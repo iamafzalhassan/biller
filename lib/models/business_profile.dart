@@ -58,7 +58,8 @@ class BusinessProfile {
 
   bool get isComplete => name.trim().isNotEmpty && ownerEmail.trim().isNotEmpty;
 
-  String get addressLine => <String>[addressBuilding, addressNo, addressStreet, addressCity].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
+  String get addressLine =>
+      <String>[addressBuilding, addressNo, addressStreet, addressCity].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
 
   List<String> get printableTerms => terms.map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList();
 

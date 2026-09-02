@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/draft_repository.dart';
-import '../data/repositories/email_repository.dart';
+import '../data/repositories/receipt_storage_repository.dart';
 import '../data/repositories/recent_invoices_repository.dart';
 import '../data/repositories/settings_repository.dart';
-import '../data/sources/email_api_client.dart';
+import '../data/sources/receipt_file_source.dart';
 import '../data/sources/prefs_source.dart';
 import '../data/sources/secure_storage_source.dart';
 import '../data/sources/sqflite_source.dart';
@@ -24,7 +24,11 @@ final Provider<SecureStorageSource> secureStorageSourceProvider = Provider<Secur
 
 final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((Ref ref) => SqfliteSource());
 
-final Provider<EmailApiClient> emailApiClientProvider = Provider<EmailApiClient>((Ref ref) => EmailApiClient());
+final Provider<ReceiptFileSource> receiptFileSourceProvider = Provider<ReceiptFileSource>((Ref ref) => ReceiptFileSource());
+
+final Provider<ReceiptStorageRepository> receiptStorageRepositoryProvider = Provider<ReceiptStorageRepository>(
+  (Ref ref) => ReceiptStorageRepository(ref.watch(receiptFileSourceProvider)),
+);
 
 final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>((Ref ref) => AuthRepository(ref.watch(secureStorageSourceProvider)));
 
@@ -33,10 +37,6 @@ final Provider<DraftRepository> draftRepositoryProvider = Provider<DraftReposito
   ref.onDispose(repository.dispose);
   return repository;
 });
-
-final Provider<EmailRepository> emailRepositoryProvider = Provider<EmailRepository>(
-  (Ref ref) => EmailRepository(ref.watch(emailApiClientProvider), ref.watch(prefsSourceProvider)),
-);
 
 final Provider<RecentInvoicesRepository> recentInvoicesRepositoryProvider = Provider<RecentInvoicesRepository>(
   (Ref ref) => RecentInvoicesRepository(ref.watch(sqfliteSourceProvider)),

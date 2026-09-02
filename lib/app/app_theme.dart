@@ -57,7 +57,11 @@ abstract final class AppTheme {
       dividerTheme: const DividerThemeData(color: AppColors.divider, space: AppSpacing.hairline, thickness: AppSpacing.hairline),
       filledButtonTheme: FilledButtonThemeData(style: _filledButtonStyle),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(foregroundColor: AppColors.textSecondary, minimumSize: const Size.square(AppSpacing.iconButtonSize)),
+        style: IconButton.styleFrom(
+          foregroundColor: AppColors.textSecondary,
+          minimumSize: const Size.square(AppSpacing.iconButtonSize),
+          shape: const CircleBorder(),
+        ),
       ),
       inputDecorationTheme: _inputDecorationTheme,
       listTileTheme: const ListTileThemeData(
@@ -109,6 +113,7 @@ abstract final class AppTheme {
 
   static InputDecorationTheme get _inputDecorationTheme => InputDecorationTheme(
     border: _border(AppColors.divider),
+    constraints: const BoxConstraints(minHeight: AppSpacing.controlHeight),
     contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
     disabledBorder: _border(AppColors.divider),
     enabledBorder: _border(AppColors.divider),

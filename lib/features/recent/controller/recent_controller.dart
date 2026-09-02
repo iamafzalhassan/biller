@@ -16,9 +16,9 @@ class RecentController extends AsyncNotifier<List<Invoice>> {
 
   Future<Uint8List> buildPdf(Invoice invoice) => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: invoice);
 
-  Future<void> resendEmail(Invoice invoice) async {
+  Future<String> saveCopy(Invoice invoice) async {
     final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
     final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
-    await ref.read(emailRepositoryProvider).enqueue(invoice: invoice, ownerEmail: profile.ownerEmail, pdfBytes: bytes);
+    return ref.read(receiptStorageRepositoryProvider).save(invoice, bytes);
   }
 }

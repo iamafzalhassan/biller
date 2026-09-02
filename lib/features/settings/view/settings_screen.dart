@@ -12,9 +12,12 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
 import '../widgets/pin_gate.dart';
+import '../widgets/recovery_sheet.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -32,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _streetController = TextEditingController();
 
+  bool _isEditingTerms = false;
   bool _isUnlocked = false;
 
   List<String> _terms = BusinessProfile.defaultTerms;
@@ -46,11 +50,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _recoverPin() async {
-    final String? code = await _prompt('Recovery code', 'The code shown during setup');
-    if (code == null || !mounted) return;
-    final String? pin = await _prompt('New 4-digit PIN', '', isPin: true);
-    if (pin == null || pin.length != 4 || !mounted) return;
-    final bool isReset = await ref.read(authRepositoryProvider).resetPinWithRecoveryCode(code: code, newPin: pin);
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext sheetContext) => RecoverySheet(onSubmit: (String code, String newPin) => unawaited(_applyRecovery(code, newPin))),
+      isScrollControlled: true,
+      showDragHandle: true,
+    );
+  }
+
+  Future<void> _applyRecovery(String code, String newPin) async {
+    final bool isReset = await ref.read(authRepositoryProvider).resetPinWithRecoveryCode(code: code, newPin: newPin);
     if (!mounted) return;
     context.showBriefSnack(isReset ? 'PIN reset' : 'That recovery code did not match');
     if (isReset) setState(() => _isUnlocked = true);
@@ -69,41 +78,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!isChanged) return;
     _currentPinController.clear();
     _newPinController.clear();
-  }
-
-  Future<String?> _prompt(String title, String hint, {bool isPin = false}) {
-    final TextEditingController controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        actions: <Widget>[
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel', maxLines: 1)),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            style: FilledButton.styleFrom(minimumSize: const Size(96, AppSpacing.touchTarget)),
-            child: const Text('OK', maxLines: 1),
-          ),
-        ],
-        actionsPadding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-        content: SizedBox(
-          height: AppSpacing.fieldHeight,
-          child: TextField(
-            autofocus: true,
-            controller: controller,
-            decoration: InputDecoration(counterText: '', hintText: hint),
-            inputFormatters: isPin ? <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly] : null,
-            keyboardType: isPin ? TextInputType.number : TextInputType.text,
-            maxLength: isPin ? 4 : null,
-            maxLines: 1,
-            obscureText: isPin,
-            textAlignVertical: TextAlignVertical.center,
-          ),
-        ),
-        contentPadding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg),
-        title: Text(title, maxLines: 1, style: AppTextStyles.sectionHeading),
-        titlePadding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
-      ),
-    );
   }
 
   Future<void> _save() async {
@@ -126,27 +100,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Navigator.of(context).pop();
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    bool isUpper = true,
-    int? maxLength,
-    TextAlign textAlign = TextAlign.start,
-    TextInputType? keyboardType,
-  }) {
-    return SizedBox(
-      height: AppSpacing.fieldHeight,
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(counterText: '', labelText: label),
-        inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
-        keyboardType: keyboardType,
-        maxLength: maxLength,
-        maxLines: 1,
-        textAlign: textAlign,
-        textAlignVertical: TextAlignVertical.center,
-        textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
-      ),
+  Widget _field({required TextEditingController controller, required String label, bool isUpper = true, int? maxLength, TextInputType? keyboardType}) {
+    return AppTextField(
+      controller: controller,
+      inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
+      keyboardType: keyboardType,
+      label: label,
+      maxLength: maxLength,
+      textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
     );
   }
 
@@ -156,27 +117,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!mounted) return;
     ref.invalidate(billingControllerProvider);
     ref.invalidate(settingsControllerProvider);
-    await Navigator.of(context).pushNamedAndRemoveUntil(Routes.setup, (Route<dynamic> route) => false);
+    await Navigator.of(context).pushAndRemoveUntil(Routes.setup(), (Route<dynamic> route) => false);
   }
 
-  Widget _sectionHeading(String label) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: <Widget>[
-      Text(label, maxLines: 1, style: AppTextStyles.overline),
-      const SizedBox(height: AppSpacing.sm),
-      const Divider(color: AppColors.divider),
-      const SizedBox(height: AppSpacing.lg),
-    ],
-  );
+  Widget _sectionHeading(String label) => SectionHeader(label: label);
 
   Widget _changePinTile() {
     return ExpansionTile(
       leading: const Icon(Icons.lock_outline, size: 20),
       title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
-        SizedBox(height: AppSpacing.fieldHeight, child: _pinField(_currentPinController, 'Current PIN')),
+        _pinField(_currentPinController, 'Current PIN'),
         const SizedBox(height: AppSpacing.md),
-        SizedBox(height: AppSpacing.fieldHeight, child: _pinField(_newPinController, 'New PIN')),
+        _pinField(_newPinController, 'New PIN'),
         const SizedBox(height: AppSpacing.lg),
         FilledButton(onPressed: () => unawaited(_changePin()), child: const Text('Update PIN', maxLines: 1)),
       ],
@@ -203,15 +156,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _pinField(TextEditingController controller, String label) {
-    return TextField(
+    return AppTextField(
       controller: controller,
-      decoration: InputDecoration(counterText: '', labelText: label),
       inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
       keyboardType: TextInputType.number,
+      label: label,
       maxLength: 4,
-      maxLines: 1,
       obscureText: true,
-      textAlignVertical: TextAlignVertical.center,
+    );
+  }
+
+  Widget _termsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _sectionHeading('TERMS AND CONDITIONS'),
+        TermsEditor(isEditable: _isEditingTerms, terms: _terms, onChanged: (List<String> terms) => _terms = terms),
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          icon: Icon(_isEditingTerms ? Icons.check : Icons.edit_outlined, size: 18),
+          label: Text(_isEditingTerms ? 'Done editing' : 'Edit conditions', maxLines: 1),
+          onPressed: () => setState(() => _isEditingTerms = !_isEditingTerms),
+        ),
+      ],
     );
   }
 
@@ -227,16 +194,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _field(controller: _emailController, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Owner email'),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('ADDRESS'),
-        _field(controller: _buildingController, label: 'Building (optional)'),
-        const SizedBox(height: AppSpacing.md),
         _field(controller: _noController, label: 'No'),
         const SizedBox(height: AppSpacing.md),
         _field(controller: _streetController, label: 'Street'),
         const SizedBox(height: AppSpacing.md),
         _field(controller: _cityController, label: 'City'),
+        const SizedBox(height: AppSpacing.md),
+        _field(controller: _buildingController, label: 'Building (optional)'),
         const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('RECEIPT'),
-        TermsEditor(terms: _terms, onChanged: (List<String> terms) => setState(() => _terms = terms)),
+        _termsSection(),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('SECURITY'),
         _changePinTile(),
@@ -279,7 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings', maxLines: 1)),
+      appBar: AppBar(title: Text(_isUnlocked ? 'Settings' : 'Enter PIN', maxLines: 1)),
       body: SafeArea(
         child: _isUnlocked ? _form() : PinGate(onRecover: () => unawaited(_recoverPin()), onSubmit: _unlock),
       ),

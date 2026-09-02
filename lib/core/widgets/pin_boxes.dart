@@ -43,13 +43,13 @@ class _PinBoxesState extends State<PinBoxes> {
         ? AppColors.danger
         : isActive
         ? AppColors.primary
-        : AppColors.divider;
+        : Colors.transparent;
     return Container(
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: Border.all(color: border, width: isActive ? 1.4 : 1),
+        border: Border.all(color: border, width: 1.4),
         borderRadius: BorderRadius.circular(AppSpacing.radiusField),
-        color: AppColors.surfaceCard,
+        color: AppColors.surfaceField,
       ),
       height: AppSpacing.pinBox,
       width: AppSpacing.pinBox,

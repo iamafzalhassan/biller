@@ -4,6 +4,7 @@ abstract final class AppColors {
   static const Color surfaceBase = Color(0xFFFAF8F3);
   static const Color surfaceCard = Color(0xFFFFFDF8);
   static const Color surfaceSunken = Color(0xFFF3F0E8);
+  static const Color surfaceField = Color(0xFFEDE8DA);
   static const Color surfaceInverse = Color(0xFF1F2233);
 
   static const Color primary = Color(0xFF2E3A72);

@@ -7,13 +7,13 @@ import '../../../core/extensions/cents_formatting_ext.dart';
 import '../../../models/invoice.dart';
 
 class InvoiceActionsSheet extends StatelessWidget {
-  const InvoiceActionsSheet({super.key, required this.invoice, required this.onEditAndReprint, required this.onReprint, required this.onResendEmail});
+  const InvoiceActionsSheet({super.key, required this.invoice, required this.onEditAndReprint, required this.onReprint, required this.onSaveCopy});
 
   final Invoice invoice;
 
   final VoidCallback onEditAndReprint;
   final VoidCallback onReprint;
-  final VoidCallback onResendEmail;
+  final VoidCallback onSaveCopy;
 
   Widget _action(IconData icon, String label, VoidCallback onTap) {
     return ListTile(
@@ -48,7 +48,7 @@ class InvoiceActionsSheet extends StatelessWidget {
           const Divider(color: AppColors.divider),
           _action(Icons.print_outlined, 'Reprint', onReprint),
           _action(Icons.edit_outlined, 'Edit & Reprint', onEditAndReprint),
-          _action(Icons.mail_outline, 'Resend email', onResendEmail),
+          _action(Icons.folder_outlined, 'Save a copy', onSaveCopy),
           const SizedBox(height: AppSpacing.md),
         ],
       ),

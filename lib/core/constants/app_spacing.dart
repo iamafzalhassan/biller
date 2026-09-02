@@ -16,8 +16,9 @@ abstract final class AppSpacing {
   static const double hairline = 1;
 
   static const double appBarHeight = 64;
-  static const double buttonHeight = 52;
-  static const double fieldHeight = 48;
+  static const double controlHeight = 52;
+  static const double buttonHeight = controlHeight;
+  static const double fieldHeight = controlHeight;
   static const double iconButtonSize = 40;
   static const double rowHeight = 56;
   static const double touchTarget = 48;

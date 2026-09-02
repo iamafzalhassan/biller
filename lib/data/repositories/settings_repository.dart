@@ -31,7 +31,6 @@ class SettingsRepository {
     await _prefs.remove(PrefsSource.keySetupComplete);
     await _prefs.remove(PrefsSource.keySequence);
     await _prefs.remove(PrefsSource.keyDraft);
-    await _prefs.remove(PrefsSource.keyOutbox);
   }
 
   Future<String> consumeInvoiceNumber() async {

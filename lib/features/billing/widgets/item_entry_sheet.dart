@@ -6,6 +6,8 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/dotted_divider.dart';
 import '../../../core/widgets/sheet_frame.dart';
 import '../../../models/invoice_item.dart';
 
@@ -41,13 +43,6 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
 
   num get _qty => num.tryParse(_qtyController.text.trim()) ?? 0;
 
-  void _selectAllOnFocus(FocusNode node, TextEditingController controller) {
-    node.addListener(() {
-      if (!node.hasFocus) return;
-      controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
-    });
-  }
-
   void _save({required bool addAnother}) {
     if (!_isValid) return;
     widget.onSave(_descriptionController.text.trim(), _qty, _unitPriceCents, addAnother);
@@ -70,22 +65,17 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     required TextInputAction textInputAction,
     required VoidCallback onSubmitted,
   }) {
-    return SizedBox(
-      height: AppSpacing.fieldHeight,
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(labelText: label),
-        focusNode: focusNode,
-        inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        maxLines: 1,
-        onChanged: (String _) => setState(() {}),
-        onSubmitted: (String _) => onSubmitted(),
-        style: AppTextStyles.amount,
-        textAlign: TextAlign.right,
-        textAlignVertical: TextAlignVertical.center,
-        textInputAction: textInputAction,
-      ),
+    return AppTextField(
+      controller: controller,
+      focusNode: focusNode,
+      inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      label: label,
+      onChanged: (String _) => setState(() {}),
+      onSubmitted: (String _) => onSubmitted(),
+      selectAllOnFocus: true,
+      textAlign: TextAlign.right,
+      textInputAction: textInputAction,
     );
   }
 
@@ -112,8 +102,6 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
   @override
   void initState() {
     super.initState();
-    _selectAllOnFocus(_priceFocus, _priceController);
-    _selectAllOnFocus(_qtyFocus, _qtyController);
     final InvoiceItem? item = widget.item;
     if (item != null) {
       _descriptionController.text = item.description;
@@ -149,23 +137,17 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
             children: <Widget>[
               Text(_isEditing ? 'Edit item' : 'Add item', maxLines: 1, style: AppTextStyles.sectionHeading),
               const SizedBox(height: AppSpacing.sm),
-              const Divider(color: AppColors.divider),
+              const DottedDivider(),
               const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                height: AppSpacing.fieldHeight,
-                child: TextField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  focusNode: _descriptionFocus,
-                  inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
-                  maxLines: 1,
-                  onChanged: (String _) => setState(() {}),
-                  onSubmitted: (String _) => _qtyFocus.requestFocus(),
-                  style: AppTextStyles.listPrimary,
-                  textAlignVertical: TextAlignVertical.center,
-                  textCapitalization: TextCapitalization.characters,
-                  textInputAction: TextInputAction.next,
-                ),
+              AppTextField(
+                controller: _descriptionController,
+                focusNode: _descriptionFocus,
+                inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
+                label: 'Description',
+                onChanged: (String _) => setState(() {}),
+                onSubmitted: (String _) => _qtyFocus.requestFocus(),
+                textCapitalization: TextCapitalization.characters,
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
@@ -201,7 +183,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
                     child: FittedBox(
                       alignment: Alignment.centerRight,
                       fit: BoxFit.scaleDown,
-                      child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.heroAmount),
+                      child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
                     ),
                   ),
                 ],

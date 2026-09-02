@@ -15,7 +15,8 @@ import 'sections/totals.dart';
 abstract final class ReceiptBuilder {
   static const double marginPt = 24;
 
-  static Future<Uint8List> build({required BusinessProfile profile, required Invoice invoice}) async => (await buildDocument(profile: profile, invoice: invoice)).save();
+  static Future<Uint8List> build({required BusinessProfile profile, required Invoice invoice}) async =>
+      (await buildDocument(profile: profile, invoice: invoice)).save();
 
   static Future<pw.Document> buildDocument({required BusinessProfile profile, required Invoice invoice}) async {
     await PdfTheme.ensureFontsLoaded();
@@ -23,7 +24,8 @@ abstract final class ReceiptBuilder {
     document.addPage(
       pw.MultiPage(
         footer: buildPageFooter,
-        header: (pw.Context context) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: <pw.Widget>[buildHeader(profile), buildMetaRow(invoice)]),
+        header: (pw.Context context) =>
+            pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: <pw.Widget>[buildHeader(profile), buildMetaRow(invoice)]),
         margin: const pw.EdgeInsets.all(marginPt),
         pageFormat: PdfPageFormat.a5,
         theme: pw.ThemeData.withFont(base: PdfTheme.regular, bold: PdfTheme.bold),

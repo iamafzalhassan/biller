@@ -30,14 +30,19 @@ class RecentScreen extends ConsumerWidget {
           Navigator.of(sheetContext).pop();
           unawaited(_reprint(ref, invoice));
         },
-        onResendEmail: () {
+        onSaveCopy: () {
           Navigator.of(sheetContext).pop();
-          unawaited(ref.read(recentControllerProvider.notifier).resendEmail(invoice));
-          context.showBriefSnack('Receipt queued for ${invoice.invoiceNumber}');
+          unawaited(_saveCopy(context, ref, invoice));
         },
       ),
       showDragHandle: true,
     );
+  }
+
+  Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
+    final String path = await ref.read(recentControllerProvider.notifier).saveCopy(invoice);
+    if (!context.mounted) return;
+    context.showBriefSnack('Saved to $path');
   }
 
   Future<void> _reprint(WidgetRef ref, Invoice invoice) async {

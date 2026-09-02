@@ -87,7 +87,7 @@ class BillingController extends Notifier<BillingState> {
         : state.invoice.copyWith(invoiceNumber: await ref.read(settingsRepositoryProvider).consumeInvoiceNumber(), createdAt: DateTime.now());
     final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
     await ref.read(recentInvoicesRepositoryProvider).save(invoice);
-    unawaited(ref.read(emailRepositoryProvider).enqueue(invoice: invoice, ownerEmail: profile.ownerEmail, pdfBytes: bytes));
+    await ref.read(receiptStorageRepositoryProvider).save(invoice, bytes);
     await ref.read(draftRepositoryProvider).clear();
     state = state.copyWith(isPrinting: false, invoice: invoice);
     return bytes;

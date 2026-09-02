@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/sheet_frame.dart';
 
 class AdvanceSheet extends StatefulWidget {
@@ -45,7 +45,8 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
       if (!mounted) return;
       _focusNode.requestFocus();
-      _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+      final int decimal = _controller.text.indexOf('.');
+      _controller.selection = TextSelection.collapsed(offset: decimal < 0 ? _controller.text.length : decimal);
     });
   }
 
@@ -61,22 +62,17 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
     return SheetFrame(
       title: widget.advanceCents > 0 ? 'Edit advance' : 'Add advance',
       children: <Widget>[
-        SizedBox(
-          height: AppSpacing.fieldHeight,
-          child: TextField(
-            controller: _controller,
-            decoration: const InputDecoration(labelText: 'Advance', prefixText: 'Rs. '),
-            focusNode: _focusNode,
-            inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            maxLines: 1,
-            onChanged: (String _) => setState(() {}),
-            onSubmitted: (String _) => _save(),
-            style: AppTextStyles.amount,
-            textAlign: TextAlign.right,
-            textAlignVertical: TextAlignVertical.center,
-            textInputAction: TextInputAction.done,
-          ),
+        AppTextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          label: 'Advance',
+          onChanged: (String _) => setState(() {}),
+          onSubmitted: (String _) => _save(),
+          prefixText: 'Rs. ',
+          textAlign: TextAlign.right,
+          textInputAction: TextInputAction.done,
         ),
         const SizedBox(height: AppSpacing.lg),
         SheetActions(

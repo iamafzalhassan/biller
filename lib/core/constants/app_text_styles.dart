@@ -37,6 +37,24 @@ abstract final class AppTextStyles {
     height: 1.3,
   );
 
+  static const TextStyle totalsValue = TextStyle(
+    color: AppColors.textPrimary,
+    fontFamily: fontFamily,
+    fontSize: 17,
+    fontWeight: FontWeight.w500,
+    height: 1.3,
+    fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+  );
+
+  static const TextStyle totalsValueBold = TextStyle(
+    color: AppColors.textPrimary,
+    fontFamily: fontFamily,
+    fontSize: 17,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+    fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+  );
+
   static const TextStyle amount = TextStyle(
     color: AppColors.textPrimary,
     fontFamily: fontFamily,
@@ -54,6 +72,10 @@ abstract final class AppTextStyles {
     height: 1.2,
     letterSpacing: 0.8,
   );
+
+  static const TextStyle fieldLabel = TextStyle(color: AppColors.textSecondary, fontFamily: fontFamily, fontSize: 11, fontWeight: FontWeight.w500, height: 1.3);
+
+  static const TextStyle fieldValue = TextStyle(color: AppColors.textPrimary, fontFamily: fontFamily, fontSize: 15, fontWeight: FontWeight.w600, height: 1.35);
 
   static const TextStyle hint = TextStyle(
     color: AppColors.textTertiary,

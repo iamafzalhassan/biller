@@ -12,22 +12,20 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
+import '../../../core/widgets/dotted_divider.dart';
 import '../../../core/responsive/responsive_builder.dart';
 import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
 import '../../preview/controller/print_service.dart';
 import '../controller/billing_controller.dart';
 import '../controller/billing_state.dart';
-import '../widgets/advance_field.dart';
 import '../widgets/advance_sheet.dart';
 import '../widgets/customer_field.dart';
 import '../widgets/draft_banner.dart';
 import '../widgets/item_entry_sheet.dart';
-import '../widgets/item_row_compact.dart';
-import '../widgets/item_row_wide.dart';
-import '../widgets/items_header_row.dart';
+import '../widgets/item_row.dart';
 import '../widgets/live_preview_pane.dart';
-import '../widgets/totals_panel.dart';
+import '../widgets/totals_section.dart';
 import 'layouts/billing_phone_layout.dart';
 import 'layouts/billing_tablet_layout.dart';
 
@@ -155,28 +153,29 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     return DraftBanner(onDiscard: _controller.discardDraft, onRestore: _controller.restoreDraft, savedAt: draft.createdAt);
   }
 
-  List<Widget> _itemRows(List<InvoiceItem> items, {required bool isWide}) {
-    return <Widget>[for (int index = 0; index < items.length; index++) _itemRow(index, items[index], isWide: isWide)];
-  }
-
-  Widget _itemRow(int index, InvoiceItem item, {required bool isWide}) {
-    return Dismissible(
-      key: ValueKey<String>(item.id),
-      background: _DeleteBackground(isWide: isWide),
-      direction: DismissDirection.endToStart,
-      onDismissed: (DismissDirection _) => _removeItem(item.id),
-      child: isWide
-          ? ItemRowWide(
-              index: index + 1,
-              item: item,
-              onTap: () => unawaited(_openSheet(item: item)),
-            )
-          : ItemRowCompact(
-              index: index + 1,
-              item: item,
-              onTap: () => unawaited(_openSheet(item: item)),
-            ),
-    );
+  List<Widget> _itemRows(List<InvoiceItem> items) {
+    return <Widget>[
+      for (int index = 0; index < items.length; index++)
+        Dismissible(
+          key: ValueKey<String>(items[index].id),
+          background: const _DeleteBackground(),
+          direction: DismissDirection.endToStart,
+          onDismissed: (DismissDirection _) => _removeItem(items[index].id),
+          child: Column(
+            children: <Widget>[
+              if (index > 0)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                  child: DottedDivider(),
+                ),
+              ItemRow(
+                item: items[index],
+                onTap: () => unawaited(_openSheet(item: items[index])),
+              ),
+            ],
+          ),
+        ),
+    ];
   }
 
   Widget _addItemButton() {
@@ -204,20 +203,29 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _advanceField(BillingState state) =>
-      AdvanceField(advanceCents: state.invoice.advanceCents, onTap: () => unawaited(_openAdvanceSheet(state.invoice.advanceCents)));
-
-  Widget _totalsPanel(BillingState state, {required String label, required Future<void> Function() onPrint}) {
-    return TotalsPanel(
+  Widget _totalsSection(BillingState state) {
+    return TotalsSection(
       advanceCents: state.invoice.advanceCents,
       balanceCents: state.invoice.balanceCents,
-      buttonLabel: label,
-      canPrint: state.canPrint,
-      isPrinting: state.isPrinting,
-      onBlockedTap: () => context.showBriefSnack(state.blockingReason),
-      onPrint: () => unawaited(onPrint()),
       showsAdvance: state.invoice.showsAdvance,
       totalCents: state.invoice.totalCents,
+      onAdvanceTap: () => unawaited(_openAdvanceSheet(state.invoice.advanceCents)),
+    );
+  }
+
+  Widget _printButton(BillingState state, {required String label, required Future<void> Function() onPrint}) {
+    return GestureDetector(
+      onTap: state.canPrint ? null : () => context.showBriefSnack(state.blockingReason),
+      child: FilledButton(
+        onPressed: state.canPrint ? () => unawaited(onPrint()) : null,
+        child: state.isPrinting
+            ? const SizedBox(
+                height: AppSpacing.progressIndicator,
+                width: AppSpacing.progressIndicator,
+                child: CircularProgressIndicator(color: AppColors.primaryOn, strokeWidth: 2),
+              )
+            : Text(label, maxLines: 1),
+      ),
     );
   }
 
@@ -254,25 +262,24 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         child: ResponsiveBuilder(
           phone: (BuildContext context) => BillingPhoneLayout(
             addItemButton: _addItemButton(),
-            advanceField: _advanceField(state),
             customerField: _customerField(),
             draftBanner: _draftBanner(state),
             emptyState: items.isEmpty ? _emptyItems() : null,
-            itemRows: _itemRows(items, isWide: false),
+            itemRows: _itemRows(items),
+            printButton: _printButton(state, label: 'Preview & Print', onPrint: _openPreview),
             scrollController: _scrollController,
-            totalsPanel: _totalsPanel(state, label: 'Preview & Print', onPrint: _openPreview),
+            totalsSection: _totalsSection(state),
           ),
           tablet: (BuildContext context) => BillingTabletLayout(
             addItemButton: _addItemButton(),
-            advanceField: _advanceField(state),
             customerField: _customerField(),
             draftBanner: _draftBanner(state),
             emptyState: items.isEmpty ? _emptyItems() : null,
-            itemRows: _itemRows(items, isWide: true),
-            itemsHeader: items.isEmpty ? null : const ItemsHeaderRow(),
+            itemRows: _itemRows(items),
             previewPane: const LivePreviewPane(),
+            printButton: _printButton(state, label: 'Print', onPrint: _printDirect),
             scrollController: _scrollController,
-            totalsPanel: _totalsPanel(state, label: 'Print', onPrint: _printDirect),
+            totalsSection: _totalsSection(state),
           ),
         ),
       ),
@@ -308,16 +315,13 @@ class _RevisedChip extends StatelessWidget {
 }
 
 class _DeleteBackground extends StatelessWidget {
-  const _DeleteBackground({required this.isWide});
-
-  final bool isWide;
+  const _DeleteBackground();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(isWide ? 0 : AppSpacing.radiusCard), color: AppColors.danger.withValues(alpha: 0.12)),
-      margin: EdgeInsets.only(bottom: isWide ? 0 : AppSpacing.sm),
+      color: AppColors.danger.withValues(alpha: 0.12),
       padding: const EdgeInsets.only(right: AppSpacing.lg),
       child: const Icon(Icons.delete_outline, color: AppColors.danger),
     );

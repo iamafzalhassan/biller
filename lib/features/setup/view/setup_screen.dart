@@ -12,6 +12,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/utils/mock_seed.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/pin_boxes.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
@@ -119,7 +120,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     });
   }
 
-  void _finish() => Navigator.of(context).pushReplacementNamed(Routes.billing);
+  void _back() {
+    if (_step == 0) return;
+    setState(() => _step--);
+    _focusStep();
+  }
+
+  void _finish() => Navigator.of(context).pushAndRemoveUntil(Routes.billing(), (Route<dynamic> route) => false);
 
   Widget _body() {
     switch (_step) {
@@ -150,13 +157,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _step1() => _stepFrame(
     hint: 'Printed under the business name',
     children: <Widget>[
-      _field(controller: _buildingController, autofocus: true, label: 'Building (optional)'),
-      const SizedBox(height: AppSpacing.md),
-      _field(controller: _noController, label: 'No'),
+      _field(controller: _noController, autofocus: true, label: 'No'),
       const SizedBox(height: AppSpacing.md),
       _field(controller: _streetController, label: 'Street'),
       const SizedBox(height: AppSpacing.md),
       _field(controller: _cityController, label: 'City'),
+      const SizedBox(height: AppSpacing.md),
+      _field(controller: _buildingController, label: 'Building (optional)'),
     ],
   );
 
@@ -172,7 +179,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step4() => _stepFrame(
     hint: 'Printed at the foot of the receipt',
-    children: <Widget>[TermsEditor(terms: _terms, onChanged: (List<String> terms) => setState(() => _terms = terms))],
+    children: <Widget>[TermsEditor(isEditable: true, terms: _terms, onChanged: (List<String> terms) => _terms = terms)],
   );
 
   Widget _step5() => _stepFrame(
@@ -186,7 +193,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: _field(controller: _deviceIdController, label: 'Device', maxLength: 1, textAlign: TextAlign.center),
+            child: _field(controller: _deviceIdController, label: 'Device', maxLength: 1),
           ),
         ],
       ),
@@ -249,24 +256,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     bool autofocus = false,
     bool isUpper = true,
     int? maxLength,
-    TextAlign textAlign = TextAlign.start,
     TextInputType? keyboardType,
   }) {
-    return SizedBox(
-      height: AppSpacing.fieldHeight,
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(counterText: '', labelText: label),
-        focusNode: autofocus ? _stepFocus : null,
-        inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
-        keyboardType: keyboardType,
-        maxLength: maxLength,
-        maxLines: 1,
-        onChanged: (String _) => setState(() {}),
-        textAlign: textAlign,
-        textAlignVertical: TextAlignVertical.center,
-        textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
-      ),
+    return AppTextField(
+      controller: controller,
+      focusNode: autofocus ? _stepFocus : null,
+      inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
+      keyboardType: keyboardType,
+      label: label,
+      maxLength: maxLength,
+      onChanged: (String _) => setState(() {}),
+      textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
     );
   }
 
@@ -309,6 +309,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        leading: _step > 0 ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: _back, tooltip: 'Back') : null,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
