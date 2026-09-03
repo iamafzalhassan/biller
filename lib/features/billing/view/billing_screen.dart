@@ -12,6 +12,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
+import '../../../core/utils/validators.dart';
 import '../../../core/widgets/dotted_divider.dart';
 import '../../../core/responsive/responsive_builder.dart';
 import '../../../models/invoice.dart';
@@ -91,7 +92,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final (int, InvoiceItem)? removed = _controller.removeItem(id);
     if (removed == null) return;
     context.showBriefSnack(
-      'Item removed',
+      'Item removed from this bill. Tap Undo if you did not mean to delete it.',
       action: SnackBarAction(label: 'Undo', onPressed: () => _controller.reinsertItem(removed.$1, removed.$2)),
     );
   }
@@ -100,9 +101,16 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Future<void> _printDirect() async {
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
-    final Uint8List bytes = await _controller.commit();
-    await PrintService.layout(bytes, name: number);
+    bool hasFailed = false;
+    try {
+      final Uint8List bytes = await _controller.commit();
+      await PrintService.layout(bytes, name: number);
+    } catch (_) {
+      hasFailed = true;
+    }
     _controller.startNewBill();
+    if (!mounted) return;
+    if (hasFailed) context.showErrorSnack('$number could not be sent to the printer. It is saved, so you can reprint it from Recent invoices.');
   }
 
   void _reseedFields(BillingState state) {
@@ -138,8 +146,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _customerField() {
+  Widget _customerField(BillingState state) {
     return CustomerField(
+      hasPhoneError: !Validators.isValidPhone(state.invoice.customerPhone ?? ''),
       nameController: _nameController,
       nameFocus: _nameFocus,
       onNameChanged: _controller.setCustomerName,
@@ -253,7 +262,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         child: ResponsiveBuilder(
           phone: (BuildContext context) => BillingPhoneLayout(
             addItemButton: _addItemButton(),
-            customerField: _customerField(),
+            customerField: _customerField(state),
             draftBanner: _draftBanner(state),
             itemRows: _itemRows(items),
             printButton: _printButton(state, label: 'Preview & Print', onPrint: _openPreview),
@@ -262,7 +271,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           ),
           tablet: (BuildContext context) => BillingTabletLayout(
             addItemButton: _addItemButton(),
-            customerField: _customerField(),
+            customerField: _customerField(state),
             draftBanner: _draftBanner(state),
             itemRows: _itemRows(items),
             previewPane: const LivePreviewPane(),

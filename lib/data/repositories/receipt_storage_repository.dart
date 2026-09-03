@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/invoice.dart';
 import '../sources/receipt_file_source.dart';
 
 class ReceiptStorageRepository {
-  static final DateFormat _stamp = DateFormat('yyyy-MM-dd_HH-mm-ss');
-
   final ReceiptFileSource _source;
 
   ReceiptStorageRepository(this._source);
 
   String get folderLabel => ReceiptFileSource.folderLabel;
 
-  String fileNameFor(Invoice invoice) => '${invoice.invoiceNumber}_${_stamp.format(invoice.createdAt)}.pdf';
+  String fileNameFor(Invoice invoice) => '${invoice.invoiceNumber}.pdf';
 
   Future<String> save(Invoice invoice, Uint8List bytes) => _source.write(fileNameFor(invoice), bytes);
 }

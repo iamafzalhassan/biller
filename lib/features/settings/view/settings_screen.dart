@@ -17,9 +17,11 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/terms_editor.dart';
+import '../../../data/repositories/settings_repository.dart';
 import '../../../models/business_profile.dart';
 import '../widgets/pin_gate.dart';
 import '../widgets/recovery_sheet.dart';
@@ -32,21 +34,39 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final FocusNode _buildingFocus = FocusNode();
+  final FocusNode _cityFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _noFocus = FocusNode();
+  final FocusNode _phone1Focus = FocusNode();
+  final FocusNode _phone2Focus = FocusNode();
+  final FocusNode _phone3Focus = FocusNode();
+  final FocusNode _streetFocus = FocusNode();
+
   final TextEditingController _buildingController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _noController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _phone1Controller = TextEditingController();
+  final TextEditingController _phone2Controller = TextEditingController();
+  final TextEditingController _phone3Controller = TextEditingController();
+  final TextEditingController _retentionController = TextEditingController();
   final TextEditingController _streetController = TextEditingController();
 
   bool _isEditingTerms = false;
   bool _isUnlocked = false;
 
+  int _logoRevision = 0;
+
   String _appVersion = '';
   String _logoPath = '';
 
   List<String> _terms = BusinessProfile.defaultTerms;
+
+  final FocusNode _currentPinFocus = FocusNode();
+  final FocusNode _newPinFocus = FocusNode();
 
   final TextEditingController _currentPinController = TextEditingController();
   final TextEditingController _newPinController = TextEditingController();
@@ -70,9 +90,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final bool isReset = await ref.read(authRepositoryProvider).resetPinWithRecoveryCode(code: code, newPin: newPin);
     if (!mounted) return;
     if (isReset) {
-      context.showSuccessSnack('PIN reset');
+      context.showSuccessSnack('PIN reset. Use your new PIN the next time you open Settings.');
     } else {
-      context.showErrorSnack('That recovery code did not match');
+      context.showErrorSnack('That recovery code did not match. Check the code you wrote down during setup.');
     }
     if (isReset) setState(() => _isUnlocked = true);
   }
@@ -81,22 +101,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final String current = _currentPinController.text;
     final String next = _newPinController.text;
     if (current.length != 4 || next.length != 4) {
-      context.showErrorSnack('Both PINs must be 4 digits');
+      context.showErrorSnack('Both PINs must be exactly 4 digits. Nothing has been changed yet.');
       return;
     }
     final bool isChanged = await ref.read(authRepositoryProvider).changePin(currentPin: current, newPin: next);
     if (!mounted) return;
     if (isChanged) {
-      context.showSuccessSnack('PIN changed');
+      context.showSuccessSnack('PIN changed. Use the new PIN the next time you open Settings.');
     } else {
-      context.showErrorSnack('Current PIN was incorrect');
+      context.showErrorSnack('Current PIN was incorrect. Your PIN has not been changed.');
     }
     if (!isChanged) return;
     _currentPinController.clear();
     _newPinController.clear();
   }
 
+  List<String> get _phones => <String>[
+    _phone1Controller.text,
+    _phone2Controller.text,
+    _phone3Controller.text,
+  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
+
+  int get _retentionDays => int.tryParse(_retentionController.text.trim()) ?? SettingsRepository.defaultRetentionDays;
+
   Future<void> _save() async {
+    if (_phones.isEmpty || _phones.any((String phone) => !Validators.isValidPhone(phone))) {
+      context.showErrorSnack('Enter at least one phone number, each 10 digits starting with 0. Nothing has been saved yet.');
+      return;
+    }
+    if (!Validators.isValidEmail(_emailController.text)) {
+      context.showErrorSnack('Enter a valid email address, like name@example.com. Nothing has been saved yet.');
+      return;
+    }
     final BusinessProfile existing = ref.read(settingsRepositoryProvider).profile;
     final BusinessProfile profile = BusinessProfile(
       addressBuilding: _buildingController.text.trim(),
@@ -108,25 +144,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       logoPath: _logoPath,
       name: _nameController.text.trim(),
       ownerEmail: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
+      phones: _phones,
       terms: _terms,
     );
+    await ref.read(settingsRepositoryProvider).saveRetentionDays(_retentionDays);
     await ref.read(settingsControllerProvider.notifier).save(profile);
     if (!mounted) return;
-    context.showSuccessSnack('Settings saved');
+    ref.invalidate(recentControllerProvider);
+    context.showSuccessSnack('Settings saved. The changes appear on the next receipt you print.');
     Navigator.of(context).pop();
   }
 
   Widget _field({
     required TextEditingController controller,
+    required FocusNode focusNode,
     required String label,
     bool isPhone = false,
     bool isUpper = true,
     int? maxLength,
+    FocusNode? nextFocus,
     TextInputType? keyboardType,
   }) {
     return AppTextField(
       controller: controller,
+      focusNode: focusNode,
       inputFormatters: isPhone
           ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
           : isUpper
@@ -135,7 +176,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       keyboardType: keyboardType,
       label: label,
       maxLength: maxLength,
+      onSubmitted: (String _) => nextFocus == null ? FocusManager.instance.primaryFocus?.unfocus() : nextFocus.requestFocus(),
       textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
+      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
+    );
+  }
+
+  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) => _field(
+    controller: controller,
+    focusNode: focusNode,
+    isPhone: true,
+    isUpper: false,
+    keyboardType: TextInputType.phone,
+    label: label,
+    nextFocus: nextFocus,
+  );
+
+  Widget _retentionField() {
+    return AppTextField(
+      controller: _retentionController,
+      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+      keyboardType: TextInputType.number,
+      label: 'Days to keep invoices',
+      maxLength: 3,
+      onSubmitted: (String _) => FocusManager.instance.primaryFocus?.unfocus(),
+      textInputAction: TextInputAction.done,
     );
   }
 
@@ -156,9 +221,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
         const SizedBox(height: AppSpacing.lg),
-        _pinField(_currentPinController, 'Current PIN'),
+        _pinField(_currentPinController, _currentPinFocus, 'Current PIN', nextFocus: _newPinFocus),
         const SizedBox(height: AppSpacing.md),
-        _pinField(_newPinController, 'New PIN'),
+        _pinField(_newPinController, _newPinFocus, 'New PIN'),
         const SizedBox(height: AppSpacing.lg),
         FilledButton(onPressed: () => unawaited(_changePin()), child: const Text('Update PIN', maxLines: 1)),
       ],
@@ -185,14 +250,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _pinField(TextEditingController controller, String label) {
+  Widget _pinField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) {
     return AppTextField(
       controller: controller,
+      focusNode: focusNode,
       inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
       keyboardType: TextInputType.number,
       label: label,
       maxLength: 4,
       obscureText: true,
+      onSubmitted: (String _) => nextFocus == null ? unawaited(_changePin()) : nextFocus.requestFocus(),
+      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
     );
   }
 
@@ -201,9 +269,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (picked == null || !mounted) return;
     final Directory base = await getApplicationDocumentsDirectory();
     final File saved = await File(picked.path).copy('${base.path}${Platform.pathSeparator}logo.png');
+    await FileImage(saved).evict();
     if (!mounted) return;
-    setState(() => _logoPath = saved.path);
-    context.showSuccessSnack('Logo selected. Save to apply.');
+    setState(() {
+      _logoPath = saved.path;
+      _logoRevision++;
+    });
+    context.showSuccessSnack('Logo selected. Tap Save to start printing it on your receipts.');
   }
 
   void _removeLogo() => setState(() => _logoPath = '');
@@ -230,7 +302,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ? const Icon(Icons.image_outlined, color: AppColors.textTertiary, size: 24)
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                      child: Image.file(File(_logoPath), fit: BoxFit.cover),
+                      child: Image.file(File(_logoPath), key: ValueKey<int>(_logoRevision), fit: BoxFit.cover),
                     ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -293,22 +365,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _logoSection(),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('BUSINESS'),
-        _field(controller: _nameController, label: 'Business name'),
+        _field(controller: _nameController, focusNode: _nameFocus, label: 'Business name', nextFocus: _phone1Focus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _phoneController, isPhone: true, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone'),
+        _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _emailController, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Owner email'),
+        _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (optional)', nextFocus: _phone3Focus),
+        const SizedBox(height: AppSpacing.md),
+        _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (optional)', nextFocus: _emailFocus),
+        const SizedBox(height: AppSpacing.md),
+        _field(
+          controller: _emailController,
+          focusNode: _emailFocus,
+          isUpper: false,
+          keyboardType: TextInputType.emailAddress,
+          label: 'Email',
+          nextFocus: _noFocus,
+        ),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('ADDRESS'),
-        _field(controller: _noController, label: 'No'),
+        _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _streetController, label: 'Street'),
+        _field(controller: _streetController, focusNode: _streetFocus, label: 'Street', nextFocus: _cityFocus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _cityController, label: 'City'),
+        _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _buildingController, label: 'Building (optional)'),
+        _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (optional)'),
         const SizedBox(height: AppSpacing.xl),
         _termsSection(),
+        const SizedBox(height: AppSpacing.xl),
+        _sectionHeading('INVOICE HISTORY'),
+        const Text(
+          'Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.',
+          style: AppTextStyles.listSecondary,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _retentionField(),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('SECURITY'),
         _changePinTile(),
@@ -331,7 +422,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _emailController.text = profile.ownerEmail;
     _nameController.text = profile.name;
     _noController.text = profile.addressNo;
-    _phoneController.text = profile.phone;
+    final List<String> phones = profile.printablePhones;
+    _phone1Controller.text = phones.isNotEmpty ? phones[0] : '';
+    _phone2Controller.text = phones.length > 1 ? phones[1] : '';
+    _phone3Controller.text = phones.length > 2 ? phones[2] : '';
+    _retentionController.text = '${ref.read(settingsRepositoryProvider).retentionDays}';
     _streetController.text = profile.addressStreet;
     _logoPath = profile.logoPath;
     _terms = profile.terms;
@@ -340,6 +435,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   void dispose() {
+    _buildingFocus.dispose();
+    _cityFocus.dispose();
+    _currentPinFocus.dispose();
+    _emailFocus.dispose();
+    _newPinFocus.dispose();
+    _nameFocus.dispose();
+    _noFocus.dispose();
+    _phone1Focus.dispose();
+    _phone2Focus.dispose();
+    _phone3Focus.dispose();
+    _streetFocus.dispose();
     _buildingController.dispose();
     _cityController.dispose();
     _currentPinController.dispose();
@@ -347,7 +453,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _emailController.dispose();
     _nameController.dispose();
     _noController.dispose();
-    _phoneController.dispose();
+    _phone1Controller.dispose();
+    _phone2Controller.dispose();
+    _phone3Controller.dispose();
+    _retentionController.dispose();
     _streetController.dispose();
     super.dispose();
   }

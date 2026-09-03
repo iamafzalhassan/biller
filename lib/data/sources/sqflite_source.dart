@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 class SqfliteSource {
-  static const int maxRows = 20;
+  static const int maxRows = 500;
   static const int schemaVersion = 1;
 
   static const String columnCreatedAt = 'created_at';
@@ -27,6 +27,11 @@ class SqfliteSource {
         '$columnPayload TEXT NOT NULL)',
       ),
     );
+  }
+
+  Future<int> purgeOlderThan(int cutoffMillis) async {
+    final Database db = await _open();
+    return db.delete(tableRecent, where: '$columnCreatedAt < ?', whereArgs: <Object>[cutoffMillis]);
   }
 
   Future<List<Map<String, Object?>>> readAll() async {

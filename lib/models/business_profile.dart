@@ -1,4 +1,6 @@
 class BusinessProfile {
+  static const int maxPhones = 3;
+
   static const List<String> defaultTerms = <String>[
     'Item may be repaired/replaced if returned within 60 days of purchase.',
     'A purchase invoice is required.',
@@ -17,7 +19,7 @@ class BusinessProfile {
     logoPath: '',
     name: '',
     ownerEmail: '',
-    phone: '',
+    phones: <String>[],
     terms: defaultTerms,
   );
 
@@ -30,8 +32,8 @@ class BusinessProfile {
   final String logoPath;
   final String name;
   final String ownerEmail;
-  final String phone;
 
+  final List<String> phones;
   final List<String> terms;
 
   const BusinessProfile({
@@ -44,7 +46,7 @@ class BusinessProfile {
     required this.logoPath,
     required this.name,
     required this.ownerEmail,
-    required this.phone,
+    required this.phones,
     required this.terms,
   });
 
@@ -58,7 +60,7 @@ class BusinessProfile {
     logoPath: json['logoPath'] as String? ?? '',
     name: json['name'] as String? ?? '',
     ownerEmail: json['ownerEmail'] as String? ?? '',
-    phone: json['phone'] as String? ?? '',
+    phones: _readPhones(json),
     terms: (json['terms'] as List<dynamic>?)?.map((dynamic e) => e as String).toList() ?? defaultTerms,
   );
 
@@ -68,6 +70,10 @@ class BusinessProfile {
 
   String get addressLine =>
       <String>[addressBuilding, addressNo, addressStreet, addressCity].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
+
+  String get phoneLine => printablePhones.map(_grouped).join('  |  ');
+
+  List<String> get printablePhones => phones.map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).take(maxPhones).toList();
 
   List<String> get printableTerms => terms.map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList();
 
@@ -81,7 +87,7 @@ class BusinessProfile {
     String? logoPath,
     String? name,
     String? ownerEmail,
-    String? phone,
+    List<String>? phones,
     List<String>? terms,
   }) => BusinessProfile(
     addressBuilding: addressBuilding ?? this.addressBuilding,
@@ -93,7 +99,7 @@ class BusinessProfile {
     logoPath: logoPath ?? this.logoPath,
     name: name ?? this.name,
     ownerEmail: ownerEmail ?? this.ownerEmail,
-    phone: phone ?? this.phone,
+    phones: phones ?? this.phones,
     terms: terms ?? this.terms,
   );
 
@@ -107,9 +113,22 @@ class BusinessProfile {
     'logoPath': logoPath,
     'name': name,
     'ownerEmail': ownerEmail,
-    'phone': phone,
+    'phones': phones,
     'terms': terms,
   };
+
+  static List<String> _readPhones(Map<String, dynamic> json) {
+    final List<dynamic>? stored = json['phones'] as List<dynamic>?;
+    if (stored != null) return stored.map((dynamic e) => e as String).where((String phone) => phone.trim().isNotEmpty).toList();
+    final String legacy = json['phone'] as String? ?? '';
+    return legacy.trim().isEmpty ? <String>[] : <String>[legacy.trim()];
+  }
+
+  static String _grouped(String phone) {
+    final String digits = phone.replaceAll(RegExp('[^0-9]'), '');
+    if (digits.length != 10) return phone;
+    return '${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}';
+  }
 
   @override
   String toString() => 'BusinessProfile($name, $invoicePrefix-$deviceId)';

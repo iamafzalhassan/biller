@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../billing/controller/billing_controller.dart';
 import '../controller/print_service.dart';
 
@@ -27,10 +28,16 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
     setState(() => _isPrinting = true);
     final BillingController controller = ref.read(billingControllerProvider.notifier);
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
-    final Uint8List bytes = await controller.commit();
-    await PrintService.layout(bytes, name: number);
+    bool hasFailed = false;
+    try {
+      final Uint8List bytes = await controller.commit();
+      await PrintService.layout(bytes, name: number);
+    } catch (_) {
+      hasFailed = true;
+    }
     controller.startNewBill();
     if (!mounted) return;
+    if (hasFailed) context.showErrorSnack('$number could not be sent to the printer. It is saved, so you can reprint it from Recent invoices.');
     Navigator.of(context).pop();
   }
 

@@ -40,10 +40,10 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun saveReceipt(fileName: String, bytes: ByteArray): String =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) saveViaMediaStore(fileName, bytes) else saveViaFilePath(fileName, bytes)
+    private fun saveReceipt(fileName: String, bytes: ByteArray): String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) saveViaMediaStore(fileName, bytes) else saveViaFilePath(fileName, bytes)
 
     private fun saveViaMediaStore(fileName: String, bytes: ByteArray): String {
+        deleteExisting(fileName)
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
             put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
@@ -57,6 +57,12 @@ class MainActivity : FlutterActivity() {
         values.put(MediaStore.Downloads.IS_PENDING, 0)
         resolver.update(uri, values, null, null)
         return "$RELATIVE_DIR/$fileName"
+    }
+
+    private fun deleteExisting(fileName: String) {
+        val selection = "${MediaStore.Downloads.DISPLAY_NAME} = ? AND ${MediaStore.Downloads.RELATIVE_PATH} LIKE ?"
+        val arguments = arrayOf(fileName, "$RELATIVE_DIR%")
+        applicationContext.contentResolver.delete(MediaStore.Downloads.EXTERNAL_CONTENT_URI, selection, arguments)
     }
 
     private fun saveViaFilePath(fileName: String, bytes: ByteArray): String {

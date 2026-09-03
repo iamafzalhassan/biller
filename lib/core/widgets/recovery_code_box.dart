@@ -37,7 +37,7 @@ class RecoveryCodeBox extends StatelessWidget {
           onPressed: () {
             Clipboard.setData(ClipboardData(text: code));
             HapticFeedback.mediumImpact();
-            context.showSuccessSnack('Recovery code copied');
+            context.showSuccessSnack('Recovery code copied to the clipboard. Keep it somewhere safe outside this phone.');
           },
         ),
       ],

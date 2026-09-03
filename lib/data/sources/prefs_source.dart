@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PrefsSource {
   static const String keyDraft = 'draft_invoice';
   static const String keyProfile = 'business_profile';
+  static const String keyRetentionDays = 'history_retention_days';
   static const String keySequence = 'invoice_sequence';
   static const String keySetupComplete = 'setup_complete';
 

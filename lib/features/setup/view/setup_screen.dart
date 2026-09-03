@@ -28,7 +28,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   static const int lastFieldStep = 6;
   static const int totalSteps = 8;
 
-  final FocusNode _stepFocus = FocusNode();
+  final FocusNode _buildingFocus = FocusNode();
+  final FocusNode _cityFocus = FocusNode();
+  final FocusNode _deviceIdFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _noFocus = FocusNode();
+  final FocusNode _phone1Focus = FocusNode();
+  final FocusNode _phone2Focus = FocusNode();
+  final FocusNode _phone3Focus = FocusNode();
+  final FocusNode _prefixFocus = FocusNode();
+  final FocusNode _streetFocus = FocusNode();
 
   final TextEditingController _buildingController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -36,7 +46,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _noController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _phone1Controller = TextEditingController();
+  final TextEditingController _phone2Controller = TextEditingController();
+  final TextEditingController _phone3Controller = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
   final TextEditingController _prefixController = TextEditingController(text: 'INV');
   final TextEditingController _streetController = TextEditingController();
@@ -54,9 +66,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       case 1:
         return 'Address';
       case 2:
-        return 'Phone';
+        return 'Phone numbers';
       case 3:
-        return 'Owner email';
+        return 'Email';
       case 4:
         return 'Terms and conditions';
       case 5:
@@ -68,12 +80,39 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
   }
 
+  FocusNode? get _stepFocus {
+    switch (_step) {
+      case 0:
+        return _nameFocus;
+      case 1:
+        return _noFocus;
+      case 2:
+        return _phone1Focus;
+      case 3:
+        return _emailFocus;
+      case 5:
+        return _prefixFocus;
+      default:
+        return null;
+    }
+  }
+
+  bool get _hasEmailError => _emailController.text.trim().isNotEmpty && !Validators.isValidEmail(_emailController.text);
+
+  bool get _hasPhoneError => <TextEditingController>[
+    _phone1Controller,
+    _phone2Controller,
+    _phone3Controller,
+  ].any((TextEditingController controller) => !Validators.isValidPhone(controller.text));
+
   bool get _canAdvance {
     switch (_step) {
       case 0:
         return _nameController.text.trim().isNotEmpty;
       case 1:
         return _noController.text.trim().isNotEmpty && _streetController.text.trim().isNotEmpty && _cityController.text.trim().isNotEmpty;
+      case 2:
+        return _phone1Controller.text.trim().isNotEmpty && !_hasPhoneError;
       case 3:
         return Validators.isValidEmail(_emailController.text);
       case 5:
@@ -85,6 +124,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
   }
 
+  List<String> get _phones => <String>[
+    _phone1Controller.text,
+    _phone2Controller.text,
+    _phone3Controller.text,
+  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
+
   BusinessProfile get _profile => BusinessProfile(
     addressBuilding: _buildingController.text.trim(),
     addressCity: _cityController.text.trim(),
@@ -95,14 +140,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     logoPath: '',
     name: _nameController.text.trim(),
     ownerEmail: _emailController.text.trim(),
-    phone: _phoneController.text.trim(),
+    phones: _phones,
     terms: _terms,
   );
 
   void _focusStep() {
+    final FocusNode? node = _stepFocus;
+    if (node == null) {
+      if (_step != lastFieldStep) FocusManager.instance.primaryFocus?.unfocus();
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (mounted) _stepFocus.requestFocus();
+      if (!mounted) return;
+      final FocusNode? current = FocusManager.instance.primaryFocus;
+      if (current != null && current != node) current.unfocus();
+      node.requestFocus();
     });
+  }
+
+  void _submitStep() {
+    if (_canAdvance) unawaited(_next());
   }
 
   Future<void> _next() async {
@@ -151,30 +208,42 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step0() => _stepFrame(
     hint: 'Printed at the top of every receipt',
-    children: <Widget>[_field(controller: _nameController, autofocus: true, label: 'Business name')],
+    children: <Widget>[_field(controller: _nameController, focusNode: _nameFocus, label: 'Business name')],
   );
 
   Widget _step1() => _stepFrame(
     hint: 'Printed under the business name',
     children: <Widget>[
-      _field(controller: _noController, autofocus: true, label: 'No'),
+      _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
       const SizedBox(height: AppSpacing.md),
-      _field(controller: _streetController, label: 'Street'),
+      _field(controller: _streetController, focusNode: _streetFocus, label: 'Street', nextFocus: _cityFocus),
       const SizedBox(height: AppSpacing.md),
-      _field(controller: _cityController, label: 'City'),
+      _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
       const SizedBox(height: AppSpacing.md),
-      _field(controller: _buildingController, label: 'Building (optional)'),
+      _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (optional)'),
     ],
   );
 
   Widget _step2() => _stepFrame(
-    hint: 'Printed on the receipt header',
-    children: <Widget>[_field(controller: _phoneController, autofocus: true, isPhone: true, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone')],
+    hint: 'Up to three lines, printed side by side on the receipt header',
+    children: <Widget>[
+      _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
+      const SizedBox(height: AppSpacing.md),
+      _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (optional)', nextFocus: _phone3Focus),
+      const SizedBox(height: AppSpacing.md),
+      _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (optional)'),
+      if (_hasPhoneError) const SizedBox(height: AppSpacing.sm),
+      if (_hasPhoneError) const Text('Each phone must be 10 digits starting with 0', maxLines: 1, style: AppTextStyles.errorHint),
+    ],
   );
 
   Widget _step3() => _stepFrame(
-    hint: 'Every receipt is emailed here',
-    children: <Widget>[_field(controller: _emailController, autofocus: true, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Owner email')],
+    hint: 'Kept on file as the owner contact',
+    children: <Widget>[
+      _field(controller: _emailController, focusNode: _emailFocus, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Email'),
+      if (_hasEmailError) const SizedBox(height: AppSpacing.sm),
+      if (_hasEmailError) const Text('Enter a valid email address, like name@example.com', maxLines: 1, style: AppTextStyles.errorHint),
+    ],
   );
 
   Widget _step4() => _stepFrame(
@@ -189,11 +258,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         children: <Widget>[
           Expanded(
             flex: 2,
-            child: _field(controller: _prefixController, label: 'Prefix'),
+            child: _field(controller: _prefixController, focusNode: _prefixFocus, label: 'Prefix', nextFocus: _deviceIdFocus),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: _field(controller: _deviceIdController, label: 'Device', maxLength: 1),
+            child: _field(controller: _deviceIdController, focusNode: _deviceIdFocus, label: 'Device', maxLength: 1),
           ),
         ],
       ),
@@ -238,18 +307,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     );
   }
 
+  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) => _field(
+    controller: controller,
+    focusNode: focusNode,
+    isPhone: true,
+    isUpper: false,
+    keyboardType: TextInputType.phone,
+    label: label,
+    nextFocus: nextFocus,
+  );
+
   Widget _field({
     required TextEditingController controller,
+    required FocusNode focusNode,
     required String label,
-    bool autofocus = false,
     bool isPhone = false,
     bool isUpper = true,
     int? maxLength,
+    FocusNode? nextFocus,
     TextInputType? keyboardType,
   }) {
     return AppTextField(
       controller: controller,
-      focusNode: autofocus ? _stepFocus : null,
+      focusNode: focusNode,
       inputFormatters: isPhone
           ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
           : isUpper
@@ -259,7 +339,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       label: label,
       maxLength: maxLength,
       onChanged: (String _) => setState(() {}),
+      onSubmitted: (String _) => nextFocus == null ? _submitStep() : nextFocus.requestFocus(),
       textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
+      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
     );
   }
 
@@ -271,14 +353,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   @override
   void dispose() {
-    _stepFocus.dispose();
+    _buildingFocus.dispose();
+    _cityFocus.dispose();
+    _deviceIdFocus.dispose();
+    _emailFocus.dispose();
+    _nameFocus.dispose();
+    _noFocus.dispose();
+    _phone1Focus.dispose();
+    _phone2Focus.dispose();
+    _phone3Focus.dispose();
+    _prefixFocus.dispose();
+    _streetFocus.dispose();
     _buildingController.dispose();
     _cityController.dispose();
     _deviceIdController.dispose();
     _emailController.dispose();
     _nameController.dispose();
     _noController.dispose();
-    _phoneController.dispose();
+    _phone1Controller.dispose();
+    _phone2Controller.dispose();
+    _phone3Controller.dispose();
     _pinController.dispose();
     _prefixController.dispose();
     _streetController.dispose();

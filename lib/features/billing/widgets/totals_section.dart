@@ -62,7 +62,7 @@ class TotalsSection extends StatelessWidget {
             onLongPress: () {
               Clipboard.setData(ClipboardData(text: totalCents.asAmount));
               HapticFeedback.mediumImpact();
-              context.showBriefSnack('Total copied');
+              context.showBriefSnack('Total copied to the clipboard, ready to paste into a message.');
             },
             child: _line('TOTAL', totalCents, isBold: true),
           ),

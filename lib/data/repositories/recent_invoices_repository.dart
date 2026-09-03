@@ -8,7 +8,8 @@ class RecentInvoicesRepository {
 
   RecentInvoicesRepository(this._source);
 
-  Future<List<Invoice>> load() async {
+  Future<List<Invoice>> load({required int retentionDays}) async {
+    await _source.purgeOlderThan(DateTime.now().subtract(Duration(days: retentionDays)).millisecondsSinceEpoch);
     final List<Map<String, Object?>> rows = await _source.readAll();
     return rows.map((Map<String, Object?> row) => Invoice.fromJson(jsonDecode(row[SqfliteSource.columnPayload]! as String) as Map<String, dynamic>)).toList();
   }

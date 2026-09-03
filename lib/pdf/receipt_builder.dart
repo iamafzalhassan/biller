@@ -82,7 +82,7 @@ abstract final class ReceiptBuilder {
     return (hasLogo ? logoBlockHeight : 0) +
         businessNameHeight +
         addressLines * addressLineHeight +
-        (profile.phone.isEmpty ? 0 : addressLineHeight) +
+        (profile.phoneLine.isEmpty ? 0 : addressLineHeight) +
         headerRuleBandHeight +
         metaBlockHeight;
   }

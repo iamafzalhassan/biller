@@ -5,6 +5,7 @@ import '../pdf_theme.dart';
 
 pw.Widget buildHeader(BusinessProfile profile, pw.MemoryImage? logo) {
   final String address = profile.addressLine;
+  final String phones = profile.phoneLine;
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: <pw.Widget>[
@@ -24,7 +25,7 @@ pw.Widget buildHeader(BusinessProfile profile, pw.MemoryImage? logo) {
                 pw.Text(profile.name, maxLines: 1, style: PdfTheme.businessName),
                 if (address.isNotEmpty) pw.SizedBox(height: PdfTheme.gapXs),
                 if (address.isNotEmpty) pw.Text(address, maxLines: 2, style: PdfTheme.meta),
-                if (profile.phone.isNotEmpty) pw.Text(profile.phone, maxLines: 1, style: PdfTheme.meta),
+                if (phones.isNotEmpty) pw.Text(phones, maxLines: 1, style: PdfTheme.meta),
               ],
             ),
           ),
