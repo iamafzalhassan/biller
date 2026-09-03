@@ -3,15 +3,17 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
 import '../../../core/formatters/thousands_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/sheet_frame.dart';
 
 class AdvanceSheet extends StatefulWidget {
-  const AdvanceSheet({super.key, required this.advanceCents, required this.onRemove, required this.onSave});
+  const AdvanceSheet({super.key, required this.advanceCents, required this.totalCents, required this.onRemove, required this.onSave});
 
   final int advanceCents;
+  final int totalCents;
 
   final ValueChanged<int> onSave;
 
@@ -26,9 +28,14 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
 
   final TextEditingController _controller = TextEditingController();
 
+  bool get _isValid => _cents > 0 && _cents <= widget.totalCents;
+
+  bool get _isOverTotal => _cents > widget.totalCents;
+
   int get _cents => _controller.text.asCentsOrNull ?? 0;
 
   void _save() {
+    if (!_isValid) return;
     widget.onSave(_cents);
     Navigator.of(context).pop();
   }
@@ -69,14 +76,15 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
           label: 'Advance',
           onChanged: (String _) => setState(() {}),
           onSubmitted: (String _) => _save(),
-          prefixText: 'Rs. ',
           selectAllOnFocus: true,
           textAlign: TextAlign.right,
           textInputAction: TextInputAction.done,
         ),
+        if (_isOverTotal) const SizedBox(height: AppSpacing.sm),
+        if (_isOverTotal) Text('Advance cannot exceed the total of ${widget.totalCents.asLkr}', style: AppTextStyles.errorHint),
         const SizedBox(height: AppSpacing.lg),
         SheetActions(
-          primary: FilledButton(onPressed: _cents > 0 ? _save : null, child: const Text('Save', maxLines: 1)),
+          primary: FilledButton(onPressed: _isValid ? _save : null, child: const Text('Save', maxLines: 1)),
           secondary: widget.advanceCents > 0
               ? OutlinedButton(
                   onPressed: _remove,

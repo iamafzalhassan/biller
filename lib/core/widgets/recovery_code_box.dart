@@ -33,7 +33,7 @@ class RecoveryCodeBox extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
           icon: const Icon(Icons.copy_outlined, size: 18),
-          label: const Text('Copy code', maxLines: 1),
+          label: const Text('Copy Code', maxLines: 1),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: code));
             HapticFeedback.mediumImpact();

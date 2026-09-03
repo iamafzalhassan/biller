@@ -9,7 +9,6 @@ abstract final class AppColors {
 
   static const Color primary = Color(0xFF2E3A72);
   static const Color primaryOn = Color(0xFFFFFFFF);
-  static const Color primarySubtle = Color(0xFFE6E8F2);
 
   static const Color danger = Color(0xFFC0392B);
   static const Color success = Color(0xFF1B6B4F);

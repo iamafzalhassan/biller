@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/router.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/utils/mock_seed.dart';
 import '../../../core/utils/validators.dart';
@@ -170,7 +171,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step2() => _stepFrame(
     hint: 'Printed on the receipt header',
-    children: <Widget>[_field(controller: _phoneController, autofocus: true, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone')],
+    children: <Widget>[_field(controller: _phoneController, autofocus: true, isPhone: true, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone')],
   );
 
   Widget _step3() => _stepFrame(
@@ -243,6 +244,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     required TextEditingController controller,
     required String label,
     bool autofocus = false,
+    bool isPhone = false,
     bool isUpper = true,
     int? maxLength,
     TextInputType? keyboardType,
@@ -250,7 +252,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return AppTextField(
       controller: controller,
       focusNode: autofocus ? _stepFocus : null,
-      inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
+      inputFormatters: isPhone
+          ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
+          : isUpper
+          ? const <TextInputFormatter>[UpperCaseFormatter()]
+          : null,
       keyboardType: keyboardType,
       label: label,
       maxLength: maxLength,

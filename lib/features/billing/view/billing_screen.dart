@@ -76,8 +76,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   Future<void> _openAdvanceSheet(int advanceCents) async {
     await showModalBottomSheet<void>(
       context: context,
-      builder: (BuildContext sheetContext) =>
-          AdvanceSheet(advanceCents: advanceCents, onRemove: () => _controller.setAdvance(0), onSave: _controller.setAdvance),
+      builder: (BuildContext sheetContext) => AdvanceSheet(
+        advanceCents: advanceCents,
+        totalCents: ref.read(billingControllerProvider).invoice.totalCents,
+        onRemove: () => _controller.setAdvance(0),
+        onSave: _controller.setAdvance,
+      ),
       isScrollControlled: true,
       showDragHandle: true,
     );
@@ -109,7 +113,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   PreferredSizeWidget _appBar(BillingState state) {
     return AppBar(
       actions: <Widget>[
-        if (state.invoice.isRevised) IconButton(icon: const Icon(Icons.close), onPressed: _controller.startNewBill, tooltip: 'Discard revision'),
+        if (state.invoice.isRevised) IconButton(icon: const Icon(Icons.close), onPressed: _controller.startNewBill, tooltip: 'Discard Revision'),
         if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.loadMockBill, tooltip: 'Load mock bill'),
         IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => Navigator.of(context).pushNamed(Routes.recent), tooltip: 'Recent invoices'),
         IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => Navigator.of(context).pushNamed(Routes.settings), tooltip: 'Settings'),
@@ -182,7 +186,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   Widget _addItemButton() {
     return OutlinedButton.icon(
       icon: const Icon(Icons.add, size: 18),
-      label: const Text('Add item', maxLines: 1),
+      label: const Text('Add Item', maxLines: 1),
       onPressed: () => unawaited(_openSheet()),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,

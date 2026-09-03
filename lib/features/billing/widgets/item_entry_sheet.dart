@@ -36,7 +36,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
 
   bool get _isEditing => widget.item != null;
 
-  bool get _isValid => _descriptionController.text.trim().isNotEmpty && _qty > 0;
+  bool get _isValid => _descriptionController.text.trim().isNotEmpty && _qty > 0 && _unitPriceCents > 0;
 
   int get _amountCents => (_qty * _unitPriceCents).round();
 

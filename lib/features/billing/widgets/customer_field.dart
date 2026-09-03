@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
 
@@ -48,6 +49,7 @@ class CustomerField extends StatelessWidget {
         AppTextField(
           controller: phoneController,
           focusNode: phoneFocus,
+          inputFormatters: const <TextInputFormatter>[SriLankaPhoneFormatter()],
           keyboardType: TextInputType.phone,
           label: 'Phone',
           onChanged: onPhoneChanged,

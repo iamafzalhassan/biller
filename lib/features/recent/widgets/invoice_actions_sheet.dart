@@ -52,7 +52,7 @@ class InvoiceActionsSheet extends StatelessWidget {
           ),
           _action(Icons.print_outlined, 'Reprint', onReprint),
           _action(Icons.edit_outlined, 'Edit & Reprint', onEditAndReprint),
-          _action(Icons.folder_outlined, 'Save a copy', onSaveCopy),
+          _action(Icons.folder_outlined, 'Save a Copy', onSaveCopy),
           const SizedBox(height: AppSpacing.md),
         ],
       ),

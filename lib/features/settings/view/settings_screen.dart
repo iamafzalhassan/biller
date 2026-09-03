@@ -15,6 +15,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
+import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/section_header.dart';
@@ -116,10 +117,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Navigator.of(context).pop();
   }
 
-  Widget _field({required TextEditingController controller, required String label, bool isUpper = true, int? maxLength, TextInputType? keyboardType}) {
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    bool isPhone = false,
+    bool isUpper = true,
+    int? maxLength,
+    TextInputType? keyboardType,
+  }) {
     return AppTextField(
       controller: controller,
-      inputFormatters: isUpper ? const <TextInputFormatter>[UpperCaseFormatter()] : null,
+      inputFormatters: isPhone
+          ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
+          : isUpper
+          ? const <TextInputFormatter>[UpperCaseFormatter()]
+          : null,
       keyboardType: keyboardType,
       label: label,
       maxLength: maxLength,
@@ -283,7 +295,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _sectionHeading('BUSINESS'),
         _field(controller: _nameController, label: 'Business name'),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _phoneController, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone'),
+        _field(controller: _phoneController, isPhone: true, isUpper: false, keyboardType: TextInputType.phone, label: 'Phone'),
         const SizedBox(height: AppSpacing.md),
         _field(controller: _emailController, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Owner email'),
         const SizedBox(height: AppSpacing.xl),

@@ -5,16 +5,6 @@ import 'app_colors.dart';
 abstract final class AppTextStyles {
   static const String fontFamily = 'Inter';
 
-  static const TextStyle heroAmount = TextStyle(
-    color: AppColors.textPrimary,
-    fontFamily: fontFamily,
-    fontSize: 30,
-    fontWeight: FontWeight.w700,
-    height: 1.1,
-    letterSpacing: -0.5,
-    fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
-  );
-
   static const TextStyle screenTitle = TextStyle(color: AppColors.textPrimary, fontFamily: fontFamily, fontSize: 20, fontWeight: FontWeight.w700, height: 1.2);
 
   static const TextStyle sectionHeading = TextStyle(
@@ -96,6 +86,8 @@ abstract final class AppTextStyles {
     height: 1.2,
     letterSpacing: 3,
   );
+
+  static const TextStyle errorHint = TextStyle(color: AppColors.danger, fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w500, height: 1.3);
 
   static const TextStyle snack = TextStyle(color: AppColors.primaryOn, fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w500, height: 1.3);
 

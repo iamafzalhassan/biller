@@ -60,7 +60,7 @@ class _PinGateState extends State<PinGate> {
             ),
           ),
           const Spacer(),
-          OutlinedButton(onPressed: widget.onRecover, child: const Text('Use recovery code', maxLines: 1)),
+          OutlinedButton(onPressed: widget.onRecover, child: const Text('Use Recovery Code', maxLines: 1)),
         ],
       ),
     );

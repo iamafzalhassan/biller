@@ -17,6 +17,10 @@ import 'sections/totals.dart';
 abstract final class ReceiptBuilder {
   static const double marginPt = 24;
 
+  static String _logoStamp = '';
+
+  static pw.MemoryImage? _logoCache;
+
   static Future<Uint8List> build({required BusinessProfile profile, required Invoice invoice}) async =>
       (await buildDocument(profile: profile, invoice: invoice)).save();
 
@@ -42,6 +46,10 @@ abstract final class ReceiptBuilder {
     if (!profile.hasLogo) return null;
     final File file = File(profile.logoPath);
     if (!file.existsSync()) return null;
-    return pw.MemoryImage(await file.readAsBytes());
+    final String stamp = '${profile.logoPath}|${file.lastModifiedSync().millisecondsSinceEpoch}';
+    if (stamp == _logoStamp) return _logoCache;
+    _logoCache = pw.MemoryImage(await file.readAsBytes());
+    _logoStamp = stamp;
+    return _logoCache;
   }
 }

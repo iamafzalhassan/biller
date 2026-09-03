@@ -51,7 +51,7 @@ class _RecoverySheetState extends State<RecoverySheet> {
   @override
   Widget build(BuildContext context) {
     return SheetFrame(
-      title: 'Use recovery code',
+      title: 'Use Recovery Code',
       children: <Widget>[
         const Text('The code shown once during setup. Entering it sets a new PIN.', style: AppTextStyles.listSecondary),
         const SizedBox(height: AppSpacing.lg),

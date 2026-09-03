@@ -36,13 +36,13 @@ class Invoice {
     createdAt: DateTime.parse(json['createdAt'] as String),
   );
 
-  int get totalCents => printableItems.fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
+  int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
 
   int get balanceCents => totalCents - advanceCents;
 
   bool get showsAdvance => advanceCents > 0;
 
-  bool get isPrintable => printableItems.isNotEmpty;
+  bool get isPrintable => items.any((InvoiceItem i) => i.isPrintable);
 
   List<InvoiceItem> get printableItems => items.where((InvoiceItem i) => i.isPrintable).toList();
 
