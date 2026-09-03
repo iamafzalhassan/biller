@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -9,6 +10,7 @@ import '../../../core/widgets/app_text_field.dart';
 class CustomerField extends StatelessWidget {
   const CustomerField({
     super.key,
+    required this.hasPhoneError,
     required this.nameController,
     required this.nameFocus,
     required this.onNameChanged,
@@ -17,6 +19,8 @@ class CustomerField extends StatelessWidget {
     required this.phoneController,
     required this.phoneFocus,
   });
+
+  final bool hasPhoneError;
 
   final FocusNode nameFocus;
   final FocusNode phoneFocus;
@@ -55,6 +59,8 @@ class CustomerField extends StatelessWidget {
           onChanged: onPhoneChanged,
           textInputAction: TextInputAction.done,
         ),
+        if (hasPhoneError) const SizedBox(height: AppSpacing.xs),
+        if (hasPhoneError) const Text('Phone must be 10 digits starting with 0', maxLines: 1, style: AppTextStyles.errorHint),
       ],
     );
   }
