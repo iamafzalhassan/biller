@@ -43,11 +43,18 @@ class SheetActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Expanded(child: secondary),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(child: primary),
+        const DottedDivider(),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: <Widget>[
+            Expanded(child: secondary),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: primary),
+          ],
+        ),
       ],
     );
   }

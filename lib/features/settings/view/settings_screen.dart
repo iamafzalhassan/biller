@@ -127,6 +127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       leading: const Icon(Icons.lock_outline, size: 20),
       title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
+        const SizedBox(height: AppSpacing.lg),
         _pinField(_currentPinController, 'Current PIN'),
         const SizedBox(height: AppSpacing.md),
         _pinField(_newPinController, 'New PIN'),
@@ -141,6 +142,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       leading: const Icon(Icons.restart_alt, size: 20),
       title: const Text('Reset and run setup again', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
+        const SizedBox(height: AppSpacing.lg),
         const Text('Clears the business profile, PIN, invoice sequence and saved draft, then reopens the setup wizard.', style: AppTextStyles.listSecondary),
         const SizedBox(height: AppSpacing.lg),
         OutlinedButton(

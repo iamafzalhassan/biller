@@ -32,26 +32,20 @@ class RecentInvoiceTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
             ),
             padding: const EdgeInsets.all(AppSpacing.cardPadding),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(invoice.customerName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listPrimary),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${invoice.invoiceNumber}  ·  ${_timeFormat.format(invoice.createdAt)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.listSecondary,
-                      ),
-                    ],
-                  ),
+                Text(invoice.customerName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listPrimary),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '${invoice.invoiceNumber}  ·  ${_timeFormat.format(invoice.createdAt)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.listSecondary,
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Text(invoice.totalCents.asLkr, maxLines: 1, style: AppTextStyles.amount),
+                const SizedBox(height: AppSpacing.sm),
+                Text(invoice.totalCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
               ],
             ),
           ),

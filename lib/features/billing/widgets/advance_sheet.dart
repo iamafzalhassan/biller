@@ -45,8 +45,7 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
       if (!mounted) return;
       _focusNode.requestFocus();
-      final int decimal = _controller.text.indexOf('.');
-      _controller.selection = TextSelection.collapsed(offset: decimal < 0 ? _controller.text.length : decimal);
+      _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
     });
   }
 
@@ -71,6 +70,7 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
           onChanged: (String _) => setState(() {}),
           onSubmitted: (String _) => _save(),
           prefixText: 'Rs. ',
+          selectAllOnFocus: true,
           textAlign: TextAlign.right,
           textInputAction: TextInputAction.done,
         ),

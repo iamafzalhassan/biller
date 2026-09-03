@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
+import '../../../core/widgets/dotted_divider.dart';
 import '../../../models/invoice.dart';
 
 class InvoiceActionsSheet extends StatelessWidget {
@@ -45,7 +46,10 @@ class InvoiceActionsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: AppColors.divider),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            child: DottedDivider(),
+          ),
           _action(Icons.print_outlined, 'Reprint', onReprint),
           _action(Icons.edit_outlined, 'Edit & Reprint', onEditAndReprint),
           _action(Icons.folder_outlined, 'Save a copy', onSaveCopy),
