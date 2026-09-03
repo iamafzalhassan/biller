@@ -42,7 +42,7 @@ class RecentScreen extends ConsumerWidget {
   Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
     final String path = await ref.read(recentControllerProvider.notifier).saveCopy(invoice);
     if (!context.mounted) return;
-    context.showBriefSnack('Saved to $path');
+    context.showSuccessSnack('Saved to $path');
   }
 
   Future<void> _reprint(WidgetRef ref, Invoice invoice) async {

@@ -12,6 +12,7 @@ class BusinessProfile {
     addressStreet: '',
     deviceId: 'A',
     invoicePrefix: 'INV',
+    logoPath: '',
     name: '',
     ownerEmail: '',
     phone: '',
@@ -24,6 +25,7 @@ class BusinessProfile {
   final String addressStreet;
   final String deviceId;
   final String invoicePrefix;
+  final String logoPath;
   final String name;
   final String ownerEmail;
   final String phone;
@@ -37,6 +39,7 @@ class BusinessProfile {
     required this.addressStreet,
     required this.deviceId,
     required this.invoicePrefix,
+    required this.logoPath,
     required this.name,
     required this.ownerEmail,
     required this.phone,
@@ -50,11 +53,14 @@ class BusinessProfile {
     addressStreet: json['addressStreet'] as String? ?? '',
     deviceId: json['deviceId'] as String? ?? 'A',
     invoicePrefix: json['invoicePrefix'] as String? ?? 'INV',
+    logoPath: json['logoPath'] as String? ?? '',
     name: json['name'] as String? ?? '',
     ownerEmail: json['ownerEmail'] as String? ?? '',
     phone: json['phone'] as String? ?? '',
     terms: (json['terms'] as List<dynamic>?)?.map((dynamic e) => e as String).toList() ?? defaultTerms,
   );
+
+  bool get hasLogo => logoPath.trim().isNotEmpty;
 
   bool get isComplete => name.trim().isNotEmpty && ownerEmail.trim().isNotEmpty;
 
@@ -70,6 +76,7 @@ class BusinessProfile {
     String? addressStreet,
     String? deviceId,
     String? invoicePrefix,
+    String? logoPath,
     String? name,
     String? ownerEmail,
     String? phone,
@@ -81,6 +88,7 @@ class BusinessProfile {
     addressStreet: addressStreet ?? this.addressStreet,
     deviceId: deviceId ?? this.deviceId,
     invoicePrefix: invoicePrefix ?? this.invoicePrefix,
+    logoPath: logoPath ?? this.logoPath,
     name: name ?? this.name,
     ownerEmail: ownerEmail ?? this.ownerEmail,
     phone: phone ?? this.phone,
@@ -94,6 +102,7 @@ class BusinessProfile {
     'addressStreet': addressStreet,
     'deviceId': deviceId,
     'invoicePrefix': invoicePrefix,
+    'logoPath': logoPath,
     'name': name,
     'ownerEmail': ownerEmail,
     'phone': phone,

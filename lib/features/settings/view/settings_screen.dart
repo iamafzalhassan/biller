@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/router.dart';
@@ -38,6 +42,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEditingTerms = false;
   bool _isUnlocked = false;
 
+  String _appVersion = '';
+  String _logoPath = '';
+
   List<String> _terms = BusinessProfile.defaultTerms;
 
   final TextEditingController _currentPinController = TextEditingController();
@@ -61,7 +68,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _applyRecovery(String code, String newPin) async {
     final bool isReset = await ref.read(authRepositoryProvider).resetPinWithRecoveryCode(code: code, newPin: newPin);
     if (!mounted) return;
-    context.showBriefSnack(isReset ? 'PIN reset' : 'That recovery code did not match');
+    if (isReset) {
+      context.showSuccessSnack('PIN reset');
+    } else {
+      context.showErrorSnack('That recovery code did not match');
+    }
     if (isReset) setState(() => _isUnlocked = true);
   }
 
@@ -69,12 +80,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final String current = _currentPinController.text;
     final String next = _newPinController.text;
     if (current.length != 4 || next.length != 4) {
-      context.showBriefSnack('Both PINs must be 4 digits');
+      context.showErrorSnack('Both PINs must be 4 digits');
       return;
     }
     final bool isChanged = await ref.read(authRepositoryProvider).changePin(currentPin: current, newPin: next);
     if (!mounted) return;
-    context.showBriefSnack(isChanged ? 'PIN changed' : 'Current PIN was incorrect');
+    if (isChanged) {
+      context.showSuccessSnack('PIN changed');
+    } else {
+      context.showErrorSnack('Current PIN was incorrect');
+    }
     if (!isChanged) return;
     _currentPinController.clear();
     _newPinController.clear();
@@ -89,6 +104,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       addressStreet: _streetController.text.trim(),
       deviceId: existing.deviceId,
       invoicePrefix: existing.invoicePrefix,
+      logoPath: _logoPath,
       name: _nameController.text.trim(),
       ownerEmail: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
@@ -96,7 +112,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     await ref.read(settingsControllerProvider.notifier).save(profile);
     if (!mounted) return;
-    context.showBriefSnack('Settings saved');
+    context.showSuccessSnack('Settings saved');
     Navigator.of(context).pop();
   }
 
@@ -151,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             foregroundColor: AppColors.danger,
             side: const BorderSide(color: AppColors.danger),
           ),
-          child: const Text('Reset everything', maxLines: 1),
+          child: const Text('Reset Everything', maxLines: 1),
         ),
       ],
     );
@@ -168,6 +184,80 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Future<void> _pickLogo() async {
+    final XFile? picked = await ImagePicker().pickImage(imageQuality: 90, maxWidth: 600, source: ImageSource.gallery);
+    if (picked == null || !mounted) return;
+    final Directory base = await getApplicationDocumentsDirectory();
+    final File saved = await File(picked.path).copy('${base.path}${Platform.pathSeparator}logo.png');
+    if (!mounted) return;
+    setState(() => _logoPath = saved.path);
+    context.showSuccessSnack('Logo selected. Save to apply.');
+  }
+
+  void _removeLogo() => setState(() => _logoPath = '');
+
+  Future<void> _loadVersion() async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = 'Biller ${info.version} (${info.buildNumber})');
+  }
+
+  Widget _logoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _sectionHeading('RECEIPT LOGO'),
+        Row(
+          children: <Widget>[
+            Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusCard), color: AppColors.surfaceField),
+              height: AppSpacing.logoPreview,
+              width: AppSpacing.logoPreview,
+              child: _logoPath.isEmpty
+                  ? const Icon(Icons.image_outlined, color: AppColors.textTertiary, size: 24)
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+                      child: Image.file(File(_logoPath), fit: BoxFit.cover),
+                    ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                _logoPath.isEmpty ? 'No logo. It prints above the business name.' : 'Prints above the business name on every receipt.',
+                style: AppTextStyles.listSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.upload_outlined, size: 18),
+                label: Text(_logoPath.isEmpty ? 'Upload Logo' : 'Replace Logo', maxLines: 1),
+                onPressed: () => unawaited(_pickLogo()),
+              ),
+            ),
+            if (_logoPath.isNotEmpty) const SizedBox(width: AppSpacing.md),
+            if (_logoPath.isNotEmpty)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _removeLogo,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(color: AppColors.danger),
+                  ),
+                  child: const Text('Remove', maxLines: 1),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _termsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,7 +267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
           icon: Icon(_isEditingTerms ? Icons.check : Icons.edit_outlined, size: 18),
-          label: Text(_isEditingTerms ? 'Done editing' : 'Edit conditions', maxLines: 1),
+          label: Text(_isEditingTerms ? 'Done' : 'Edit Conditions', maxLines: 1),
           onPressed: () => setState(() => _isEditingTerms = !_isEditingTerms),
         ),
       ],
@@ -188,6 +278,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.xl),
       children: <Widget>[
+        _logoSection(),
+        const SizedBox(height: AppSpacing.xl),
         _sectionHeading('BUSINESS'),
         _field(controller: _nameController, label: 'Business name'),
         const SizedBox(height: AppSpacing.md),
@@ -212,6 +304,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (kDebugMode) _resetTile(),
         const SizedBox(height: AppSpacing.xl),
         FilledButton(onPressed: () => unawaited(_save()), child: const Text('Save', maxLines: 1)),
+        const SizedBox(height: AppSpacing.xl),
+        Text(_appVersion, style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
       ],
     );
   }
@@ -227,7 +321,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _noController.text = profile.addressNo;
     _phoneController.text = profile.phone;
     _streetController.text = profile.addressStreet;
+    _logoPath = profile.logoPath;
     _terms = profile.terms;
+    unawaited(_loadVersion());
   }
 
   @override

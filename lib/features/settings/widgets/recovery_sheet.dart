@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -79,7 +80,14 @@ class _RecoverySheetState extends State<RecoverySheet> {
         const SizedBox(height: AppSpacing.lg),
         SheetActions(
           primary: FilledButton(onPressed: _isValid ? _submit : null, child: const Text('Reset PIN', maxLines: 1)),
-          secondary: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel', maxLines: 1)),
+          secondary: OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.danger,
+              side: const BorderSide(color: AppColors.danger),
+            ),
+            child: const Text('Cancel', maxLines: 1),
+          ),
         ),
       ],
     );

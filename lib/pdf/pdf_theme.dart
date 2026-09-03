@@ -10,6 +10,7 @@ abstract final class PdfTheme {
   static const double metaSize = 8.5;
   static const double totalSize = 12;
 
+  static const PdfColor fill = PdfColor.fromInt(0xFFF2F2F2);
   static const PdfColor hairline = PdfColor.fromInt(0xFFBFBFBF);
   static const PdfColor ink = PdfColor.fromInt(0xFF111111);
   static const PdfColor inkMuted = PdfColor.fromInt(0xFF666666);

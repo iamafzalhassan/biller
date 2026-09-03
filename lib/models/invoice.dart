@@ -42,7 +42,7 @@ class Invoice {
 
   bool get showsAdvance => advanceCents > 0;
 
-  bool get isPrintable => customerName.trim().isNotEmpty && printableItems.isNotEmpty;
+  bool get isPrintable => printableItems.isNotEmpty;
 
   List<InvoiceItem> get printableItems => items.where((InvoiceItem i) => i.isPrintable).toList();
 

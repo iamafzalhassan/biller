@@ -70,10 +70,11 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(style: _outlinedButtonStyle),
       snackBarTheme: const SnackBarThemeData(
+        actionTextColor: AppColors.primaryOn,
         backgroundColor: AppColors.surfaceInverse,
-        behavior: SnackBarBehavior.floating,
-        contentTextStyle: TextStyle(color: AppColors.primaryOn, fontFamily: AppTextStyles.fontFamily, fontSize: 14, height: 1.3),
-        insetPadding: EdgeInsets.all(AppSpacing.screenPadding),
+        behavior: SnackBarBehavior.fixed,
+        contentTextStyle: AppTextStyles.snack,
+        shape: RoundedRectangleBorder(),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(

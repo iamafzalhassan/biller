@@ -109,6 +109,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   PreferredSizeWidget _appBar(BillingState state) {
     return AppBar(
       actions: <Widget>[
+        if (state.invoice.isRevised) IconButton(icon: const Icon(Icons.close), onPressed: _controller.startNewBill, tooltip: 'Discard revision'),
         if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.loadMockBill, tooltip: 'Load mock bill'),
         IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => Navigator.of(context).pushNamed(Routes.recent), tooltip: 'Recent invoices'),
         IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => Navigator.of(context).pushNamed(Routes.settings), tooltip: 'Settings'),
@@ -190,19 +191,6 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _emptyItems() {
-    return Container(
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.divider),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-        color: AppColors.surfaceCard,
-      ),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-      child: const Text('No items yet', maxLines: 1, style: AppTextStyles.listSecondary),
-    );
-  }
-
   Widget _totalsSection(BillingState state) {
     return TotalsSection(
       advanceCents: state.invoice.advanceCents,
@@ -215,7 +203,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Widget _printButton(BillingState state, {required String label, required Future<void> Function() onPrint}) {
     return GestureDetector(
-      onTap: state.canPrint ? null : () => context.showBriefSnack(state.blockingReason),
+      onTap: state.canPrint ? null : () => context.showErrorSnack(state.blockingReason),
       child: FilledButton(
         onPressed: state.canPrint ? () => unawaited(onPrint()) : null,
         child: state.isPrinting
@@ -264,7 +252,6 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
             addItemButton: _addItemButton(),
             customerField: _customerField(),
             draftBanner: _draftBanner(state),
-            emptyState: items.isEmpty ? _emptyItems() : null,
             itemRows: _itemRows(items),
             printButton: _printButton(state, label: 'Preview & Print', onPrint: _openPreview),
             scrollController: _scrollController,
@@ -274,7 +261,6 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
             addItemButton: _addItemButton(),
             customerField: _customerField(),
             draftBanner: _draftBanner(state),
-            emptyState: items.isEmpty ? _emptyItems() : null,
             itemRows: _itemRows(items),
             previewPane: const LivePreviewPane(),
             printButton: _printButton(state, label: 'Print', onPrint: _printDirect),

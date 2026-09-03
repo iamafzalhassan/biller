@@ -10,6 +10,7 @@ abstract final class MockSeed {
     addressStreet: 'PRINCE STREET',
     deviceId: 'A',
     invoicePrefix: 'INV',
+    logoPath: '',
     name: 'KYTE INTERNATIONAL',
     ownerEmail: 'owner@kyteinternational.lk',
     phone: '077 666 4616',

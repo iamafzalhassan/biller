@@ -20,11 +20,7 @@ class BillingState {
 
   bool get canPrint => invoice.isPrintable && !isPrinting;
 
-  String get blockingReason {
-    if (invoice.customerName.trim().isEmpty) return 'Enter the customer name first';
-    if (invoice.printableItems.isEmpty) return 'Add at least one item with a quantity';
-    return '';
-  }
+  String get blockingReason => invoice.printableItems.isEmpty ? 'Add at least one item before printing' : '';
 
   BillingState copyWith({bool? isPrinting, bool? isRestorable, int? formRevision, String? pendingInvoiceNumber, Invoice? invoice}) => BillingState(
     isPrinting: isPrinting ?? this.isPrinting,

@@ -8,16 +8,18 @@ pw.Widget buildTotals(Invoice invoice) {
   final bool showsAdvance = invoice.showsAdvance;
   return pw.Container(
     alignment: pw.Alignment.centerRight,
-    margin: const pw.EdgeInsets.only(top: 12),
-    child: pw.SizedBox(
-      width: 210,
+    margin: const pw.EdgeInsets.only(top: 10),
+    child: pw.Container(
+      decoration: const pw.BoxDecoration(color: PdfTheme.fill),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      width: 220,
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: <pw.Widget>[
-          _rule(thick: !showsAdvance),
           _line('TOTAL', invoice.totalCents.asLkr, valueStyle: showsAdvance ? PdfTheme.bodyStrong : PdfTheme.total),
+          if (showsAdvance) _rule(),
           if (showsAdvance) _line('ADVANCE', invoice.advanceCents.asLkr, valueStyle: PdfTheme.bodyStrong),
-          if (showsAdvance) _rule(thick: true),
+          if (showsAdvance) _rule(),
           if (showsAdvance) _line('BALANCE', invoice.balanceCents.asLkr, valueStyle: PdfTheme.total),
         ],
       ),
@@ -29,14 +31,14 @@ pw.Widget _line(String label, String value, {required pw.TextStyle valueStyle}) 
   return pw.Padding(
     padding: const pw.EdgeInsets.symmetric(vertical: 3),
     child: pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.end,
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: <pw.Widget>[
-        pw.Text(label, style: PdfTheme.label),
-        pw.Text(value, style: valueStyle),
+        pw.Text(label, maxLines: 1, style: PdfTheme.label),
+        pw.Text(value, maxLines: 1, style: valueStyle),
       ],
     ),
   );
 }
 
-pw.Widget _rule({bool thick = false}) => pw.Divider(color: PdfTheme.hairline, height: 6, thickness: thick ? 1.1 : 0.5);
+pw.Widget _rule() => pw.Divider(color: PdfTheme.hairline, height: 5, thickness: 0.5);

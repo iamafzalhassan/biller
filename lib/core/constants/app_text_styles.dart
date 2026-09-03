@@ -88,5 +88,16 @@ abstract final class AppTextStyles {
 
   static const TextStyle label = TextStyle(color: AppColors.textSecondary, fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
 
+  static const TextStyle recoveryCode = TextStyle(
+    color: AppColors.textPrimary,
+    fontFamily: fontFamily,
+    fontSize: 26,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: 3,
+  );
+
+  static const TextStyle snack = TextStyle(color: AppColors.primaryOn, fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w500, height: 1.3);
+
   static const TextStyle button = TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0.2);
 }

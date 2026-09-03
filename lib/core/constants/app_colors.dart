@@ -12,6 +12,7 @@ abstract final class AppColors {
   static const Color primarySubtle = Color(0xFFE6E8F2);
 
   static const Color danger = Color(0xFFC0392B);
+  static const Color success = Color(0xFF1B6B4F);
   static const Color warning = Color(0xFFB8860B);
 
   static const Color divider = Color(0xFFE8E3D8);

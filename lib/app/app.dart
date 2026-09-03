@@ -15,6 +15,8 @@ class BillerApp extends ConsumerWidget {
     final bool isSetUp = ref.watch(settingsRepositoryProvider).isSetupComplete;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      builder: (BuildContext context, Widget? child) =>
+          GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child),
       home: isSetUp ? const BillingScreen() : const SetupScreen(),
       routes: Routes.map,
       theme: AppTheme.light,

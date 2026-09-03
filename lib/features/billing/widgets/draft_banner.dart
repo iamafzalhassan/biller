@@ -23,21 +23,24 @@ class DraftBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         color: AppColors.warning.withValues(alpha: 0.08),
       ),
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.sm),
-      child: Row(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Expanded(
-            child: Text('Unsaved bill from ${_timeFormat.format(savedAt)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          SizedBox(
-            height: AppSpacing.touchTarget,
-            child: TextButton(onPressed: onDiscard, child: const Text('Discard', maxLines: 1)),
-          ),
-          SizedBox(
-            height: AppSpacing.touchTarget,
-            child: TextButton(onPressed: onRestore, child: const Text('Restore', maxLines: 1)),
+          Text('Unsaved bill from ${_timeFormat.format(savedAt)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listPrimary),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton(onPressed: onDiscard, child: const Text('Discard', maxLines: 1)),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: FilledButton(onPressed: onRestore, child: const Text('Restore', maxLines: 1)),
+              ),
+            ],
           ),
         ],
       ),

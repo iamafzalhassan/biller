@@ -11,7 +11,6 @@ class BillingPhoneLayout extends StatelessWidget {
     required this.addItemButton,
     required this.customerField,
     required this.draftBanner,
-    required this.emptyState,
     required this.printButton,
     required this.totalsSection,
   });
@@ -23,7 +22,6 @@ class BillingPhoneLayout extends StatelessWidget {
   final Widget addItemButton;
   final Widget customerField;
   final Widget? draftBanner;
-  final Widget? emptyState;
   final Widget printButton;
   final Widget totalsSection;
 
@@ -43,9 +41,8 @@ class BillingPhoneLayout extends StatelessWidget {
         _inset(customerField),
         const SizedBox(height: AppSpacing.xl),
         _inset(const SectionHeader(label: 'DETAIL ITEMS')),
-        if (emptyState != null) _inset(emptyState!),
         ...itemRows,
-        const SizedBox(height: AppSpacing.lg),
+        if (itemRows.isNotEmpty) const SizedBox(height: AppSpacing.lg),
         _inset(addItemButton),
         const SizedBox(height: AppSpacing.xl),
         _inset(totalsSection),

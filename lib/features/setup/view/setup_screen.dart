@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/router.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
@@ -14,6 +13,7 @@ import '../../../core/utils/mock_seed.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/pin_boxes.dart';
+import '../../../core/widgets/recovery_code_box.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
 import '../controller/setup_controller.dart';
@@ -93,6 +93,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     addressStreet: _streetController.text.trim(),
     deviceId: _deviceIdController.text.trim().toUpperCase(),
     invoicePrefix: _prefixController.text.trim().toUpperCase(),
+    logoPath: '',
     name: _nameController.text.trim(),
     ownerEmail: _emailController.text.trim(),
     phone: _phoneController.text.trim(),
@@ -224,19 +225,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step7() => _stepFrame(
     hint: 'The only way to reset a forgotten PIN. It is shown once and cannot be recovered later',
-    children: <Widget>[
-      Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-          color: AppColors.primarySubtle,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
-        width: double.infinity,
-        child: Text(_recoveryCode, maxLines: 1, style: AppTextStyles.heroAmount, textAlign: TextAlign.center),
-      ),
-    ],
+    children: <Widget>[RecoveryCodeBox(code: _recoveryCode)],
   );
 
   Widget _stepFrame({required String hint, required List<Widget> children}) {
@@ -335,14 +324,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     : _canAdvance
                     ? () => unawaited(_next())
                     : null,
-                child: Text(
-                  isRecoveryStep
-                      ? 'I have written it down'
-                      : _step == lastFieldStep
-                      ? 'Finish setup'
-                      : 'Next',
-                  maxLines: 1,
-                ),
+                child: Text(isRecoveryStep ? 'Finish Setup' : 'Next', maxLines: 1),
               ),
             ],
           ),

@@ -26,12 +26,17 @@ class TotalsSection extends StatelessWidget {
 
   final VoidCallback onAdvanceTap;
 
-  Widget _line(String label, int cents, {required bool isBold, Widget? trailing}) {
+  Widget _line(String label, int cents, {required bool isBold, bool isEditable = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: <Widget>[
           Text(label, maxLines: 1, style: AppTextStyles.overline),
+          if (isEditable)
+            const Padding(
+              padding: EdgeInsets.only(left: AppSpacing.xs),
+              child: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 14),
+            ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: FittedBox(
@@ -40,7 +45,6 @@ class TotalsSection extends StatelessWidget {
               child: Text(cents.asLkr, maxLines: 1, style: isBold ? AppTextStyles.totalsValueBold : AppTextStyles.totalsValue),
             ),
           ),
-          ?trailing,
         ],
       ),
     );
@@ -63,19 +67,8 @@ class TotalsSection extends StatelessWidget {
             child: _line('TOTAL', totalCents, isBold: true),
           ),
           if (showsAdvance) const DottedDivider(),
-          if (showsAdvance)
-            InkWell(
-              onTap: onAdvanceTap,
-              child: _line(
-                'ADVANCE',
-                advanceCents,
-                isBold: false,
-                trailing: const Padding(
-                  padding: EdgeInsets.only(left: AppSpacing.sm),
-                  child: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 16),
-                ),
-              ),
-            ),
+          if (showsAdvance) InkWell(onTap: onAdvanceTap, child: _line('ADVANCE', advanceCents, isBold: false, isEditable: true)),
+          if (showsAdvance) const DottedDivider(),
           if (showsAdvance) _line('BALANCE', balanceCents, isBold: false),
           if (!showsAdvance) const SizedBox(height: AppSpacing.sm),
           if (!showsAdvance) OutlinedButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Add advance', maxLines: 1), onPressed: onAdvanceTap),

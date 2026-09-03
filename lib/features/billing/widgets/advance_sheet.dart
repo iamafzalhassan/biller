@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
-import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/formatters/thousands_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/sheet_frame.dart';
 
@@ -41,7 +41,7 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.advanceCents > 0) _controller.text = (widget.advanceCents / 100).toStringAsFixed(2);
+    if (widget.advanceCents > 0) _controller.text = widget.advanceCents.asAmount;
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
       if (!mounted) return;
       _focusNode.requestFocus();
@@ -59,12 +59,12 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
   @override
   Widget build(BuildContext context) {
     return SheetFrame(
-      title: widget.advanceCents > 0 ? 'Edit advance' : 'Add advance',
+      title: widget.advanceCents > 0 ? 'Edit Advance' : 'Add Advance',
       children: <Widget>[
         AppTextField(
           controller: _controller,
           focusNode: _focusNode,
-          inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
+          inputFormatters: const <TextInputFormatter>[ThousandsFormatter()],
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           label: 'Advance',
           onChanged: (String _) => setState(() {}),
@@ -86,7 +86,14 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
                   ),
                   child: const Text('Remove', maxLines: 1),
                 )
-              : OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel', maxLines: 1)),
+              : OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(color: AppColors.danger),
+                  ),
+                  child: const Text('Cancel', maxLines: 1),
+                ),
         ),
       ],
     );

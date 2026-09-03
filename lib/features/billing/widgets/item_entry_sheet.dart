@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
+import '../../../core/formatters/thousands_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/dotted_divider.dart';
@@ -41,7 +42,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
 
   int get _unitPriceCents => _priceController.text.asCentsOrNull ?? 0;
 
-  num get _qty => num.tryParse(_qtyController.text.trim()) ?? 0;
+  num get _qty => num.tryParse(_qtyController.text.replaceAll(',', '').trim()) ?? 0;
 
   void _save({required bool addAnother}) {
     if (!_isValid) return;
@@ -68,7 +69,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     return AppTextField(
       controller: controller,
       focusNode: focusNode,
-      inputFormatters: const <TextInputFormatter>[DecimalFormatter()],
+      inputFormatters: const <TextInputFormatter>[ThousandsFormatter()],
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       label: label,
       onChanged: (String _) => setState(() {}),
@@ -94,8 +95,15 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
       );
     }
     return SheetActions(
-      primary: FilledButton(onPressed: _isValid ? () => _save(addAnother: true) : null, child: const Text('Save & add next', maxLines: 1)),
-      secondary: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Done', maxLines: 1)),
+      primary: FilledButton(onPressed: _isValid ? () => _save(addAnother: true) : null, child: const Text('Save & Next', maxLines: 1)),
+      secondary: OutlinedButton(
+        onPressed: () => Navigator.of(context).pop(),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.danger,
+          side: const BorderSide(color: AppColors.danger),
+        ),
+        child: const Text('Cancel', maxLines: 1),
+      ),
     );
   }
 
@@ -105,7 +113,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     final InvoiceItem? item = widget.item;
     if (item != null) {
       _descriptionController.text = item.description;
-      _priceController.text = item.unitPriceCents == 0 ? '' : (item.unitPriceCents / 100).toStringAsFixed(2);
+      _priceController.text = item.unitPriceCents == 0 ? '' : item.unitPriceCents.asAmount;
       _qtyController.text = item.qty == 0 ? '' : item.qty.asQty;
     }
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
@@ -130,12 +138,12 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0, AppSpacing.screenPadding, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(_isEditing ? 'Edit item' : 'Add item', maxLines: 1, style: AppTextStyles.sectionHeading),
+              Text(_isEditing ? 'Edit Item' : 'Add Item', maxLines: 1, style: AppTextStyles.sectionHeading),
               const SizedBox(height: AppSpacing.sm),
               const DottedDivider(),
               const SizedBox(height: AppSpacing.lg),

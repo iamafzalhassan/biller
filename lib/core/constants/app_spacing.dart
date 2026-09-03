@@ -22,6 +22,7 @@ abstract final class AppSpacing {
   static const double iconButtonSize = 40;
   static const double rowHeight = 56;
   static const double touchTarget = 48;
+  static const double logoPreview = 72;
 
   static const double amountColumn = 132;
   static const double indexColumn = 28;

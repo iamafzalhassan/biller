@@ -38,12 +38,7 @@ class _PinBoxesState extends State<PinBoxes> {
 
   Widget _box(int index) {
     final int filled = widget.controller.text.length;
-    final bool isActive = index == filled && _focusNode.hasFocus;
-    final Color border = widget.hasError
-        ? AppColors.danger
-        : isActive
-        ? AppColors.primary
-        : Colors.transparent;
+    final Color border = widget.hasError ? AppColors.danger : Colors.transparent;
     return Container(
       alignment: Alignment.center,
       decoration: BoxDecoration(

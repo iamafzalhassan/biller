@@ -13,6 +13,7 @@ const BusinessProfile profile = BusinessProfile(
   addressStreet: 'SEA STREET',
   deviceId: 'A',
   invoicePrefix: 'INV',
+  logoPath: '',
   name: 'SILVA WHOLESALE',
   ownerEmail: 'owner@example.com',
   phone: '0112345678',

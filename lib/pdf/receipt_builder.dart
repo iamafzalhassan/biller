@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -20,12 +22,13 @@ abstract final class ReceiptBuilder {
 
   static Future<pw.Document> buildDocument({required BusinessProfile profile, required Invoice invoice}) async {
     await PdfTheme.ensureFontsLoaded();
+    final pw.MemoryImage? logo = await _loadLogo(profile);
     final pw.Document document = pw.Document(title: invoice.invoiceNumber);
     document.addPage(
       pw.MultiPage(
         footer: buildPageFooter,
         header: (pw.Context context) =>
-            pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: <pw.Widget>[buildHeader(profile), buildMetaRow(invoice)]),
+            pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: <pw.Widget>[buildHeader(profile, logo), buildMetaRow(invoice)]),
         margin: const pw.EdgeInsets.all(marginPt),
         pageFormat: PdfPageFormat.a5,
         theme: pw.ThemeData.withFont(base: PdfTheme.regular, bold: PdfTheme.bold),
@@ -33,5 +36,12 @@ abstract final class ReceiptBuilder {
       ),
     );
     return document;
+  }
+
+  static Future<pw.MemoryImage?> _loadLogo(BusinessProfile profile) async {
+    if (!profile.hasLogo) return null;
+    final File file = File(profile.logoPath);
+    if (!file.existsSync()) return null;
+    return pw.MemoryImage(await file.readAsBytes());
   }
 }
