@@ -114,7 +114,6 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     return AppBar(
       actions: <Widget>[
         if (state.invoice.isRevised) IconButton(icon: const Icon(Icons.close), onPressed: _controller.startNewBill, tooltip: 'Discard Revision'),
-        if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.loadMockBill, tooltip: 'Load mock bill'),
         IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => Navigator.of(context).pushNamed(Routes.recent), tooltip: 'Recent invoices'),
         IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => Navigator.of(context).pushNamed(Routes.settings), tooltip: 'Settings'),
         const SizedBox(width: AppSpacing.sm),

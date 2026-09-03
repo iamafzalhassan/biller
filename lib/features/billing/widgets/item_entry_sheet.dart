@@ -102,7 +102,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
           foregroundColor: AppColors.danger,
           side: const BorderSide(color: AppColors.danger),
         ),
-        child: const Text('Cancel', maxLines: 1),
+        child: const Text('Close', maxLines: 1),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,6 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
-import '../../../core/utils/mock_seed.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/pin_boxes.dart';
@@ -269,17 +267,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void initState() {
     super.initState();
     _focusStep();
-    if (!kDebugMode) return;
-    _buildingController.text = MockSeed.profile.addressBuilding;
-    _cityController.text = MockSeed.profile.addressCity;
-    _deviceIdController.text = MockSeed.profile.deviceId;
-    _emailController.text = MockSeed.profile.ownerEmail;
-    _nameController.text = MockSeed.profile.name;
-    _noController.text = MockSeed.profile.addressNo;
-    _phoneController.text = MockSeed.profile.phone;
-    _pinController.text = MockSeed.pin;
-    _prefixController.text = MockSeed.profile.invoicePrefix;
-    _streetController.text = MockSeed.profile.addressStreet;
   }
 
   @override

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/utils/mock_bill.dart';
 import '../../../models/business_profile.dart';
 import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
@@ -19,7 +18,6 @@ class BillingController extends Notifier<BillingState> {
   BillingState build() {
     final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
     final bool hasDraft = ref.read(draftRepositoryProvider).draft != null;
-    if (kDebugMode && !hasDraft) return _mockState(pending, 0);
     return BillingState(isPrinting: false, isRestorable: hasDraft, formRevision: 0, pendingInvoiceNumber: pending, invoice: _blankInvoice(pending));
   }
 
@@ -72,11 +70,6 @@ class BillingController extends Notifier<BillingState> {
     );
   }
 
-  void loadMockBill() {
-    state = _mockState(state.pendingInvoiceNumber, state.formRevision + 1);
-    ref.read(draftRepositoryProvider).saveDebounced(state.invoice);
-  }
-
   Future<Uint8List> buildPreviewPdf() => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: state.invoice);
 
   Future<Uint8List> commit() async {
@@ -112,11 +105,6 @@ class BillingController extends Notifier<BillingState> {
   void _update(Invoice invoice) {
     state = state.copyWith(invoice: invoice);
     ref.read(draftRepositoryProvider).saveDebounced(invoice);
-  }
-
-  BillingState _mockState(String pending, int formRevision) {
-    final Invoice mock = MockBill.build(pending);
-    return BillingState(isPrinting: false, isRestorable: false, formRevision: formRevision, pendingInvoiceNumber: pending, invoice: mock);
   }
 
   Invoice _blankInvoice(String invoiceNumber) =>

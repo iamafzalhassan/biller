@@ -68,17 +68,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
               AppSpacing.screenPadding,
               AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
             ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Done', maxLines: 1)),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: FilledButton(onPressed: _isPrinting ? null : () => unawaited(_print()), child: const Text('Print', maxLines: 1)),
-                ),
-              ],
-            ),
+            child: FilledButton(onPressed: _isPrinting ? null : () => unawaited(_print()), child: const Text('Print', maxLines: 1)),
           ),
         ],
       ),

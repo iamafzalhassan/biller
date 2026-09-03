@@ -3,6 +3,8 @@ class BusinessProfile {
     'Item may be repaired/replaced if returned within 60 days of purchase.',
     'A purchase invoice is required.',
     'No refunds will be issued. No liability for customer misuse.',
+    'Goods are checked and accepted by the customer at the time of handover.',
+    'Shortages or damage must be reported on the day of purchase.',
   ];
 
   static const BusinessProfile empty = BusinessProfile(

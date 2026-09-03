@@ -98,19 +98,12 @@ abstract final class ReceiptBuilder {
 
   static List<List<InvoiceItem>> paginate({required List<InvoiceItem> items, required int pageRows, required int lastPageRows}) {
     if (items.length <= lastPageRows) return <List<InvoiceItem>>[items];
-    int pageCount = 2;
-    while ((pageCount - 1) * pageRows + lastPageRows < items.length) {
-      pageCount++;
-    }
-    final int onLast = _atLeastOne(_min(lastPageRows, (items.length / pageCount).ceil()));
-    final int perPage = _atLeastOne(((items.length - onLast) / (pageCount - 1)).ceil());
     final List<List<InvoiceItem>> pages = <List<InvoiceItem>>[];
     int index = 0;
-    for (int page = 0; page < pageCount - 1; page++) {
-      final int end = _min(index + perPage, items.length - onLast);
-      if (end <= index) continue;
-      pages.add(items.sublist(index, end));
-      index = end;
+    while (items.length - index > lastPageRows) {
+      final int take = _atLeastOne(_min(pageRows, items.length - index - 1));
+      pages.add(items.sublist(index, index + take));
+      index += take;
     }
     pages.add(items.sublist(index));
     return pages;
