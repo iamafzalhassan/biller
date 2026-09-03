@@ -19,18 +19,19 @@ pw.Widget buildItemsTable(List<InvoiceItem> items, int startIndex) {
       top: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
     ),
     columnWidths: _columnWidths,
-    children: <pw.TableRow>[
-      pw.TableRow(
-        decoration: const pw.BoxDecoration(color: PdfTheme.fill),
-        children: <pw.Widget>[
-          _headerCell('NO', align: pw.TextAlign.center),
-          _headerCell('DESCRIPTION'),
-          _headerCell('QTY', align: pw.TextAlign.right),
-          _headerCell('PRICE', align: pw.TextAlign.right),
-          _headerCell('AMOUNT', align: pw.TextAlign.right),
-        ],
-      ),
-      for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i]),
+    children: <pw.TableRow>[_headerRow(), for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i])],
+  );
+}
+
+pw.TableRow _headerRow() {
+  return pw.TableRow(
+    decoration: const pw.BoxDecoration(color: PdfTheme.fill),
+    children: <pw.Widget>[
+      _cell('NO', PdfTheme.label, pw.TextAlign.center, PdfTheme.headerRowHeight),
+      _cell('DESCRIPTION', PdfTheme.label, pw.TextAlign.left, PdfTheme.headerRowHeight),
+      _cell('QTY', PdfTheme.label, pw.TextAlign.right, PdfTheme.headerRowHeight),
+      _cell('PRICE', PdfTheme.label, pw.TextAlign.right, PdfTheme.headerRowHeight),
+      _cell('AMOUNT (LKR)', PdfTheme.label, pw.TextAlign.right, PdfTheme.headerRowHeight),
     ],
   );
 }
@@ -38,37 +39,24 @@ pw.Widget buildItemsTable(List<InvoiceItem> items, int startIndex) {
 pw.TableRow _itemRow(int number, InvoiceItem item) {
   return pw.TableRow(
     children: <pw.Widget>[
-      _cell(pw.Text('$number', maxLines: 1, style: PdfTheme.body, textAlign: pw.TextAlign.center)),
-      _cell(pw.Text(item.description, maxLines: 1, overflow: pw.TextOverflow.clip, style: PdfTheme.body)),
-      _cell(pw.Text(item.qty.asQty, maxLines: 1, style: PdfTheme.body, textAlign: pw.TextAlign.right)),
-      _cell(pw.Text(item.unitPriceCents.asAmount, maxLines: 1, style: PdfTheme.body, textAlign: pw.TextAlign.right)),
-      _cell(pw.Text(item.amountCents.asAmount, maxLines: 1, style: PdfTheme.bodyStrong, textAlign: pw.TextAlign.right)),
+      _cell('$number', PdfTheme.body, pw.TextAlign.center, PdfTheme.rowHeight),
+      _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight),
+      _cell(item.qty.asQty, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
+      _cell(item.unitPriceCents.asAmount, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
+      _cell(item.amountCents.asAmount, PdfTheme.bodyStrong, pw.TextAlign.right, PdfTheme.rowHeight),
     ],
   );
 }
 
-pw.Widget _headerCell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
+pw.Widget _cell(String text, pw.TextStyle style, pw.TextAlign align, double height) {
   return pw.Container(
     alignment: align == pw.TextAlign.center
         ? pw.Alignment.center
         : align == pw.TextAlign.right
         ? pw.Alignment.centerRight
         : pw.Alignment.centerLeft,
-    height: PdfTheme.headerRowHeight,
+    height: height,
     padding: const pw.EdgeInsets.symmetric(horizontal: PdfTheme.cellPadX),
-    child: pw.Text(text, maxLines: 1, style: PdfTheme.label, textAlign: align),
-  );
-}
-
-pw.Widget _cell(pw.Text child) {
-  return pw.Container(
-    alignment: child.textAlign == pw.TextAlign.center
-        ? pw.Alignment.center
-        : child.textAlign == pw.TextAlign.right
-        ? pw.Alignment.centerRight
-        : pw.Alignment.centerLeft,
-    height: PdfTheme.rowHeight,
-    padding: const pw.EdgeInsets.symmetric(horizontal: PdfTheme.cellPadX),
-    child: child,
+    child: pw.Text(text, maxLines: 1, overflow: pw.TextOverflow.clip, style: style, textAlign: align),
   );
 }

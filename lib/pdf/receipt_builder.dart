@@ -6,16 +6,29 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../models/business_profile.dart';
 import '../models/invoice.dart';
+import '../models/invoice_item.dart';
 import 'pdf_theme.dart';
 import 'sections/header.dart';
 import 'sections/items_table.dart';
 import 'sections/meta_row.dart';
 import 'sections/page_footer.dart';
+import 'sections/signatures.dart';
 import 'sections/terms.dart';
 import 'sections/totals.dart';
 
 abstract final class ReceiptBuilder {
   static const double marginPt = 24;
+
+  static const double pageHeight = 595.28;
+  static const double bodyHeight = pageHeight - marginPt * 2;
+  static const double dividerBandHeight = PdfTheme.gapMd * 2 + PdfTheme.ruleThin;
+  static const double headerWithLogoHeight = 143;
+  static const double headerWithoutLogoHeight = 103;
+  static const double pageFooterHeight = 15;
+  static const double safetyMargin = 12;
+  static const double signaturesHeight = PdfTheme.signatureSpace + PdfTheme.ruleStrong + PdfTheme.gapXs + 9;
+  static const double termsHeadingHeight = 9 + PdfTheme.gapSm;
+  static const double termsLineHeight = 14;
 
   static String _logoStamp = '';
 
@@ -27,19 +40,96 @@ abstract final class ReceiptBuilder {
   static Future<pw.Document> buildDocument({required BusinessProfile profile, required Invoice invoice}) async {
     await PdfTheme.ensureFontsLoaded();
     final pw.MemoryImage? logo = await _loadLogo(profile);
-    final pw.Document document = pw.Document(title: invoice.invoiceNumber);
-    document.addPage(
-      pw.MultiPage(
-        footer: buildPageFooter,
-        header: (pw.Context context) =>
-            pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: <pw.Widget>[buildHeader(profile, logo), buildMetaRow(invoice)]),
-        margin: const pw.EdgeInsets.all(marginPt),
-        pageFormat: PdfPageFormat.a5,
-        theme: pw.ThemeData.withFont(base: PdfTheme.regular, bold: PdfTheme.bold),
-        build: (pw.Context context) => <pw.Widget>[buildItemsTable(invoice.printableItems), buildTotals(invoice), buildTerms(profile.printableTerms)],
-      ),
+    final double usable = bodyHeight - (logo == null ? headerWithoutLogoHeight : headerWithLogoHeight) - pageFooterHeight - safetyMargin;
+    final List<List<InvoiceItem>> pages = paginate(
+      items: invoice.printableItems,
+      pageRows: rowsPerPage(usable),
+      lastPageRows: rowsOnLastPage(usable, invoice: invoice, termsCount: profile.printableTerms.length),
     );
+    final pw.Document document = pw.Document(title: invoice.invoiceNumber);
+    int startIndex = 1;
+    for (int page = 0; page < pages.length; page++) {
+      final int firstNumber = startIndex;
+      startIndex += pages[page].length;
+      document.addPage(
+        pw.Page(
+          margin: const pw.EdgeInsets.all(marginPt),
+          pageFormat: PdfPageFormat.a5,
+          theme: pw.ThemeData.withFont(base: PdfTheme.regular, bold: PdfTheme.bold),
+          build: (pw.Context context) => _page(
+            profile: profile,
+            invoice: invoice,
+            logo: logo,
+            items: pages[page],
+            firstNumber: firstNumber,
+            isLastPage: page == pages.length - 1,
+            pageNumber: page + 1,
+            pageCount: pages.length,
+          ),
+        ),
+      );
+    }
     return document;
+  }
+
+  static int rowsPerPage(double usable) => _atLeastOne((usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);
+
+  static int rowsOnLastPage(double usable, {required Invoice invoice, required int termsCount}) {
+    final double totals = (invoice.showsAdvance ? 3 : 1) * PdfTheme.rowHeight;
+    final double terms = termsCount == 0 ? 0 : termsHeadingHeight + termsCount * termsLineHeight;
+    final double closing = PdfTheme.headerRowHeight + totals + signaturesHeight + dividerBandHeight + terms;
+    return _atLeastOne((usable - closing) ~/ PdfTheme.rowHeight);
+  }
+
+  static List<List<InvoiceItem>> paginate({required List<InvoiceItem> items, required int pageRows, required int lastPageRows}) {
+    if (items.length <= lastPageRows) return <List<InvoiceItem>>[items];
+    int pageCount = 2;
+    while ((pageCount - 1) * pageRows + lastPageRows < items.length) {
+      pageCount++;
+    }
+    final int onLast = _min(lastPageRows, (items.length / pageCount).ceil());
+    final int perPage = ((items.length - onLast) / (pageCount - 1)).ceil();
+    final List<List<InvoiceItem>> pages = <List<InvoiceItem>>[];
+    int index = 0;
+    for (int page = 0; page < pageCount - 1; page++) {
+      final int end = _min(index + perPage, items.length - onLast);
+      pages.add(items.sublist(index, end));
+      index = end;
+    }
+    pages.add(items.sublist(index));
+    return pages;
+  }
+
+  static int _atLeastOne(int value) => value < 1 ? 1 : value;
+
+  static int _min(int a, int b) => a < b ? a : b;
+
+  static pw.Widget _page({
+    required bool isLastPage,
+    required int firstNumber,
+    required int pageCount,
+    required int pageNumber,
+    required List<InvoiceItem> items,
+    required BusinessProfile profile,
+    required Invoice invoice,
+    required pw.MemoryImage? logo,
+  }) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: <pw.Widget>[
+        buildHeader(profile, logo),
+        buildMetaRow(invoice),
+        buildItemsTable(items, firstNumber),
+        if (isLastPage) buildTotals(invoice),
+        pw.Spacer(),
+        if (isLastPage) buildSignatures(),
+        if (isLastPage) pw.SizedBox(height: PdfTheme.gapMd),
+        if (isLastPage) pw.Divider(color: PdfTheme.hairline, height: PdfTheme.ruleThin, thickness: PdfTheme.ruleThin),
+        if (isLastPage) pw.SizedBox(height: PdfTheme.gapMd),
+        if (isLastPage) buildTerms(profile.printableTerms),
+        buildPageFooter(pageNumber, pageCount),
+      ],
+    );
   }
 
   static Future<pw.MemoryImage?> _loadLogo(BusinessProfile profile) async {

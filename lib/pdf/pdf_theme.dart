@@ -34,7 +34,7 @@ abstract final class PdfTheme {
   static const double signatureWidth = 130;
   static const double totalsWidth = 168;
 
-  static const double amountColumn = 72;
+  static const double amountColumn = 84;
   static const double indexColumn = 26;
   static const double priceColumn = 62;
   static const double qtyColumn = 34;
@@ -56,6 +56,8 @@ abstract final class PdfTheme {
   static pw.Font get semiBold => _semiBold!;
 
   static pw.TextStyle get body => pw.TextStyle(color: ink, font: regular, fontSize: bodySize);
+
+  static pw.TextStyle get bodyBold => pw.TextStyle(color: ink, font: bold, fontSize: bodySize);
 
   static pw.TextStyle get bodyStrong => pw.TextStyle(color: ink, font: semiBold, fontSize: bodySize);
 
