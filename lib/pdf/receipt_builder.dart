@@ -22,10 +22,14 @@ abstract final class ReceiptBuilder {
   static const double pageHeight = 595.28;
   static const double bodyHeight = pageHeight - marginPt * 2;
   static const double dividerBandHeight = PdfTheme.gapMd * 2 + PdfTheme.ruleThin;
-  static const double headerWithLogoHeight = 143;
-  static const double headerWithoutLogoHeight = 103;
+  static const double addressLineHeight = 11;
+  static const double addressWrapChars = 70;
+  static const double businessNameHeight = 17;
+  static const double headerRuleBandHeight = PdfTheme.gapMd + 1;
+  static const double logoBlockHeight = PdfTheme.logoHeight + PdfTheme.gapSm;
+  static const double metaBlockHeight = 52;
   static const double pageFooterHeight = 15;
-  static const double safetyMargin = 12;
+  static const double safetyMargin = PdfTheme.rowHeight;
   static const double signaturesHeight = PdfTheme.signatureSpace + PdfTheme.ruleStrong + PdfTheme.gapXs + 9;
   static const double termsHeadingHeight = 9 + PdfTheme.gapSm;
   static const double termsLineHeight = 14;
@@ -40,7 +44,7 @@ abstract final class ReceiptBuilder {
   static Future<pw.Document> buildDocument({required BusinessProfile profile, required Invoice invoice}) async {
     await PdfTheme.ensureFontsLoaded();
     final pw.MemoryImage? logo = await _loadLogo(profile);
-    final double usable = bodyHeight - (logo == null ? headerWithoutLogoHeight : headerWithLogoHeight) - pageFooterHeight - safetyMargin;
+    final double usable = bodyHeight - headerHeight(profile, hasLogo: logo != null) - pageFooterHeight - safetyMargin;
     final List<List<InvoiceItem>> pages = paginate(
       items: invoice.printableItems,
       pageRows: rowsPerPage(usable),
@@ -72,6 +76,17 @@ abstract final class ReceiptBuilder {
     return document;
   }
 
+  static double headerHeight(BusinessProfile profile, {required bool hasLogo}) {
+    final String address = profile.addressLine;
+    final int addressLines = address.isEmpty ? 0 : (address.length > addressWrapChars ? 2 : 1);
+    return (hasLogo ? logoBlockHeight : 0) +
+        businessNameHeight +
+        addressLines * addressLineHeight +
+        (profile.phone.isEmpty ? 0 : addressLineHeight) +
+        headerRuleBandHeight +
+        metaBlockHeight;
+  }
+
   static int rowsPerPage(double usable) => _atLeastOne((usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);
 
   static int rowsOnLastPage(double usable, {required Invoice invoice, required int termsCount}) {
@@ -87,12 +102,13 @@ abstract final class ReceiptBuilder {
     while ((pageCount - 1) * pageRows + lastPageRows < items.length) {
       pageCount++;
     }
-    final int onLast = _min(lastPageRows, (items.length / pageCount).ceil());
-    final int perPage = ((items.length - onLast) / (pageCount - 1)).ceil();
+    final int onLast = _atLeastOne(_min(lastPageRows, (items.length / pageCount).ceil()));
+    final int perPage = _atLeastOne(((items.length - onLast) / (pageCount - 1)).ceil());
     final List<List<InvoiceItem>> pages = <List<InvoiceItem>>[];
     int index = 0;
     for (int page = 0; page < pageCount - 1; page++) {
       final int end = _min(index + perPage, items.length - onLast);
+      if (end <= index) continue;
       pages.add(items.sublist(index, end));
       index = end;
     }
