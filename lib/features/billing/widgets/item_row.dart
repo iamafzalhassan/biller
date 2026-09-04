@@ -16,11 +16,18 @@ class ItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceBase,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+      clipBehavior: Clip.antiAlias,
+      color: AppColors.surfaceCard,
       child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.md),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.divider),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

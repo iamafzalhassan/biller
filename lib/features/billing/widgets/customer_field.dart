@@ -39,6 +39,7 @@ class CustomerField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         AppTextField(
+          autofocus: true,
           controller: nameController,
           focusNode: nameFocus,
           inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],

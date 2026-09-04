@@ -60,7 +60,7 @@ class RecentScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.md),
       child: Row(
         children: <Widget>[
-          const Icon(Icons.schedule_outlined, color: AppColors.textSecondary, size: 16),
+          const Icon(Icons.schedule_outlined, color: AppColors.textSecondary, size: AppSpacing.iconHint),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -86,7 +86,7 @@ class RecentScreen extends ConsumerWidget {
             decoration: const BoxDecoration(color: AppColors.surfaceField, shape: BoxShape.circle),
             height: AppSpacing.emptyStateIcon,
             width: AppSpacing.emptyStateIcon,
-            child: const Icon(Icons.receipt_long_outlined, color: AppColors.textTertiary, size: 32),
+            child: const Icon(Icons.receipt_long_outlined, color: AppColors.textTertiary, size: AppSpacing.iconEmptyState),
           ),
           const SizedBox(height: AppSpacing.lg),
           const Text('No invoices yet', maxLines: 1, style: AppTextStyles.listPrimary),

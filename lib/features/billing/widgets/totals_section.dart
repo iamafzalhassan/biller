@@ -35,7 +35,7 @@ class TotalsSection extends StatelessWidget {
           if (isEditable)
             const Padding(
               padding: EdgeInsets.only(left: AppSpacing.xs),
-              child: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 14),
+              child: Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: AppSpacing.iconInline),
             ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -71,7 +71,12 @@ class TotalsSection extends StatelessWidget {
           if (showsAdvance) const DottedDivider(),
           if (showsAdvance) _line('BALANCE', balanceCents, isBold: false),
           if (!showsAdvance) const SizedBox(height: AppSpacing.sm),
-          if (!showsAdvance) OutlinedButton.icon(icon: const Icon(Icons.add, size: 18), label: const Text('Add Advance', maxLines: 1), onPressed: onAdvanceTap),
+          if (!showsAdvance)
+            OutlinedButton.icon(
+              icon: const Icon(Icons.add, size: AppSpacing.iconButton),
+              label: const Text('Add Advance', maxLines: 1),
+              onPressed: onAdvanceTap,
+            ),
           const SizedBox(height: AppSpacing.xs),
         ],
       ),

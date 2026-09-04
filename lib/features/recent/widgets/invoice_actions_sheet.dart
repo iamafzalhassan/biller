@@ -18,7 +18,7 @@ class InvoiceActionsSheet extends StatelessWidget {
 
   Widget _action(IconData icon, String label, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.primary, size: 22),
+      leading: Icon(icon, color: AppColors.primary, size: AppSpacing.iconSheet),
       minLeadingWidth: AppSpacing.xl,
       onTap: onTap,
       title: Text(label, maxLines: 1, style: AppTextStyles.body),

@@ -5,14 +5,15 @@ import '../data/repositories/draft_repository.dart';
 import '../data/repositories/receipt_storage_repository.dart';
 import '../data/repositories/recent_invoices_repository.dart';
 import '../data/repositories/settings_repository.dart';
-import '../data/sources/receipt_file_source.dart';
 import '../data/sources/prefs_source.dart';
+import '../data/sources/receipt_file_source.dart';
 import '../data/sources/secure_storage_source.dart';
 import '../data/sources/sqflite_source.dart';
 import '../features/billing/controller/billing_controller.dart';
 import '../features/billing/controller/billing_state.dart';
 import '../features/recent/controller/recent_controller.dart';
 import '../features/settings/controller/settings_controller.dart';
+import '../features/setup/controller/setup_controller.dart';
 import '../models/business_profile.dart';
 import '../models/invoice.dart';
 
@@ -22,7 +23,11 @@ final Provider<PrefsSource> prefsSourceProvider = Provider<PrefsSource>(
 
 final Provider<SecureStorageSource> secureStorageSourceProvider = Provider<SecureStorageSource>((Ref ref) => SecureStorageSource());
 
-final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((Ref ref) => SqfliteSource());
+final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((Ref ref) {
+  final SqfliteSource source = SqfliteSource();
+  ref.onDispose(source.close);
+  return source;
+});
 
 final Provider<ReceiptFileSource> receiptFileSourceProvider = Provider<ReceiptFileSource>((Ref ref) => ReceiptFileSource());
 
@@ -53,3 +58,5 @@ final AsyncNotifierProvider<RecentController, List<Invoice>> recentControllerPro
 final NotifierProvider<SettingsController, BusinessProfile> settingsControllerProvider = NotifierProvider<SettingsController, BusinessProfile>(
   SettingsController.new,
 );
+
+final NotifierProvider<SetupController, BusinessProfile> setupControllerProvider = NotifierProvider<SetupController, BusinessProfile>(SetupController.new);

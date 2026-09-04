@@ -22,6 +22,7 @@ class RecentInvoiceTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+        clipBehavior: Clip.antiAlias,
         color: AppColors.surfaceCard,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppSpacing.radiusCard),

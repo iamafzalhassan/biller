@@ -14,5 +14,3 @@ class SetupController extends Notifier<BusinessProfile> {
     return ref.read(authRepositoryProvider).setPin(pin);
   }
 }
-
-final NotifierProvider<SetupController, BusinessProfile> setupControllerProvider = NotifierProvider<SetupController, BusinessProfile>(SetupController.new);

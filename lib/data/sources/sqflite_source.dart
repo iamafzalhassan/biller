@@ -12,21 +12,13 @@ class SqfliteSource {
   static const String databaseName = 'biller.db';
   static const String tableRecent = 'recent_invoices';
 
-  Database? _db;
+  Future<Database>? _opening;
 
-  Future<void> init() async {
-    _db ??= await openDatabase(
-      databaseName,
-      version: schemaVersion,
-      onCreate: (Database db, int version) => db.execute(
-        'CREATE TABLE $tableRecent ('
-        '$columnInvoiceNumber TEXT PRIMARY KEY, '
-        '$columnCustomerName TEXT NOT NULL, '
-        '$columnTotalCents INTEGER NOT NULL, '
-        '$columnCreatedAt INTEGER NOT NULL, '
-        '$columnPayload TEXT NOT NULL)',
-      ),
-    );
+  Future<void> close() async {
+    final Future<Database>? opening = _opening;
+    if (opening == null) return;
+    _opening = null;
+    await (await opening).close();
   }
 
   Future<int> purgeOlderThan(int cutoffMillis) async {
@@ -45,9 +37,19 @@ class SqfliteSource {
     await _trim(db);
   }
 
-  Future<Database> _open() async {
-    await init();
-    return _db!;
+  Future<Database> _open() {
+    return _opening ??= openDatabase(
+      databaseName,
+      version: schemaVersion,
+      onCreate: (Database db, int version) => db.execute(
+        'CREATE TABLE $tableRecent ('
+        '$columnInvoiceNumber TEXT PRIMARY KEY, '
+        '$columnCustomerName TEXT NOT NULL, '
+        '$columnTotalCents INTEGER NOT NULL, '
+        '$columnCreatedAt INTEGER NOT NULL, '
+        '$columnPayload TEXT NOT NULL)',
+      ),
+    );
   }
 
   Future<void> _trim(Database db) async {

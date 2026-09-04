@@ -116,9 +116,6 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
       _priceController.text = item.unitPriceCents == 0 ? '' : item.unitPriceCents.asAmount;
       _qtyController.text = item.qty == 0 ? '' : item.qty.asQty;
     }
-    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (mounted) _descriptionFocus.requestFocus();
-    });
   }
 
   @override
@@ -148,6 +145,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
               const DottedDivider(),
               const SizedBox(height: AppSpacing.lg),
               AppTextField(
+                autofocus: true,
                 controller: _descriptionController,
                 focusNode: _descriptionFocus,
                 inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],

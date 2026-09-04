@@ -42,7 +42,7 @@ class _PinBoxesState extends State<PinBoxes> {
     return Container(
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: Border.all(color: border, width: 1.4),
+        border: Border.all(color: border, width: AppSpacing.borderFocus),
         borderRadius: BorderRadius.circular(AppSpacing.radiusField),
         color: AppColors.surfaceField,
       ),
@@ -63,6 +63,7 @@ class _PinBoxesState extends State<PinBoxes> {
   @override
   void dispose() {
     widget.controller.removeListener(_rebuild);
+    _focusNode.removeListener(_rebuild);
     _focusNode.dispose();
     super.dispose();
   }

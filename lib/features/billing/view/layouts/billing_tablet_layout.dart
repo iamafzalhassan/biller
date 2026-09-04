@@ -50,7 +50,7 @@ class BillingTabletLayout extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl),
               _inset(const SectionHeader(label: 'DETAIL ITEMS')),
               ...itemRows,
-              if (itemRows.isNotEmpty) const SizedBox(height: AppSpacing.lg),
+              if (itemRows.isNotEmpty) const SizedBox(height: AppSpacing.sm),
               _inset(addItemButton),
               const SizedBox(height: AppSpacing.xl),
               _inset(totalsSection),

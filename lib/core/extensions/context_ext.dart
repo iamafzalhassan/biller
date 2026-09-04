@@ -9,10 +9,6 @@ const int maxSnackLines = 2;
 enum SnackTone { error, neutral, success }
 
 extension ContextExt on BuildContext {
-  bool get isTablet => MediaQuery.sizeOf(this).width >= 600;
-
-  double get keyboardInset => MediaQuery.viewInsetsOf(this).bottom;
-
   void showBriefSnack(String message, {SnackBarAction? action}) => _showSnack(message, SnackTone.neutral, action);
 
   void showSuccessSnack(String message) => _showSnack(message, SnackTone.success, null);

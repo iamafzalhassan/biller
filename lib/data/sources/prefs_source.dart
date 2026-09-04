@@ -19,15 +19,11 @@ class PrefsSource {
 
   String? getString(String key) => _prefs.getString(key);
 
-  List<String> getStringList(String key) => _prefs.getStringList(key) ?? <String>[];
-
   Future<void> setBool(String key, bool value) => _prefs.setBool(key, value);
 
   Future<void> setInt(String key, int value) => _prefs.setInt(key, value);
 
   Future<void> setString(String key, String value) => _prefs.setString(key, value);
-
-  Future<void> setStringList(String key, List<String> value) => _prefs.setStringList(key, value);
 
   Future<void> remove(String key) => _prefs.remove(key);
 }

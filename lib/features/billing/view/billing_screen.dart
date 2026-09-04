@@ -12,9 +12,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/widgets/dotted_divider.dart';
 import '../../../core/responsive/responsive_builder.dart';
+import '../../../core/utils/soft_keyboard.dart';
+import '../../../core/utils/validators.dart';
 import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
 import '../../preview/controller/print_service.dart';
@@ -168,24 +168,13 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   List<Widget> _itemRows(List<InvoiceItem> items) {
     return <Widget>[
-      for (int index = 0; index < items.length; index++)
-        Dismissible(
-          key: ValueKey<String>(items[index].id),
-          background: const _DeleteBackground(),
-          direction: DismissDirection.endToStart,
-          onDismissed: (DismissDirection _) => _removeItem(items[index].id),
-          child: Column(
-            children: <Widget>[
-              if (index > 0)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                  child: DottedDivider(),
-                ),
-              ItemRow(
-                item: items[index],
-                onTap: () => unawaited(_openSheet(item: items[index])),
-              ),
-            ],
+      for (final InvoiceItem item in items)
+        Padding(
+          key: ValueKey<String>(item.id),
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm, left: AppSpacing.screenPadding, right: AppSpacing.screenPadding),
+          child: ItemRow(
+            item: item,
+            onTap: () => unawaited(_openSheet(item: item)),
           ),
         ),
     ];
@@ -193,7 +182,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Widget _addItemButton() {
     return OutlinedButton.icon(
-      icon: const Icon(Icons.add, size: 18),
+      icon: const Icon(Icons.add, size: AppSpacing.iconButton),
       label: const Text('Add Item', maxLines: 1),
       onPressed: () => unawaited(_openSheet()),
       style: OutlinedButton.styleFrom(
@@ -222,7 +211,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
             ? const SizedBox(
                 height: AppSpacing.progressIndicator,
                 width: AppSpacing.progressIndicator,
-                child: CircularProgressIndicator(color: AppColors.primaryOn, strokeWidth: 2),
+                child: CircularProgressIndicator(color: AppColors.primaryOn, strokeWidth: AppSpacing.progressStroke),
               )
             : Text(label, maxLines: 1),
       ),
@@ -233,6 +222,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   void initState() {
     super.initState();
     _reseedFields(ref.read(billingControllerProvider));
+    unawaited(SoftKeyboard.openOnStartup(_nameFocus, () => mounted));
     unawaited(WakelockPlus.enable());
   }
 
@@ -296,32 +286,7 @@ class _RevisedChip extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusChip), color: AppColors.warning.withValues(alpha: 0.15)),
       margin: const EdgeInsets.only(left: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-      child: const Text(
-        'REVISED',
-        maxLines: 1,
-        style: TextStyle(
-          color: AppColors.warning,
-          fontFamily: AppTextStyles.fontFamily,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-          letterSpacing: 0.8,
-        ),
-      ),
-    );
-  }
-}
-
-class _DeleteBackground extends StatelessWidget {
-  const _DeleteBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.centerRight,
-      color: AppColors.danger.withValues(alpha: 0.12),
-      padding: const EdgeInsets.only(right: AppSpacing.lg),
-      child: const Icon(Icons.delete_outline, color: AppColors.danger),
+      child: const Text('REVISED', maxLines: 1, style: AppTextStyles.chip),
     );
   }
 }

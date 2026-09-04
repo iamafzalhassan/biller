@@ -32,14 +32,6 @@ class _RecoverySheetState extends State<RecoverySheet> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (mounted) _codeFocus.requestFocus();
-    });
-  }
-
-  @override
   void dispose() {
     _codeController.dispose();
     _pinController.dispose();
@@ -56,6 +48,7 @@ class _RecoverySheetState extends State<RecoverySheet> {
         const Text('The code shown once during setup. Entering it sets a new PIN.', style: AppTextStyles.listSecondary),
         const SizedBox(height: AppSpacing.lg),
         AppTextField(
+          autofocus: true,
           controller: _codeController,
           focusNode: _codeFocus,
           label: 'Recovery code',

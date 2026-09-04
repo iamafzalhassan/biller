@@ -14,6 +14,16 @@ abstract final class AppSpacing {
   static const double screenPadding = 16;
   static const double cardPadding = 12;
   static const double hairline = 1;
+  static const double borderFocus = 1.4;
+  static const double progressStroke = 2;
+
+  static const double iconInline = 14;
+  static const double iconHint = 16;
+  static const double iconButton = 18;
+  static const double iconTile = 20;
+  static const double iconSheet = 22;
+  static const double iconPlaceholder = 24;
+  static const double iconEmptyState = 32;
 
   static const double appBarHeight = 64;
   static const double controlHeight = 52;

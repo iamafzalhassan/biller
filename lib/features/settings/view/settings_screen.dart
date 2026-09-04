@@ -36,8 +36,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final FocusNode _buildingFocus = FocusNode();
   final FocusNode _cityFocus = FocusNode();
+  final FocusNode _currentPinFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _nameFocus = FocusNode();
+  final FocusNode _newPinFocus = FocusNode();
   final FocusNode _noFocus = FocusNode();
   final FocusNode _phone1Focus = FocusNode();
   final FocusNode _phone2Focus = FocusNode();
@@ -46,8 +48,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   final TextEditingController _buildingController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _currentPinController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _newPinController = TextEditingController();
   final TextEditingController _noController = TextEditingController();
   final TextEditingController _phone1Controller = TextEditingController();
   final TextEditingController _phone2Controller = TextEditingController();
@@ -58,18 +62,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEditingTerms = false;
   bool _isUnlocked = false;
 
-  int _logoRevision = 0;
-
   String _appVersion = '';
   String _logoPath = '';
 
   List<String> _terms = BusinessProfile.defaultTerms;
-
-  final FocusNode _currentPinFocus = FocusNode();
-  final FocusNode _newPinFocus = FocusNode();
-
-  final TextEditingController _currentPinController = TextEditingController();
-  final TextEditingController _newPinController = TextEditingController();
 
   Future<bool> _unlock(String pin) async {
     final bool isValid = await ref.read(authRepositoryProvider).verifyPin(pin);
@@ -149,6 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     await ref.read(settingsRepositoryProvider).saveRetentionDays(_retentionDays);
     await ref.read(settingsControllerProvider.notifier).save(profile);
+    if (existing.logoPath != _logoPath) await _deleteLogoFile(existing.logoPath);
     if (!mounted) return;
     ref.invalidate(recentControllerProvider);
     context.showSuccessSnack('Settings saved. The changes appear on the next receipt you print.');
@@ -217,7 +214,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _changePinTile() {
     return ExpansionTile(
-      leading: const Icon(Icons.lock_outline, size: 20),
+      leading: const Icon(Icons.lock_outline, size: AppSpacing.iconTile),
       title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
         const SizedBox(height: AppSpacing.lg),
@@ -232,7 +229,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _resetTile() {
     return ExpansionTile(
-      leading: const Icon(Icons.restart_alt, size: 20),
+      leading: const Icon(Icons.restart_alt, size: AppSpacing.iconTile),
       title: const Text('Reset and run setup again', maxLines: 1, style: AppTextStyles.listPrimary),
       children: <Widget>[
         const SizedBox(height: AppSpacing.lg),
@@ -268,17 +265,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final XFile? picked = await ImagePicker().pickImage(imageQuality: 90, maxWidth: 600, source: ImageSource.gallery);
     if (picked == null || !mounted) return;
     final Directory base = await getApplicationDocumentsDirectory();
-    final File saved = await File(picked.path).copy('${base.path}${Platform.pathSeparator}logo.png');
-    await FileImage(saved).evict();
+    final String stamp = '${DateTime.now().millisecondsSinceEpoch}';
+    final File saved = await File(picked.path).copy('${base.path}${Platform.pathSeparator}logo_$stamp.png');
+    final String replaced = _logoPath;
     if (!mounted) return;
-    setState(() {
-      _logoPath = saved.path;
-      _logoRevision++;
-    });
+    setState(() => _logoPath = saved.path);
+    await _deleteUnsavedLogo(replaced);
+    if (!mounted) return;
     context.showSuccessSnack('Logo selected. Tap Save to start printing it on your receipts.');
   }
 
   void _removeLogo() => setState(() => _logoPath = '');
+
+  Future<void> _deleteUnsavedLogo(String path) async {
+    if (path.isEmpty || path == ref.read(settingsRepositoryProvider).profile.logoPath) return;
+    await _deleteLogoFile(path);
+  }
+
+  Future<void> _deleteLogoFile(String path) async {
+    try {
+      final File file = File(path);
+      if (file.existsSync()) await file.delete();
+    } catch (_) {
+      return;
+    }
+  }
 
   Future<void> _loadVersion() async {
     final PackageInfo info = await PackageInfo.fromPlatform();
@@ -299,10 +310,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               height: AppSpacing.logoPreview,
               width: AppSpacing.logoPreview,
               child: _logoPath.isEmpty
-                  ? const Icon(Icons.image_outlined, color: AppColors.textTertiary, size: 24)
+                  ? const Icon(Icons.image_outlined, color: AppColors.textTertiary, size: AppSpacing.iconPlaceholder)
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                      child: Image.file(File(_logoPath), key: ValueKey<int>(_logoRevision), fit: BoxFit.cover),
+                      child: Image.file(File(_logoPath), key: ValueKey<String>(_logoPath), fit: BoxFit.cover),
                     ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -319,7 +330,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: <Widget>[
             Expanded(
               child: OutlinedButton.icon(
-                icon: const Icon(Icons.upload_outlined, size: 18),
+                icon: const Icon(Icons.upload_outlined, size: AppSpacing.iconButton),
                 label: Text(_logoPath.isEmpty ? 'Upload Logo' : 'Replace Logo', maxLines: 1),
                 onPressed: () => unawaited(_pickLogo()),
               ),
@@ -350,7 +361,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         TermsEditor(isEditable: _isEditingTerms, terms: _terms, onChanged: (List<String> terms) => _terms = terms),
         const SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
-          icon: Icon(_isEditingTerms ? Icons.check : Icons.edit_outlined, size: 18),
+          icon: Icon(_isEditingTerms ? Icons.check : Icons.edit_outlined, size: AppSpacing.iconButton),
           label: Text(_isEditingTerms ? 'Done' : 'Edit Conditions', maxLines: 1),
           onPressed: () => setState(() => _isEditingTerms = !_isEditingTerms),
         ),
@@ -439,8 +450,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _cityFocus.dispose();
     _currentPinFocus.dispose();
     _emailFocus.dispose();
-    _newPinFocus.dispose();
     _nameFocus.dispose();
+    _newPinFocus.dispose();
     _noFocus.dispose();
     _phone1Focus.dispose();
     _phone2Focus.dispose();
@@ -449,9 +460,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _buildingController.dispose();
     _cityController.dispose();
     _currentPinController.dispose();
-    _newPinController.dispose();
     _emailController.dispose();
     _nameController.dispose();
+    _newPinController.dispose();
     _noController.dispose();
     _phone1Controller.dispose();
     _phone2Controller.dispose();

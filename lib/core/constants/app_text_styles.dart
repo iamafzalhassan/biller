@@ -87,6 +87,15 @@ abstract final class AppTextStyles {
     letterSpacing: 3,
   );
 
+  static const TextStyle chip = TextStyle(
+    color: AppColors.warning,
+    fontFamily: fontFamily,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+    letterSpacing: 0.8,
+  );
+
   static const TextStyle errorHint = TextStyle(color: AppColors.danger, fontFamily: fontFamily, fontSize: 12, fontWeight: FontWeight.w500, height: 1.3);
 
   static const TextStyle snack = TextStyle(color: AppColors.primaryOn, fontFamily: fontFamily, fontSize: 14, fontWeight: FontWeight.w500, height: 1.3);

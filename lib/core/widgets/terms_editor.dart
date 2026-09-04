@@ -17,21 +17,26 @@ class TermsEditor extends StatefulWidget {
 }
 
 class _TermsEditorState extends State<TermsEditor> {
+  static final RegExp _breakPattern = RegExp(r'\n[ \t]*\n');
+
+  static const String separator = '\n\n';
+
   final TextEditingController _controller = TextEditingController();
 
-  void _publish(String value) => widget.onChanged(value.split('\n').map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
+  void _publish(String value) =>
+      widget.onChanged(value.split(_breakPattern).map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
 
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.terms.join('\n');
+    _controller.text = widget.terms.join(separator);
   }
 
   @override
   void didUpdateWidget(covariant TermsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isEditable == widget.isEditable) return;
-    _controller.text = widget.terms.join('\n');
+    _controller.text = widget.terms.join(separator);
   }
 
   @override
@@ -42,12 +47,12 @@ class _TermsEditorState extends State<TermsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isEditable) return Text(widget.terms.join('\n'), style: AppTextStyles.body);
+    if (!widget.isEditable) return Text(widget.terms.join(separator), style: AppTextStyles.body);
     return AppTextField(
       controller: _controller,
       isGrowable: true,
       keyboardType: TextInputType.multiline,
-      label: 'One condition per line',
+      label: 'Leave a blank line between conditions',
       onChanged: _publish,
       textCapitalization: TextCapitalization.sentences,
     );

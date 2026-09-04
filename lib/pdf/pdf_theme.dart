@@ -45,6 +45,8 @@ abstract final class PdfTheme {
   static const PdfColor inkMuted = PdfColor.fromInt(0xFF666666);
   static const PdfColor paper = PdfColor.fromInt(0xFFFFFFFF);
 
+  static Future<void>? _loading;
+
   static pw.Font? _bold;
   static pw.Font? _regular;
   static pw.Font? _semiBold;
@@ -79,8 +81,9 @@ abstract final class PdfTheme {
 
   static pw.TextStyle get totalsFigureBold => pw.TextStyle(color: ink, font: bold, fontSize: totalsSize);
 
-  static Future<void> ensureFontsLoaded() async {
-    if (_regular != null) return;
+  static Future<void> ensureFontsLoaded() => _loading ??= _loadFonts();
+
+  static Future<void> _loadFonts() async {
     _regular = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-Regular.ttf'));
     _semiBold = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-SemiBold.ttf'));
     _bold = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-Bold.ttf'));

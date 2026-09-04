@@ -4,18 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/providers.dart';
 import '../../../app/router.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/pin_boxes.dart';
 import '../../../core/widgets/recovery_code_box.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
-import '../controller/setup_controller.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -80,23 +81,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
   }
 
-  FocusNode? get _stepFocus {
-    switch (_step) {
-      case 0:
-        return _nameFocus;
-      case 1:
-        return _noFocus;
-      case 2:
-        return _phone1Focus;
-      case 3:
-        return _emailFocus;
-      case 5:
-        return _prefixFocus;
-      default:
-        return null;
-    }
-  }
-
   bool get _hasEmailError => _emailController.text.trim().isNotEmpty && !Validators.isValidEmail(_emailController.text);
 
   bool get _hasPhoneError => <TextEditingController>[
@@ -144,20 +128,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     terms: _terms,
   );
 
-  void _focusStep() {
-    final FocusNode? node = _stepFocus;
-    if (node == null) {
-      if (_step != lastFieldStep) FocusManager.instance.primaryFocus?.unfocus();
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (!mounted) return;
-      final FocusNode? current = FocusManager.instance.primaryFocus;
-      if (current != null && current != node) current.unfocus();
-      node.requestFocus();
-    });
-  }
-
   void _submitStep() {
     if (_canAdvance) unawaited(_next());
   }
@@ -165,7 +135,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Future<void> _next() async {
     if (_step < lastFieldStep) {
       setState(() => _step++);
-      _focusStep();
       return;
     }
     ref.read(setupControllerProvider.notifier).update(_profile);
@@ -180,7 +149,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void _back() {
     if (_step == 0) return;
     setState(() => _step--);
-    _focusStep();
   }
 
   void _finish() => Navigator.of(context).pushAndRemoveUntil(Routes.billing(), (Route<dynamic> route) => false);
@@ -208,13 +176,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step0() => _stepFrame(
     hint: 'Printed at the top of every receipt',
-    children: <Widget>[_field(controller: _nameController, focusNode: _nameFocus, label: 'Business name')],
+    children: <Widget>[_field(autofocus: true, controller: _nameController, focusNode: _nameFocus, label: 'Business name')],
   );
 
   Widget _step1() => _stepFrame(
     hint: 'Printed under the business name',
     children: <Widget>[
-      _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
+      _field(autofocus: true, controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
       const SizedBox(height: AppSpacing.md),
       _field(controller: _streetController, focusNode: _streetFocus, label: 'Street', nextFocus: _cityFocus),
       const SizedBox(height: AppSpacing.md),
@@ -227,7 +195,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _step2() => _stepFrame(
     hint: 'Up to three lines, printed side by side on the receipt header',
     children: <Widget>[
-      _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
+      _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', autofocus: true, nextFocus: _phone2Focus),
       const SizedBox(height: AppSpacing.md),
       _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (optional)', nextFocus: _phone3Focus),
       const SizedBox(height: AppSpacing.md),
@@ -240,7 +208,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _step3() => _stepFrame(
     hint: 'Kept on file as the owner contact',
     children: <Widget>[
-      _field(controller: _emailController, focusNode: _emailFocus, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Email'),
+      _field(autofocus: true, controller: _emailController, focusNode: _emailFocus, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Email'),
       if (_hasEmailError) const SizedBox(height: AppSpacing.sm),
       if (_hasEmailError) const Text('Enter a valid email address, like name@example.com', maxLines: 1, style: AppTextStyles.errorHint),
     ],
@@ -258,7 +226,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         children: <Widget>[
           Expanded(
             flex: 2,
-            child: _field(controller: _prefixController, focusNode: _prefixFocus, label: 'Prefix', nextFocus: _deviceIdFocus),
+            child: _field(autofocus: true, controller: _prefixController, focusNode: _prefixFocus, label: 'Prefix', nextFocus: _deviceIdFocus),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -298,6 +266,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _stepFrame({required String hint, required List<Widget> children}) {
     return Column(
+      key: ValueKey<int>(_step),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text(hint, style: AppTextStyles.listSecondary),
@@ -307,7 +276,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     );
   }
 
-  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) => _field(
+  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {bool autofocus = false, FocusNode? nextFocus}) => _field(
+    autofocus: autofocus,
     controller: controller,
     focusNode: focusNode,
     isPhone: true,
@@ -321,6 +291,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     required TextEditingController controller,
     required FocusNode focusNode,
     required String label,
+    bool autofocus = false,
     bool isPhone = false,
     bool isUpper = true,
     int? maxLength,
@@ -328,6 +299,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     TextInputType? keyboardType,
   }) {
     return AppTextField(
+      autofocus: autofocus,
       controller: controller,
       focusNode: focusNode,
       inputFormatters: isPhone
@@ -348,7 +320,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   void initState() {
     super.initState();
-    _focusStep();
+    unawaited(SoftKeyboard.openOnStartup(_nameFocus, () => mounted));
   }
 
   @override

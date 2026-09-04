@@ -49,11 +49,6 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
   void initState() {
     super.initState();
     if (widget.advanceCents > 0) _controller.text = widget.advanceCents.asAmount;
-    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (!mounted) return;
-      _focusNode.requestFocus();
-      _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
-    });
   }
 
   @override
@@ -69,6 +64,7 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
       title: widget.advanceCents > 0 ? 'Edit Advance' : 'Add Advance',
       children: <Widget>[
         AppTextField(
+          autofocus: true,
           controller: _controller,
           focusNode: _focusNode,
           inputFormatters: const <TextInputFormatter>[ThousandsFormatter()],
