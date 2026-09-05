@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -10,6 +11,16 @@ abstract final class SoftKeyboard {
   static bool get isOpen {
     final FlutterView? view = WidgetsBinding.instance.platformDispatcher.implicitView;
     return view != null && view.viewInsets.bottom > 0;
+  }
+
+  static void dismiss() {
+    _release();
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) => _release());
+  }
+
+  static void _release() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.hide'));
   }
 
   static Future<void> openOnStartup(FocusNode node, bool Function() isMounted) async {

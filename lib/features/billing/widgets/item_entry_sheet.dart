@@ -173,7 +173,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
                     child: _numberField(
                       controller: _priceController,
                       focusNode: _priceFocus,
-                      label: 'Unit price',
+                      label: 'Unit Price',
                       onSubmitted: () => _save(addAnother: !_isEditing),
                       textInputAction: TextInputAction.done,
                     ),

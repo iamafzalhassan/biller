@@ -63,21 +63,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   String get _stepTitle {
     switch (_step) {
       case 0:
-        return 'Business name';
+        return 'Business Name';
       case 1:
         return 'Address';
       case 2:
-        return 'Phone numbers';
+        return 'Phone Numbers';
       case 3:
         return 'Email';
       case 4:
-        return 'Terms and conditions';
+        return 'Terms and Conditions';
       case 5:
-        return 'Invoice numbering';
+        return 'Invoice Numbering';
       case 6:
-        return 'Set a 4-digit PIN';
+        return 'Set a 4-Digit PIN';
       default:
-        return 'Write this down';
+        return 'Write This Down';
     }
   }
 
@@ -176,7 +176,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _step0() => _stepFrame(
     hint: 'Printed at the top of every receipt',
-    children: <Widget>[_field(autofocus: true, controller: _nameController, focusNode: _nameFocus, label: 'Business name')],
+    children: <Widget>[_field(autofocus: true, controller: _nameController, focusNode: _nameFocus, label: 'Business Name')],
   );
 
   Widget _step1() => _stepFrame(
@@ -188,7 +188,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       const SizedBox(height: AppSpacing.md),
       _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
       const SizedBox(height: AppSpacing.md),
-      _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (optional)'),
+      _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (Optional)'),
     ],
   );
 
@@ -197,9 +197,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     children: <Widget>[
       _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', autofocus: true, nextFocus: _phone2Focus),
       const SizedBox(height: AppSpacing.md),
-      _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (optional)', nextFocus: _phone3Focus),
+      _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (Optional)', nextFocus: _phone3Focus),
       const SizedBox(height: AppSpacing.md),
-      _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (optional)'),
+      _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (Optional)'),
       if (_hasPhoneError) const SizedBox(height: AppSpacing.sm),
       if (_hasPhoneError) const Text('Each phone must be 10 digits starting with 0', maxLines: 1, style: AppTextStyles.errorHint),
     ],

@@ -44,7 +44,7 @@ class CustomerField extends StatelessWidget {
           focusNode: nameFocus,
           inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
           keyboardType: TextInputType.text,
-          label: 'Customer name',
+          label: 'Customer Name',
           onChanged: onNameChanged,
           onSubmitted: (String _) => onNameSubmitted(),
           textCapitalization: TextCapitalization.characters,

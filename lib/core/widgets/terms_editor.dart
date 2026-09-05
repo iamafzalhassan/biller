@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 import 'app_text_field.dart';
 
@@ -26,6 +27,29 @@ class _TermsEditorState extends State<TermsEditor> {
   void _publish(String value) =>
       widget.onChanged(value.split(_breakPattern).map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
 
+  Widget _numberedTerms() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (int index = 0; index < widget.terms.length; index++)
+          Padding(
+            padding: EdgeInsets.only(top: index == 0 ? 0 : AppSpacing.sm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(
+                  width: AppSpacing.indexColumn,
+                  child: Text('${index + 1}.', style: AppTextStyles.body),
+                ),
+                Expanded(child: Text(widget.terms[index], style: AppTextStyles.body)),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,12 +71,12 @@ class _TermsEditorState extends State<TermsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isEditable) return Text(widget.terms.join(separator), style: AppTextStyles.body);
+    if (!widget.isEditable) return _numberedTerms();
     return AppTextField(
       controller: _controller,
       isGrowable: true,
       keyboardType: TextInputType.multiline,
-      label: 'Leave a blank line between conditions',
+      label: 'Conditions (Blank Line Between Each)',
       onChanged: _publish,
       textCapitalization: TextCapitalization.sentences,
     );

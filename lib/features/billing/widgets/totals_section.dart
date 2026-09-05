@@ -13,11 +13,13 @@ class TotalsSection extends StatelessWidget {
     super.key,
     required this.advanceCents,
     required this.balanceCents,
+    required this.hasItems,
     required this.showsAdvance,
     required this.totalCents,
     required this.onAdvanceTap,
   });
 
+  final bool hasItems;
   final bool showsAdvance;
 
   final int advanceCents;
@@ -70,8 +72,8 @@ class TotalsSection extends StatelessWidget {
           if (showsAdvance) InkWell(onTap: onAdvanceTap, child: _line('ADVANCE', advanceCents, isBold: false, isEditable: true)),
           if (showsAdvance) const DottedDivider(),
           if (showsAdvance) _line('BALANCE', balanceCents, isBold: false),
-          if (!showsAdvance) const SizedBox(height: AppSpacing.sm),
-          if (!showsAdvance)
+          if (!showsAdvance && hasItems) const SizedBox(height: AppSpacing.sm),
+          if (!showsAdvance && hasItems)
             OutlinedButton.icon(
               icon: const Icon(Icons.add, size: AppSpacing.iconButton),
               label: const Text('Add Advance', maxLines: 1),

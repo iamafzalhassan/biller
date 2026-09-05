@@ -9,15 +9,19 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
+import '../../../core/utils/soft_keyboard.dart';
 import '../../../models/invoice.dart';
 import '../../preview/controller/print_service.dart';
 import '../widgets/invoice_actions_sheet.dart';
 import '../widgets/recent_invoice_tile.dart';
 
+const int noteLines = 2;
+
 class RecentScreen extends ConsumerWidget {
   const RecentScreen({super.key});
 
   Future<void> _openActions(BuildContext context, WidgetRef ref, Invoice invoice) async {
+    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => InvoiceActionsSheet(
@@ -38,6 +42,7 @@ class RecentScreen extends ConsumerWidget {
       ),
       showDragHandle: true,
     );
+    SoftKeyboard.dismiss();
   }
 
   Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
@@ -65,7 +70,7 @@ class RecentScreen extends ConsumerWidget {
           Expanded(
             child: Text(
               'Invoices are kept for $days days, then removed from this list.',
-              maxLines: 1,
+              maxLines: noteLines,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.listSecondary,
             ),

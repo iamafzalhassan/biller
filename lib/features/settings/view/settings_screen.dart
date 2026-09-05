@@ -17,6 +17,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/section_header.dart';
@@ -74,12 +75,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _recoverPin() async {
+    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => RecoverySheet(onSubmit: (String code, String newPin) => unawaited(_applyRecovery(code, newPin))),
       isScrollControlled: true,
       showDragHandle: true,
     );
+    SoftKeyboard.dismiss();
   }
 
   Future<void> _applyRecovery(String code, String newPin) async {
@@ -194,7 +197,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       controller: _retentionController,
       inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
       keyboardType: TextInputType.number,
-      label: 'Days to keep invoices',
+      label: 'Days to Keep Invoices',
       maxLength: 3,
       onSubmitted: (String _) => FocusManager.instance.primaryFocus?.unfocus(),
       textInputAction: TextInputAction.done,
@@ -376,13 +379,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _logoSection(),
         const SizedBox(height: AppSpacing.xl),
         _sectionHeading('BUSINESS'),
-        _field(controller: _nameController, focusNode: _nameFocus, label: 'Business name', nextFocus: _phone1Focus),
+        _field(controller: _nameController, focusNode: _nameFocus, label: 'Business Name', nextFocus: _phone1Focus),
         const SizedBox(height: AppSpacing.md),
         _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
         const SizedBox(height: AppSpacing.md),
-        _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (optional)', nextFocus: _phone3Focus),
+        _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (Optional)', nextFocus: _phone3Focus),
         const SizedBox(height: AppSpacing.md),
-        _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (optional)', nextFocus: _emailFocus),
+        _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (Optional)', nextFocus: _emailFocus),
         const SizedBox(height: AppSpacing.md),
         _field(
           controller: _emailController,
@@ -400,7 +403,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: AppSpacing.md),
         _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
         const SizedBox(height: AppSpacing.md),
-        _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (optional)'),
+        _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (Optional)'),
         const SizedBox(height: AppSpacing.xl),
         _termsSection(),
         const SizedBox(height: AppSpacing.xl),

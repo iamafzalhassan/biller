@@ -12,20 +12,35 @@ const Map<int, pw.TableColumnWidth> _columnWidths = <int, pw.TableColumnWidth>{
   4: pw.FixedColumnWidth(PdfTheme.amountColumn),
 };
 
+const pw.BoxDecoration _headerDecoration = pw.BoxDecoration(
+  border: pw.Border(
+    bottom: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
+  ),
+  color: PdfTheme.fill,
+);
+
+const pw.BoxDecoration _rowDecoration = pw.BoxDecoration(
+  border: pw.Border(
+    bottom: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
+  ),
+);
+
 pw.Widget buildItemsTable(List<InvoiceItem> items, int startIndex) {
   return pw.Table(
     border: const pw.TableBorder(
-      horizontalInside: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
       top: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
     ),
     columnWidths: _columnWidths,
-    children: <pw.TableRow>[_headerRow(), for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i])],
+    children: <pw.TableRow>[
+      _headerRow(),
+      for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i], isLast: i == items.length - 1),
+    ],
   );
 }
 
 pw.TableRow _headerRow() {
   return pw.TableRow(
-    decoration: const pw.BoxDecoration(color: PdfTheme.fill),
+    decoration: _headerDecoration,
     children: <pw.Widget>[
       _cell('NO', PdfTheme.label, pw.TextAlign.center, PdfTheme.headerRowHeight),
       _cell('DESCRIPTION', PdfTheme.label, pw.TextAlign.left, PdfTheme.headerRowHeight),
@@ -36,8 +51,9 @@ pw.TableRow _headerRow() {
   );
 }
 
-pw.TableRow _itemRow(int number, InvoiceItem item) {
+pw.TableRow _itemRow(int number, InvoiceItem item, {required bool isLast}) {
   return pw.TableRow(
+    decoration: isLast ? null : _rowDecoration,
     children: <pw.Widget>[
       _cell('$number', PdfTheme.body, pw.TextAlign.center, PdfTheme.rowHeight),
       _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight),

@@ -69,7 +69,7 @@ class BusinessProfile {
   bool get isComplete => name.trim().isNotEmpty && ownerEmail.trim().isNotEmpty;
 
   String get addressLine =>
-      <String>[addressBuilding, addressNo, addressStreet, addressCity].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
+      <String>[addressNo, addressStreet, addressCity, addressBuilding].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
 
   String get phoneLine => printablePhones.map(_grouped).join('  |  ');
 

@@ -80,7 +80,7 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
         if (_isOverTotal) Text('Advance cannot exceed the total of ${widget.totalCents.asLkr}', style: AppTextStyles.errorHint),
         const SizedBox(height: AppSpacing.lg),
         SheetActions(
-          primary: FilledButton(onPressed: _isValid ? _save : null, child: const Text('Save', maxLines: 1)),
+          primary: FilledButton(onPressed: _isValid ? _save : null, child: const Text('Add Advance', maxLines: 1)),
           secondary: widget.advanceCents > 0
               ? OutlinedButton(
                   onPressed: _remove,

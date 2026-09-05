@@ -51,6 +51,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   BillingController get _controller => ref.read(billingControllerProvider.notifier);
 
   Future<void> _openSheet({InvoiceItem? item}) async {
+    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => ItemEntrySheet(
@@ -72,9 +73,11 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       isScrollControlled: true,
       showDragHandle: true,
     );
+    SoftKeyboard.dismiss();
   }
 
   Future<void> _openAdvanceSheet(int advanceCents) async {
+    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => AdvanceSheet(
@@ -86,6 +89,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       isScrollControlled: true,
       showDragHandle: true,
     );
+    SoftKeyboard.dismiss();
   }
 
   void _removeItem(String id) {
@@ -196,6 +200,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     return TotalsSection(
       advanceCents: state.invoice.advanceCents,
       balanceCents: state.invoice.balanceCents,
+      hasItems: state.invoice.printableItems.isNotEmpty,
       showsAdvance: state.invoice.showsAdvance,
       totalCents: state.invoice.totalCents,
       onAdvanceTap: () => unawaited(_openAdvanceSheet(state.invoice.advanceCents)),
