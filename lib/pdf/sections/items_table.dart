@@ -4,6 +4,8 @@ import '../../core/extensions/cents_formatting_ext.dart';
 import '../../models/invoice_item.dart';
 import '../pdf_theme.dart';
 
+const int descriptionMaxLines = 2;
+
 const Map<int, pw.TableColumnWidth> _columnWidths = <int, pw.TableColumnWidth>{
   0: pw.FixedColumnWidth(PdfTheme.indexColumn),
   1: pw.FlexColumnWidth(),
@@ -12,29 +14,17 @@ const Map<int, pw.TableColumnWidth> _columnWidths = <int, pw.TableColumnWidth>{
   4: pw.FixedColumnWidth(PdfTheme.amountColumn),
 };
 
-const pw.BoxDecoration _headerDecoration = pw.BoxDecoration(
-  border: pw.Border(
-    bottom: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
-  ),
-  color: PdfTheme.fill,
-);
+const pw.BoxDecoration _headerDecoration = pw.BoxDecoration(color: PdfTheme.fill);
 
-const pw.BoxDecoration _rowDecoration = pw.BoxDecoration(
-  border: pw.Border(
-    bottom: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
-  ),
-);
+const pw.BorderSide _rule = pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin);
+
+const pw.TableBorder _tableBorder = pw.TableBorder(top: _rule, bottom: _rule, horizontalInside: _rule);
 
 pw.Widget buildItemsTable(List<InvoiceItem> items, int startIndex) {
   return pw.Table(
-    border: const pw.TableBorder(
-      top: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
-    ),
+    border: _tableBorder,
     columnWidths: _columnWidths,
-    children: <pw.TableRow>[
-      _headerRow(),
-      for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i], isLast: i == items.length - 1),
-    ],
+    children: <pw.TableRow>[_headerRow(), for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i])],
   );
 }
 
@@ -51,12 +41,11 @@ pw.TableRow _headerRow() {
   );
 }
 
-pw.TableRow _itemRow(int number, InvoiceItem item, {required bool isLast}) {
+pw.TableRow _itemRow(int number, InvoiceItem item) {
   return pw.TableRow(
-    decoration: isLast ? null : _rowDecoration,
     children: <pw.Widget>[
       _cell('$number', PdfTheme.body, pw.TextAlign.center, PdfTheme.rowHeight),
-      _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight),
+      _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight, maxLines: descriptionMaxLines),
       _cell(item.qty.asQty, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
       _cell(item.unitPriceCents.asAmount, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
       _cell(item.amountCents.asAmount, PdfTheme.bodyStrong, pw.TextAlign.right, PdfTheme.rowHeight),
@@ -64,7 +53,7 @@ pw.TableRow _itemRow(int number, InvoiceItem item, {required bool isLast}) {
   );
 }
 
-pw.Widget _cell(String text, pw.TextStyle style, pw.TextAlign align, double height) {
+pw.Widget _cell(String text, pw.TextStyle style, pw.TextAlign align, double height, {int maxLines = 1}) {
   return pw.Container(
     alignment: align == pw.TextAlign.center
         ? pw.Alignment.center
@@ -73,6 +62,6 @@ pw.Widget _cell(String text, pw.TextStyle style, pw.TextAlign align, double heig
         : pw.Alignment.centerLeft,
     height: height,
     padding: const pw.EdgeInsets.symmetric(horizontal: PdfTheme.cellPadX),
-    child: pw.Text(text, maxLines: 1, overflow: pw.TextOverflow.clip, style: style, textAlign: align),
+    child: pw.Text(text, maxLines: maxLines, overflow: pw.TextOverflow.clip, style: style, textAlign: align),
   );
 }

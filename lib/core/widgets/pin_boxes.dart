@@ -6,9 +6,18 @@ import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 
 class PinBoxes extends StatefulWidget {
-  const PinBoxes({super.key, required this.autofocus, required this.controller, required this.hasError, required this.onChanged, required this.onCompleted});
+  const PinBoxes({
+    super.key,
+    required this.autofocus,
+    required this.controller,
+    required this.hasError,
+    required this.onChanged,
+    required this.onCompleted,
+    this.enabled = true,
+  });
 
   final bool autofocus;
+  final bool enabled;
   final bool hasError;
 
   final TextEditingController controller;
@@ -100,6 +109,7 @@ class _PinBoxesState extends State<PinBoxes> {
                     focusedErrorBorder: InputBorder.none,
                     isDense: true,
                   ),
+                  enabled: widget.enabled,
                   enableInteractiveSelection: false,
                   enableSuggestions: false,
                   focusNode: _focusNode,

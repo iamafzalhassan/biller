@@ -2,6 +2,16 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../pdf_theme.dart';
 
+const int termsMaxLines = 3;
+
+const double termsWrapChars = 72;
+
+int termLineCount(String term) {
+  final int lines = (term.trim().length / termsWrapChars).ceil();
+  if (lines < 1) return 1;
+  return lines > termsMaxLines ? termsMaxLines : lines;
+}
+
 pw.Widget buildTerms(List<String> terms) {
   if (terms.isEmpty) return pw.SizedBox();
   return pw.Column(
@@ -25,7 +35,9 @@ pw.Widget _term(int number, String term) {
           width: PdfTheme.gapLg,
           child: pw.Text('$number.', maxLines: 1, style: PdfTheme.terms),
         ),
-        pw.Expanded(child: pw.Text(term, style: PdfTheme.terms)),
+        pw.Expanded(
+          child: pw.Text(term, maxLines: termsMaxLines, overflow: pw.TextOverflow.clip, style: PdfTheme.terms),
+        ),
       ],
     ),
   );

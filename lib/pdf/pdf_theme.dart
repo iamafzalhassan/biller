@@ -21,7 +21,7 @@ abstract final class PdfTheme {
   static const double chipPadX = 4;
   static const double chipPadY = 1.5;
 
-  static const double rowHeight = 22;
+  static const double rowHeight = 26;
   static const double headerRowHeight = 20;
   static const double signatureSpace = 22;
 
@@ -29,8 +29,8 @@ abstract final class PdfTheme {
   static const double cellPadY = 5;
 
   static const double logoHeight = 34;
-  static const double ruleStrong = 0.7;
-  static const double ruleThin = 0.5;
+  static const double ruleStrong = 1.0;
+  static const double ruleThin = 0.75;
   static const double signatureWidth = 130;
   static const double totalsWidth = 168;
 

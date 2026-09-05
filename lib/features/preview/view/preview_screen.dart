@@ -10,7 +10,6 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/extensions/context_ext.dart';
-import '../../billing/controller/billing_controller.dart';
 import '../controller/print_service.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
@@ -26,16 +25,33 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   Future<void> _print() async {
     if (_isPrinting) return;
     setState(() => _isPrinting = true);
-    final BillingController controller = ref.read(billingControllerProvider.notifier);
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
+    final Uint8List? bytes = await _commit(number);
+    if (bytes == null) {
+      if (mounted) setState(() => _isPrinting = false);
+      return;
+    }
+    await _sendToPrinter(bytes, number);
+  }
+
+  Future<Uint8List?> _commit(String number) async {
+    try {
+      return await ref.read(billingControllerProvider.notifier).commit();
+    } catch (_) {
+      if (!mounted) return null;
+      context.showErrorSnack('Could not prepare $number. Nothing was printed and the bill is still here, so you can check the details and try again.');
+      return null;
+    }
+  }
+
+  Future<void> _sendToPrinter(Uint8List bytes, String number) async {
     bool hasFailed = false;
     try {
-      final Uint8List bytes = await controller.commit();
       await PrintService.layout(bytes, name: number);
     } catch (_) {
       hasFailed = true;
     }
-    controller.startNewBill();
+    ref.read(billingControllerProvider.notifier).startNewBill();
     if (!mounted) return;
     if (hasFailed) context.showErrorSnack('$number could not be sent to the printer. It is saved, so you can reprint it from Recent invoices.');
     Navigator.of(context).pop();

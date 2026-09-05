@@ -33,7 +33,7 @@ class RecentScreen extends ConsumerWidget {
         },
         onReprint: () {
           Navigator.of(sheetContext).pop();
-          unawaited(_reprint(ref, invoice));
+          unawaited(_reprint(context, ref, invoice));
         },
         onSaveCopy: () {
           Navigator.of(sheetContext).pop();
@@ -46,14 +46,24 @@ class RecentScreen extends ConsumerWidget {
   }
 
   Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
-    final String path = await ref.read(recentControllerProvider.notifier).saveCopy(invoice);
-    if (!context.mounted) return;
-    context.showSuccessSnack('Copy saved to $path. Open it from your Files app under Downloads.');
+    try {
+      final String path = await ref.read(recentControllerProvider.notifier).saveCopy(invoice);
+      if (!context.mounted) return;
+      context.showSuccessSnack('Copy saved to $path. Open it from your Files app under Downloads.');
+    } catch (_) {
+      if (!context.mounted) return;
+      context.showErrorSnack('${invoice.invoiceNumber} could not be saved to Downloads. Check the phone storage and try again.');
+    }
   }
 
-  Future<void> _reprint(WidgetRef ref, Invoice invoice) async {
-    final Uint8List bytes = await ref.read(recentControllerProvider.notifier).buildPdf(invoice);
-    await PrintService.layout(bytes, name: invoice.invoiceNumber);
+  Future<void> _reprint(BuildContext context, WidgetRef ref, Invoice invoice) async {
+    try {
+      final Uint8List bytes = await ref.read(recentControllerProvider.notifier).buildPdf(invoice);
+      await PrintService.layout(bytes, name: invoice.invoiceNumber);
+    } catch (_) {
+      if (!context.mounted) return;
+      context.showErrorSnack('${invoice.invoiceNumber} could not be sent to the printer. Check that the printer is on the same WiFi network and try again.');
+    }
   }
 
   Widget _retentionNote(int days) {
@@ -74,6 +84,20 @@ class RecentScreen extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.listSecondary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyList(int days) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) => ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: <Widget>[
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: _emptyState(days),
           ),
         ],
       ),
@@ -118,14 +142,18 @@ class RecentScreen extends ConsumerWidget {
             _retentionNote(days),
             Expanded(
               child: invoices.when(
-                data: (List<Invoice> data) => data.isEmpty
-                    ? _emptyState(days)
-                    : ListView.builder(
-                        itemBuilder: (BuildContext context, int index) =>
-                            RecentInvoiceTile(invoice: data[index], onTap: () => unawaited(_openActions(context, ref, data[index]))),
-                        itemCount: data.length,
-                        padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.xl),
-                      ),
+                data: (List<Invoice> data) => RefreshIndicator(
+                  onRefresh: ref.read(recentControllerProvider.notifier).refresh,
+                  child: data.isEmpty
+                      ? _emptyList(days)
+                      : ListView.builder(
+                          itemBuilder: (BuildContext context, int index) =>
+                              RecentInvoiceTile(invoice: data[index], onTap: () => unawaited(_openActions(context, ref, data[index]))),
+                          itemCount: data.length,
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.xl),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                        ),
+                ),
                 error: (Object error, StackTrace stack) => Padding(
                   padding: const EdgeInsets.all(AppSpacing.screenPadding),
                   child: Center(

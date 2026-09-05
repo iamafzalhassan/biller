@@ -41,16 +41,25 @@ class SqfliteSource {
     return _opening ??= openDatabase(
       databaseName,
       version: schemaVersion,
-      onCreate: (Database db, int version) => db.execute(
-        'CREATE TABLE $tableRecent ('
-        '$columnInvoiceNumber TEXT PRIMARY KEY, '
-        '$columnCustomerName TEXT NOT NULL, '
-        '$columnTotalCents INTEGER NOT NULL, '
-        '$columnCreatedAt INTEGER NOT NULL, '
-        '$columnPayload TEXT NOT NULL)',
-      ),
+      onCreate: (Database db, int version) => _createTable(db),
+      onUpgrade: _rebuild,
+      onDowngrade: _rebuild,
     );
   }
+
+  Future<void> _rebuild(Database db, int from, int to) async {
+    await db.execute('DROP TABLE IF EXISTS $tableRecent');
+    await _createTable(db);
+  }
+
+  Future<void> _createTable(Database db) => db.execute(
+    'CREATE TABLE $tableRecent ('
+    '$columnInvoiceNumber TEXT PRIMARY KEY, '
+    '$columnCustomerName TEXT NOT NULL, '
+    '$columnTotalCents INTEGER NOT NULL, '
+    '$columnCreatedAt INTEGER NOT NULL, '
+    '$columnPayload TEXT NOT NULL)',
+  );
 
   Future<void> _trim(Database db) async {
     await db.execute(

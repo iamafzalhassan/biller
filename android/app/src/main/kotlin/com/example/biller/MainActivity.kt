@@ -1,4 +1,4 @@
-package com.example.biller.biller
+package com.example.biller
 
 import android.content.ContentValues
 import android.net.Uri

@@ -33,7 +33,7 @@ class Invoice {
     invoiceNumber: json['invoiceNumber'] as String? ?? '',
     customerPhone: json['customerPhone'] as String?,
     items: (json['items'] as List<dynamic>? ?? <dynamic>[]).map((dynamic e) => InvoiceItem.fromJson(e as Map<String, dynamic>)).toList(),
-    createdAt: DateTime.parse(json['createdAt'] as String),
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
   );
 
   int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
@@ -77,6 +77,29 @@ class Invoice {
     'items': items.map((InvoiceItem i) => i.toJson()).toList(),
     'createdAt': createdAt.toIso8601String(),
   };
+
+  bool _sameItems(List<InvoiceItem> other) {
+    if (other.length != items.length) return false;
+    for (int index = 0; index < items.length; index++) {
+      if (other[index] != items[index]) return false;
+    }
+    return true;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Invoice &&
+      other.isRevised == isRevised &&
+      other.advanceCents == advanceCents &&
+      other.previousTotalCents == previousTotalCents &&
+      other.customerName == customerName &&
+      other.invoiceNumber == invoiceNumber &&
+      other.customerPhone == customerPhone &&
+      other.createdAt == createdAt &&
+      _sameItems(other.items);
+
+  @override
+  int get hashCode => Object.hash(isRevised, advanceCents, previousTotalCents, customerName, invoiceNumber, customerPhone, createdAt, Object.hashAll(items));
 
   @override
   String toString() => 'Invoice($invoiceNumber, $customerName, $totalCents)';

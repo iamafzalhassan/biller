@@ -105,9 +105,24 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Future<void> _printDirect() async {
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
+    final Uint8List? bytes = await _commit(number);
+    if (bytes == null) return;
+    await _sendToPrinter(bytes, number);
+  }
+
+  Future<Uint8List?> _commit(String number) async {
+    try {
+      return await _controller.commit();
+    } catch (_) {
+      if (!mounted) return null;
+      context.showErrorSnack('Could not prepare $number. Nothing was printed and the bill is still here, so you can check the details and try again.');
+      return null;
+    }
+  }
+
+  Future<void> _sendToPrinter(Uint8List bytes, String number) async {
     bool hasFailed = false;
     try {
-      final Uint8List bytes = await _controller.commit();
       await PrintService.layout(bytes, name: number);
     } catch (_) {
       hasFailed = true;

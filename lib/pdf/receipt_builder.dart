@@ -32,7 +32,7 @@ abstract final class ReceiptBuilder {
   static const double safetyMargin = PdfTheme.rowHeight;
   static const double signaturesHeight = PdfTheme.signatureSpace + PdfTheme.ruleStrong + PdfTheme.gapXs + 9;
   static const double termsHeadingHeight = 9 + PdfTheme.gapSm;
-  static const double termsLineHeight = 14;
+  static const double termsLineHeight = 11;
 
   static String _logoStamp = '';
 
@@ -48,7 +48,7 @@ abstract final class ReceiptBuilder {
     final List<List<InvoiceItem>> pages = paginate(
       items: invoice.printableItems,
       pageRows: rowsPerPage(usable),
-      lastPageRows: rowsOnLastPage(usable, invoice: invoice, termsCount: profile.printableTerms.length),
+      lastPageRows: rowsOnLastPage(usable, invoice: invoice, terms: profile.printableTerms),
     );
     final pw.Document document = pw.Document(title: invoice.invoiceNumber);
     int startIndex = 1;
@@ -89,11 +89,19 @@ abstract final class ReceiptBuilder {
 
   static int rowsPerPage(double usable) => _atLeastOne((usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);
 
-  static int rowsOnLastPage(double usable, {required Invoice invoice, required int termsCount}) {
+  static int rowsOnLastPage(double usable, {required Invoice invoice, required List<String> terms}) {
     final double totals = (invoice.showsAdvance ? 3 : 1) * PdfTheme.rowHeight;
-    final double terms = termsCount == 0 ? 0 : termsHeadingHeight + termsCount * termsLineHeight;
-    final double closing = PdfTheme.headerRowHeight + totals + signaturesHeight + dividerBandHeight + terms;
+    final double closing = PdfTheme.headerRowHeight + totals + signaturesHeight + dividerBandHeight + termsHeight(terms);
     return _atLeastOne((usable - closing) ~/ PdfTheme.rowHeight);
+  }
+
+  static double termsHeight(List<String> terms) {
+    if (terms.isEmpty) return 0;
+    double height = termsHeadingHeight;
+    for (final String term in terms) {
+      height += termLineCount(term) * termsLineHeight + PdfTheme.gapXs;
+    }
+    return height;
   }
 
   static List<List<InvoiceItem>> paginate({required List<InvoiceItem> items, required int pageRows, required int lastPageRows}) {

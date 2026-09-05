@@ -17,7 +17,9 @@ class ThousandsFormatter extends TextInputFormatter {
     final String whole = dot < 0 ? raw : raw.substring(0, dot);
     final String fraction = dot < 0 ? '' : raw.substring(dot + 1);
     if (fraction.length > decimalPlaces) return oldValue;
-    final String grouped = whole.isEmpty ? '' : _groups.format(int.parse(whole));
+    final int? value = whole.isEmpty ? 0 : int.tryParse(whole);
+    if (value == null) return oldValue;
+    final String grouped = whole.isEmpty ? '' : _groups.format(value);
     final String formatted = dot < 0 ? grouped : '$grouped.$fraction';
     final int cursorFromEnd = newValue.text.length - newValue.selection.baseOffset;
     return TextEditingValue(

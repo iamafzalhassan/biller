@@ -74,17 +74,23 @@ class BillingController extends Notifier<BillingState> {
 
   Future<Uint8List> commit() async {
     state = state.copyWith(isPrinting: true);
-    final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
-    final Invoice invoice = state.invoice.isRevised
-        ? state.invoice
-        : state.invoice.copyWith(invoiceNumber: await ref.read(settingsRepositoryProvider).consumeInvoiceNumber(), createdAt: DateTime.now());
-    final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
-    await ref.read(recentInvoicesRepositoryProvider).save(invoice);
-    ref.invalidate(recentControllerProvider);
-    await ref.read(receiptStorageRepositoryProvider).save(invoice, bytes);
-    await ref.read(draftRepositoryProvider).clear();
-    state = state.copyWith(isPrinting: false, invoice: invoice);
-    return bytes;
+    try {
+      final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
+      final Invoice invoice = state.invoice.isRevised
+          ? state.invoice
+          : state.invoice.copyWith(invoiceNumber: ref.read(settingsRepositoryProvider).pendingInvoiceNumber, createdAt: DateTime.now());
+      final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
+      if (!invoice.isRevised) await ref.read(settingsRepositoryProvider).commitPendingInvoiceNumber();
+      await ref.read(recentInvoicesRepositoryProvider).save(invoice);
+      ref.invalidate(recentControllerProvider);
+      await _archive(invoice, bytes);
+      await ref.read(draftRepositoryProvider).clear();
+      state = state.copyWith(isPrinting: false, invoice: invoice);
+      return bytes;
+    } catch (_) {
+      state = state.copyWith(isPrinting: false);
+      rethrow;
+    }
   }
 
   void startNewBill() {
@@ -96,6 +102,14 @@ class BillingController extends Notifier<BillingState> {
       pendingInvoiceNumber: pending,
       invoice: _blankInvoice(pending),
     );
+  }
+
+  Future<void> _archive(Invoice invoice, Uint8List bytes) async {
+    try {
+      await ref.read(receiptStorageRepositoryProvider).save(invoice, bytes);
+    } catch (_) {
+      return;
+    }
   }
 
   void _updateItem(String id, InvoiceItem Function(InvoiceItem) transform) {

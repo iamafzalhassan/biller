@@ -23,9 +23,11 @@ class SettingsRepository {
     return BusinessProfile.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
+  int get nextSequence => _prefs.getInt(PrefsSource.keySequence) + 1;
+
   String get pendingInvoiceNumber {
     final BusinessProfile p = profile;
-    return InvoiceNumberGen.build(sequence: _prefs.getInt(PrefsSource.keySequence) + 1, deviceId: p.deviceId, prefix: p.invoicePrefix);
+    return InvoiceNumberGen.build(sequence: nextSequence, deviceId: p.deviceId, prefix: p.invoicePrefix);
   }
 
   Future<void> saveProfile(BusinessProfile profile) => _prefs.setString(PrefsSource.keyProfile, jsonEncode(profile.toJson()));
@@ -42,10 +44,5 @@ class SettingsRepository {
     await _prefs.remove(PrefsSource.keyDraft);
   }
 
-  Future<String> consumeInvoiceNumber() async {
-    final int next = _prefs.getInt(PrefsSource.keySequence) + 1;
-    await _prefs.setInt(PrefsSource.keySequence, next);
-    final BusinessProfile p = profile;
-    return InvoiceNumberGen.build(sequence: next, deviceId: p.deviceId, prefix: p.invoicePrefix);
-  }
+  Future<void> commitPendingInvoiceNumber() => _prefs.setInt(PrefsSource.keySequence, _prefs.getInt(PrefsSource.keySequence) + 1);
 }

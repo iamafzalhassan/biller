@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,11 +9,42 @@ import 'app_theme.dart';
 import 'providers.dart';
 import 'router.dart';
 
-class BillerApp extends ConsumerWidget {
+class BillerApp extends ConsumerStatefulWidget {
   const BillerApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BillerApp> createState() => _BillerAppState();
+}
+
+class _BillerAppState extends ConsumerState<BillerApp> with WidgetsBindingObserver {
+  Future<void> _purgeExpiredInvoices() async {
+    try {
+      await ref.read(recentInvoicesRepositoryProvider).purge(retentionDays: ref.read(settingsRepositoryProvider).retentionDays);
+    } catch (_) {
+      return;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_purgeExpiredInvoices());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_purgeExpiredInvoices());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bool isSetUp = ref.watch(settingsRepositoryProvider).isSetupComplete;
     return MaterialApp(
       debugShowCheckedModeBanner: false,

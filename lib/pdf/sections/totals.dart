@@ -6,12 +6,13 @@ import '../pdf_theme.dart';
 
 const Map<int, pw.TableColumnWidth> _columnWidths = <int, pw.TableColumnWidth>{0: pw.FlexColumnWidth(), 1: pw.FixedColumnWidth(PdfTheme.amountColumn)};
 
+const pw.BorderSide _rule = pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin);
+
+const pw.TableBorder _tableBorder = pw.TableBorder(bottom: _rule, horizontalInside: _rule);
+
 pw.Widget buildTotals(Invoice invoice) {
   return pw.Table(
-    border: const pw.TableBorder(
-      horizontalInside: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
-      top: pw.BorderSide(color: PdfTheme.hairline, width: PdfTheme.ruleThin),
-    ),
+    border: _tableBorder,
     columnWidths: _columnWidths,
     children: <pw.TableRow>[
       _row('TOTAL', invoice.totalCents.asAmount, PdfTheme.bodyBold),

@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/thousands_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -34,6 +35,8 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _qtyController = TextEditingController();
 
+  bool get _isDirty => _descriptionController.text.trim().isNotEmpty || _qtyController.text.trim().isNotEmpty || _priceController.text.trim().isNotEmpty;
+
   bool get _isEditing => widget.item != null;
 
   bool get _isValid => _descriptionController.text.trim().isNotEmpty && _qty > 0 && _unitPriceCents > 0;
@@ -43,6 +46,15 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
   int get _unitPriceCents => _priceController.text.asCentsOrNull ?? 0;
 
   num get _qty => num.tryParse(_qtyController.text.replaceAll(',', '').trim()) ?? 0;
+
+  void _close() {
+    if (_isValid) {
+      _save(addAnother: false);
+      return;
+    }
+    if (_isDirty) context.showBriefSnack('That item was not added. An item needs a description, a quantity and a price.');
+    Navigator.of(context).pop();
+  }
 
   void _save({required bool addAnother}) {
     if (!_isValid) return;
@@ -96,14 +108,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     }
     return SheetActions(
       primary: FilledButton(onPressed: _isValid ? () => _save(addAnother: true) : null, child: const Text('Save & Next', maxLines: 1)),
-      secondary: OutlinedButton(
-        onPressed: () => Navigator.of(context).pop(),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.danger,
-          side: const BorderSide(color: AppColors.danger),
-        ),
-        child: const Text('Close', maxLines: 1),
-      ),
+      secondary: OutlinedButton(onPressed: _close, child: Text(_isValid ? 'Save & Close' : 'Close', maxLines: 1)),
     );
   }
 

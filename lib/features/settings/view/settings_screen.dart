@@ -17,6 +17,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/phone_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
+import '../../../core/utils/invoice_number_gen.dart';
 import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -38,6 +39,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final FocusNode _buildingFocus = FocusNode();
   final FocusNode _cityFocus = FocusNode();
   final FocusNode _currentPinFocus = FocusNode();
+  final FocusNode _deviceIdFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _nameFocus = FocusNode();
   final FocusNode _newPinFocus = FocusNode();
@@ -45,11 +47,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final FocusNode _phone1Focus = FocusNode();
   final FocusNode _phone2Focus = FocusNode();
   final FocusNode _phone3Focus = FocusNode();
+  final FocusNode _prefixFocus = FocusNode();
   final FocusNode _streetFocus = FocusNode();
 
   final TextEditingController _buildingController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _currentPinController = TextEditingController();
+  final TextEditingController _deviceIdController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _newPinController = TextEditingController();
@@ -57,6 +61,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _phone1Controller = TextEditingController();
   final TextEditingController _phone2Controller = TextEditingController();
   final TextEditingController _phone3Controller = TextEditingController();
+  final TextEditingController _prefixController = TextEditingController();
   final TextEditingController _retentionController = TextEditingController();
   final TextEditingController _streetController = TextEditingController();
 
@@ -121,6 +126,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _phone3Controller.text,
   ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
 
+  String get _nextInvoiceNumber => InvoiceNumberGen.build(
+    sequence: ref.read(settingsRepositoryProvider).nextSequence,
+    deviceId: _deviceIdController.text.trim().toUpperCase(),
+    prefix: _prefixController.text.trim().toUpperCase(),
+  );
+
   int get _retentionDays => int.tryParse(_retentionController.text.trim()) ?? SettingsRepository.defaultRetentionDays;
 
   Future<void> _save() async {
@@ -132,14 +143,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context.showErrorSnack('Enter a valid email address, like name@example.com. Nothing has been saved yet.');
       return;
     }
+    if (_prefixController.text.trim().isEmpty || !Validators.isValidDeviceId(_deviceIdController.text.trim().toUpperCase())) {
+      context.showErrorSnack('Enter an invoice prefix and a single-letter device ID, like INV and A. Nothing has been saved yet.');
+      return;
+    }
     final BusinessProfile existing = ref.read(settingsRepositoryProvider).profile;
     final BusinessProfile profile = BusinessProfile(
       addressBuilding: _buildingController.text.trim(),
       addressCity: _cityController.text.trim(),
       addressNo: _noController.text.trim(),
       addressStreet: _streetController.text.trim(),
-      deviceId: existing.deviceId,
-      invoicePrefix: existing.invoicePrefix,
+      deviceId: _deviceIdController.text.trim().toUpperCase(),
+      invoicePrefix: _prefixController.text.trim().toUpperCase(),
       logoPath: _logoPath,
       name: _nameController.text.trim(),
       ownerEmail: _emailController.text.trim(),
@@ -151,6 +166,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (existing.logoPath != _logoPath) await _deleteLogoFile(existing.logoPath);
     if (!mounted) return;
     ref.invalidate(recentControllerProvider);
+    if (existing.deviceId != profile.deviceId || existing.invoicePrefix != profile.invoicePrefix) ref.invalidate(billingControllerProvider);
     context.showSuccessSnack('Settings saved. The changes appear on the next receipt you print.');
     Navigator.of(context).pop();
   }
@@ -160,6 +176,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required FocusNode focusNode,
     required String label,
     bool isPhone = false,
+    ValueChanged<String>? onChanged,
     bool isUpper = true,
     int? maxLength,
     FocusNode? nextFocus,
@@ -176,6 +193,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       keyboardType: keyboardType,
       label: label,
       maxLength: maxLength,
+      onChanged: onChanged,
       onSubmitted: (String _) => nextFocus == null ? FocusManager.instance.primaryFocus?.unfocus() : nextFocus.requestFocus(),
       textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
       textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
@@ -191,6 +209,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     label: label,
     nextFocus: nextFocus,
   );
+
+  void _refresh(String _) => setState(() {});
 
   Widget _retentionField() {
     return AppTextField(
@@ -407,6 +427,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: AppSpacing.xl),
         _termsSection(),
         const SizedBox(height: AppSpacing.xl),
+        _sectionHeading('INVOICE NUMBERING'),
+        const Text(
+          'Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.',
+          style: AppTextStyles.listSecondary,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              flex: 2,
+              child: _field(
+                controller: _prefixController,
+                focusNode: _prefixFocus,
+                label: 'Prefix',
+                maxLength: 6,
+                nextFocus: _deviceIdFocus,
+                onChanged: _refresh,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _field(controller: _deviceIdController, focusNode: _deviceIdFocus, label: 'Device', maxLength: 1, onChanged: _refresh),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text('Next invoice: $_nextInvoiceNumber', maxLines: 1, style: AppTextStyles.listSecondary),
+        const SizedBox(height: AppSpacing.xl),
         _sectionHeading('INVOICE HISTORY'),
         const Text(
           'Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.',
@@ -441,6 +490,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _phone2Controller.text = phones.length > 1 ? phones[1] : '';
     _phone3Controller.text = phones.length > 2 ? phones[2] : '';
     _retentionController.text = '${ref.read(settingsRepositoryProvider).retentionDays}';
+    _prefixController.text = profile.invoicePrefix;
+    _deviceIdController.text = profile.deviceId;
     _streetController.text = profile.addressStreet;
     _logoPath = profile.logoPath;
     _terms = profile.terms;
@@ -452,6 +503,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _buildingFocus.dispose();
     _cityFocus.dispose();
     _currentPinFocus.dispose();
+    _deviceIdFocus.dispose();
     _emailFocus.dispose();
     _nameFocus.dispose();
     _newPinFocus.dispose();
@@ -459,10 +511,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _phone1Focus.dispose();
     _phone2Focus.dispose();
     _phone3Focus.dispose();
+    _prefixFocus.dispose();
     _streetFocus.dispose();
     _buildingController.dispose();
     _cityController.dispose();
     _currentPinController.dispose();
+    _deviceIdController.dispose();
     _emailController.dispose();
     _nameController.dispose();
     _newPinController.dispose();
@@ -470,6 +524,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _phone1Controller.dispose();
     _phone2Controller.dispose();
     _phone3Controller.dispose();
+    _prefixController.dispose();
     _retentionController.dispose();
     _streetController.dispose();
     super.dispose();
