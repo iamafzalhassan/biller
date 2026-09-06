@@ -7,11 +7,8 @@ import '../../../models/invoice.dart';
 import '../../../pdf/receipt_builder.dart';
 
 class RecentController extends AsyncNotifier<List<Invoice>> {
-  @override
-  Future<List<Invoice>> build() => ref.read(recentInvoicesRepositoryProvider).load(retentionDays: ref.read(settingsRepositoryProvider).retentionDays);
-
   Future<void> refresh() async {
-    state = await AsyncValue.guard(() => ref.read(recentInvoicesRepositoryProvider).load(retentionDays: ref.read(settingsRepositoryProvider).retentionDays));
+    state = await AsyncValue.guard(_load);
   }
 
   Future<Uint8List> buildPdf(Invoice invoice) => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: invoice);
@@ -21,4 +18,9 @@ class RecentController extends AsyncNotifier<List<Invoice>> {
     final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
     return ref.read(receiptStorageRepositoryProvider).save(invoice, bytes);
   }
+
+  Future<List<Invoice>> _load() => ref.read(recentInvoicesRepositoryProvider).load(retentionDays: ref.read(settingsRepositoryProvider).retentionDays);
+
+  @override
+  Future<List<Invoice>> build() => _load();
 }

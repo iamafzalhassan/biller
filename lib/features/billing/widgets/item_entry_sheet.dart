@@ -9,7 +9,6 @@ import '../../../core/extensions/context_ext.dart';
 import '../../../core/formatters/thousands_formatter.dart';
 import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/dotted_divider.dart';
 import '../../../core/widgets/sheet_frame.dart';
 import '../../../models/invoice_item.dart';
 
@@ -18,7 +17,7 @@ class ItemEntrySheet extends StatefulWidget {
 
   final InvoiceItem? item;
 
-  final void Function(String description, num qty, int unitPriceCents, bool addAnother) onSave;
+  final void Function(String description, num qty, int unitPriceCents) onSave;
 
   final VoidCallback? onDelete;
 
@@ -35,30 +34,21 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _qtyController = TextEditingController();
 
+  int get _amountCents => (_qty * _unitPriceCents).round();
+
   bool get _isDirty => _descriptionController.text.trim().isNotEmpty || _qtyController.text.trim().isNotEmpty || _priceController.text.trim().isNotEmpty;
 
   bool get _isEditing => widget.item != null;
 
   bool get _isValid => _descriptionController.text.trim().isNotEmpty && _qty > 0 && _unitPriceCents > 0;
 
-  int get _amountCents => (_qty * _unitPriceCents).round();
+  num get _qty => num.tryParse(_qtyController.text.replaceAll(',', '').trim()) ?? 0;
 
   int get _unitPriceCents => _priceController.text.asCentsOrNull ?? 0;
 
-  num get _qty => num.tryParse(_qtyController.text.replaceAll(',', '').trim()) ?? 0;
-
-  void _close() {
-    if (_isValid) {
-      _save(addAnother: false);
-      return;
-    }
-    if (_isDirty) context.showBriefSnack('That item was not added. An item needs a description, a quantity and a price.');
-    Navigator.of(context).pop();
-  }
-
   void _save({required bool addAnother}) {
     if (!_isValid) return;
-    widget.onSave(_descriptionController.text.trim(), _qty, _unitPriceCents, addAnother);
+    widget.onSave(_descriptionController.text.trim(), _qty, _unitPriceCents);
     if (!addAnother) {
       Navigator.of(context).pop();
       return;
@@ -69,6 +59,15 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     HapticFeedback.selectionClick();
     setState(() {});
     _descriptionFocus.requestFocus();
+  }
+
+  void _close() {
+    if (_isValid) {
+      _save(addAnother: false);
+      return;
+    }
+    if (_isDirty) context.showBriefSnack('That item was not added. An item needs a description, a quantity and a price.');
+    Navigator.of(context).pop();
   }
 
   Widget _numberField({
@@ -136,75 +135,62 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(_isEditing ? 'Edit Item' : 'Add Item', maxLines: 1, style: AppTextStyles.sectionHeading),
-              const SizedBox(height: AppSpacing.sm),
-              const DottedDivider(),
-              const SizedBox(height: AppSpacing.lg),
-              AppTextField(
-                autofocus: true,
-                controller: _descriptionController,
-                focusNode: _descriptionFocus,
-                inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
-                label: 'Description',
-                onChanged: (String _) => setState(() {}),
-                onSubmitted: (String _) => _qtyFocus.requestFocus(),
-                textCapitalization: TextCapitalization.characters,
+    return SheetFrame(
+      title: _isEditing ? 'Edit Item' : 'Add Item',
+      children: <Widget>[
+        AppTextField(
+          autofocus: true,
+          controller: _descriptionController,
+          focusNode: _descriptionFocus,
+          inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
+          label: 'Description',
+          onChanged: (String _) => setState(() {}),
+          onSubmitted: (String _) => _qtyFocus.requestFocus(),
+          textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _numberField(
+                controller: _qtyController,
+                focusNode: _qtyFocus,
+                label: 'Qty',
+                onSubmitted: _priceFocus.requestFocus,
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _numberField(
-                      controller: _qtyController,
-                      focusNode: _qtyFocus,
-                      label: 'Qty',
-                      onSubmitted: _priceFocus.requestFocus,
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    flex: 2,
-                    child: _numberField(
-                      controller: _priceController,
-                      focusNode: _priceFocus,
-                      label: 'Unit Price',
-                      onSubmitted: () => _save(addAnother: !_isEditing),
-                      textInputAction: TextInputAction.done,
-                    ),
-                  ),
-                ],
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              flex: 2,
+              child: _numberField(
+                controller: _priceController,
+                focusNode: _priceFocus,
+                label: 'Unit Price',
+                onSubmitted: () => _save(addAnother: !_isEditing),
+                textInputAction: TextInputAction.done,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: <Widget>[
-                  const Text('AMOUNT', maxLines: 1, style: AppTextStyles.overline),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: FittedBox(
-                      alignment: Alignment.centerRight,
-                      fit: BoxFit.scaleDown,
-                      child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _actions(),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: <Widget>[
+            const Text('AMOUNT', maxLines: 1, style: AppTextStyles.overline),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: FittedBox(
+                alignment: Alignment.centerRight,
+                fit: BoxFit.scaleDown,
+                child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _actions(),
+      ],
     );
   }
 }

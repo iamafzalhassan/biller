@@ -2,6 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsSource {
   static const String keyDraft = 'draft_invoice';
+  static const String keyPrinterAddress = 'printer_address';
+  static const String keyPrinterName = 'printer_name';
+  static const String keyPrinterPaper = 'printer_paper';
+  static const String keyPrintTarget = 'print_target';
   static const String keyProfile = 'business_profile';
   static const String keyRetentionDays = 'history_retention_days';
   static const String keySequence = 'invoice_sequence';

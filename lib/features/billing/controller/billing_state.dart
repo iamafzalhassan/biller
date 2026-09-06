@@ -5,21 +5,21 @@ class BillingState {
   final bool isPrinting;
   final bool isRestorable;
 
-  final int formRevision;
+  final int formSeed;
 
   final String pendingInvoiceNumber;
 
+  final DateTime? draftSavedAt;
   final Invoice invoice;
 
   const BillingState({
     required this.isPrinting,
     required this.isRestorable,
-    required this.formRevision,
+    required this.formSeed,
     required this.pendingInvoiceNumber,
+    this.draftSavedAt,
     required this.invoice,
   });
-
-  bool get canPrint => blockingReason.isEmpty && !isPrinting;
 
   String get blockingReason {
     if (Validators.isBlank(invoice.customerName)) return 'Enter the customer name before printing. It is printed at the top of the bill.';
@@ -28,11 +28,28 @@ class BillingState {
     return '';
   }
 
-  BillingState copyWith({bool? isPrinting, bool? isRestorable, int? formRevision, String? pendingInvoiceNumber, Invoice? invoice}) => BillingState(
-    isPrinting: isPrinting ?? this.isPrinting,
-    isRestorable: isRestorable ?? this.isRestorable,
-    formRevision: formRevision ?? this.formRevision,
-    pendingInvoiceNumber: pendingInvoiceNumber ?? this.pendingInvoiceNumber,
-    invoice: invoice ?? this.invoice,
-  );
+  bool get canPrint => blockingReason.isEmpty && !isPrinting;
+
+  BillingState copyWith({bool? isPrinting, bool? isRestorable, int? formSeed, String? pendingInvoiceNumber, DateTime? draftSavedAt, Invoice? invoice}) =>
+      BillingState(
+        isPrinting: isPrinting ?? this.isPrinting,
+        isRestorable: isRestorable ?? this.isRestorable,
+        formSeed: formSeed ?? this.formSeed,
+        pendingInvoiceNumber: pendingInvoiceNumber ?? this.pendingInvoiceNumber,
+        draftSavedAt: draftSavedAt ?? this.draftSavedAt,
+        invoice: invoice ?? this.invoice,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is BillingState &&
+      other.isPrinting == isPrinting &&
+      other.isRestorable == isRestorable &&
+      other.formSeed == formSeed &&
+      other.pendingInvoiceNumber == pendingInvoiceNumber &&
+      other.draftSavedAt == draftSavedAt &&
+      other.invoice == invoice;
+
+  @override
+  int get hashCode => Object.hash(isPrinting, isRestorable, formSeed, pendingInvoiceNumber, draftSavedAt, invoice);
 }

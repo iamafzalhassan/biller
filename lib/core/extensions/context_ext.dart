@@ -4,11 +4,12 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 
-const int maxSnackLines = 2;
-
 enum SnackTone { error, neutral, success }
 
 extension ContextExt on BuildContext {
+  static const int _maxLines = 2;
+  static const int _visibleSeconds = 5;
+
   void showBriefSnack(String message, {SnackBarAction? action}) => _showSnack(message, SnackTone.neutral, action);
 
   void showSuccessSnack(String message) => _showSnack(message, SnackTone.success, null);
@@ -27,8 +28,8 @@ extension ContextExt on BuildContext {
             SnackTone.success => AppColors.success,
           },
           behavior: SnackBarBehavior.fixed,
-          content: Text(message, maxLines: maxSnackLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.snack),
-          duration: const Duration(seconds: 5),
+          content: Text(message, maxLines: _maxLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.snack),
+          duration: const Duration(seconds: _visibleSeconds),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.lg),
         ),
       );

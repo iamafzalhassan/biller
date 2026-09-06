@@ -25,6 +25,9 @@ class _BillerAppState extends ConsumerState<BillerApp> with WidgetsBindingObserv
     }
   }
 
+  Widget _dismissOnTapOutside(Widget? child) =>
+      GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child);
+
   @override
   void initState() {
     super.initState();
@@ -47,9 +50,8 @@ class _BillerAppState extends ConsumerState<BillerApp> with WidgetsBindingObserv
   Widget build(BuildContext context) {
     final bool isSetUp = ref.watch(settingsRepositoryProvider).isSetupComplete;
     return MaterialApp(
+      builder: (BuildContext context, Widget? child) => _dismissOnTapOutside(child),
       debugShowCheckedModeBanner: false,
-      builder: (BuildContext context, Widget? child) =>
-          GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child),
       home: isSetUp ? const BillingScreen() : const SetupScreen(),
       routes: Routes.map,
       theme: AppTheme.light,

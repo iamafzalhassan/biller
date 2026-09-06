@@ -15,7 +15,12 @@ class SettingsRepository {
 
   bool get isSetupComplete => _prefs.getBool(PrefsSource.keySetupComplete);
 
-  int get retentionDays => _prefs.getInt(PrefsSource.keyRetentionDays, fallback: defaultRetentionDays).clamp(minRetentionDays, maxRetentionDays);
+  int get nextSequence => _prefs.getInt(PrefsSource.keySequence) + 1;
+
+  String get pendingInvoiceNumber {
+    final BusinessProfile current = profile;
+    return InvoiceNumberGen.build(sequence: nextSequence, deviceId: current.deviceId, prefix: current.invoicePrefix);
+  }
 
   BusinessProfile get profile {
     final String? raw = _prefs.getString(PrefsSource.keyProfile);
@@ -23,12 +28,7 @@ class SettingsRepository {
     return BusinessProfile.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  int get nextSequence => _prefs.getInt(PrefsSource.keySequence) + 1;
-
-  String get pendingInvoiceNumber {
-    final BusinessProfile p = profile;
-    return InvoiceNumberGen.build(sequence: nextSequence, deviceId: p.deviceId, prefix: p.invoicePrefix);
-  }
+  int get retentionDays => _prefs.getInt(PrefsSource.keyRetentionDays, fallback: defaultRetentionDays).clamp(minRetentionDays, maxRetentionDays);
 
   Future<void> saveProfile(BusinessProfile profile) => _prefs.setString(PrefsSource.keyProfile, jsonEncode(profile.toJson()));
 

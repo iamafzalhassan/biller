@@ -64,12 +64,10 @@ class BusinessProfile {
     terms: (json['terms'] as List<dynamic>?)?.map((dynamic e) => e as String).toList() ?? defaultTerms,
   );
 
-  bool get hasLogo => logoPath.trim().isNotEmpty;
-
-  bool get isComplete => name.trim().isNotEmpty && ownerEmail.trim().isNotEmpty;
-
   String get addressLine =>
       <String>[addressNo, addressStreet, addressCity, addressBuilding].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
+
+  bool get hasLogo => logoPath.trim().isNotEmpty;
 
   String get phoneLine => printablePhones.map(_grouped).join('  |  ');
 

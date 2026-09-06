@@ -7,11 +7,11 @@ import '../core/constants/app_text_styles.dart';
 abstract final class AppTheme {
   static ThemeData get light {
     final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
+      error: AppColors.danger,
       primary: AppColors.primary,
       onPrimary: AppColors.primaryOn,
+      seedColor: AppColors.primary,
       surface: AppColors.surfaceBase,
-      error: AppColors.danger,
     );
     return ThemeData(
       colorScheme: scheme,
@@ -101,17 +101,6 @@ abstract final class AppTheme {
     textStyle: AppTextStyles.button,
   );
 
-  static ButtonStyle get _outlinedButtonStyle => OutlinedButton.styleFrom(
-    foregroundColor: AppColors.primary,
-    maximumSize: const Size.fromHeight(AppSpacing.buttonHeight),
-    minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
-    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusButton)),
-    side: const BorderSide(color: AppColors.primary),
-    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    textStyle: AppTextStyles.button,
-  );
-
   static InputDecorationTheme get _inputDecorationTheme => InputDecorationTheme(
     border: _border(AppColors.divider),
     constraints: const BoxConstraints(minHeight: AppSpacing.controlHeight),
@@ -129,6 +118,17 @@ abstract final class AppTheme {
     isDense: true,
     labelStyle: AppTextStyles.label,
     prefixStyle: AppTextStyles.amount,
+  );
+
+  static ButtonStyle get _outlinedButtonStyle => OutlinedButton.styleFrom(
+    foregroundColor: AppColors.primary,
+    maximumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+    minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusButton)),
+    side: const BorderSide(color: AppColors.primary),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    textStyle: AppTextStyles.button,
   );
 
   static OutlineInputBorder _border(Color color, {double width = 1}) => OutlineInputBorder(

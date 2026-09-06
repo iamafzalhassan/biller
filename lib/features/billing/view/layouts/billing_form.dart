@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/section_header.dart';
 
-class BillingPhoneLayout extends StatelessWidget {
-  const BillingPhoneLayout({
+class BillingForm extends StatelessWidget {
+  const BillingForm({
     super.key,
     required this.itemRows,
     required this.scrollController,
@@ -34,6 +34,7 @@ class BillingPhoneLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       controller: scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.xl + MediaQuery.viewInsetsOf(context).bottom),
       children: <Widget>[
         if (draftBanner != null) _inset(draftBanner!),

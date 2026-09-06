@@ -13,9 +13,9 @@ class InvoiceItem {
 
   int get amountCents => (qty * unitPriceCents).round();
 
-  bool get isPrintable => description.trim().isNotEmpty && qty > 0;
-
   bool get isEmpty => description.trim().isEmpty && qty == 0 && unitPriceCents == 0;
+
+  bool get isPrintable => description.trim().isNotEmpty && qty > 0;
 
   InvoiceItem copyWith({int? unitPriceCents, num? qty, String? description, String? id}) =>
       InvoiceItem(unitPriceCents: unitPriceCents ?? this.unitPriceCents, qty: qty ?? this.qty, description: description ?? this.description, id: id ?? this.id);

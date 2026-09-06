@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
@@ -17,18 +18,17 @@ import 'sections/terms.dart';
 import 'sections/totals.dart';
 
 abstract final class ReceiptBuilder {
-  static const double marginPt = 24;
-
-  static const double pageHeight = 595.28;
-  static const double bodyHeight = pageHeight - marginPt * 2;
-  static const double dividerBandHeight = PdfTheme.gapMd * 2 + PdfTheme.ruleThin;
   static const double addressLineHeight = 11;
   static const double addressWrapChars = 70;
+  static const double bodyHeight = pageHeight - marginPt * 2;
   static const double businessNameHeight = 17;
+  static const double dividerBandHeight = PdfTheme.gapMd * 2 + PdfTheme.ruleThin;
   static const double headerRuleBandHeight = PdfTheme.gapMd + 1;
   static const double logoBlockHeight = PdfTheme.logoHeight + PdfTheme.gapSm;
+  static const double marginPt = 24;
   static const double metaBlockHeight = 52;
   static const double pageFooterHeight = 15;
+  static const double pageHeight = 595.28;
   static const double safetyMargin = PdfTheme.rowHeight;
   static const double signaturesHeight = PdfTheme.signatureSpace + PdfTheme.ruleStrong + PdfTheme.gapXs + 9;
   static const double termsHeadingHeight = 9 + PdfTheme.gapSm;
@@ -38,17 +38,14 @@ abstract final class ReceiptBuilder {
 
   static pw.MemoryImage? _logoCache;
 
-  static Future<Uint8List> build({required BusinessProfile profile, required Invoice invoice}) async =>
-      (await buildDocument(profile: profile, invoice: invoice)).save();
-
-  static Future<pw.Document> buildDocument({required BusinessProfile profile, required Invoice invoice}) async {
+  static Future<Uint8List> build({required BusinessProfile profile, required Invoice invoice}) async {
     await PdfTheme.ensureFontsLoaded();
     final pw.MemoryImage? logo = await _loadLogo(profile);
-    final double usable = bodyHeight - headerHeight(profile, hasLogo: logo != null) - pageFooterHeight - safetyMargin;
-    final List<List<InvoiceItem>> pages = paginate(
+    final double usable = bodyHeight - _headerHeight(profile, hasLogo: logo != null) - pageFooterHeight - safetyMargin;
+    final List<List<InvoiceItem>> pages = _paginate(
       items: invoice.printableItems,
-      pageRows: rowsPerPage(usable),
-      lastPageRows: rowsOnLastPage(usable, invoice: invoice, terms: profile.printableTerms),
+      pageRows: _rowsPerPage(usable),
+      lastPageRows: _rowsOnLastPage(usable, invoice: invoice, terms: profile.printableTerms),
     );
     final pw.Document document = pw.Document(title: invoice.invoiceNumber);
     int startIndex = 1;
@@ -73,10 +70,21 @@ abstract final class ReceiptBuilder {
         ),
       );
     }
-    return document;
+    return document.save();
   }
 
-  static double headerHeight(BusinessProfile profile, {required bool hasLogo}) {
+  static Future<pw.MemoryImage?> _loadLogo(BusinessProfile profile) async {
+    if (!profile.hasLogo) return null;
+    final File file = File(profile.logoPath);
+    if (!file.existsSync()) return null;
+    final String stamp = '${profile.logoPath}|${file.lastModifiedSync().millisecondsSinceEpoch}';
+    if (stamp == _logoStamp) return _logoCache;
+    _logoCache = pw.MemoryImage(await file.readAsBytes());
+    _logoStamp = stamp;
+    return _logoCache;
+  }
+
+  static double _headerHeight(BusinessProfile profile, {required bool hasLogo}) {
     final String address = profile.addressLine;
     final int addressLines = address.isEmpty ? 0 : (address.length > addressWrapChars ? 2 : 1);
     return (hasLogo ? logoBlockHeight : 0) +
@@ -87,15 +95,15 @@ abstract final class ReceiptBuilder {
         metaBlockHeight;
   }
 
-  static int rowsPerPage(double usable) => _atLeastOne((usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);
+  static int _rowsPerPage(double usable) => math.max(1, (usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);
 
-  static int rowsOnLastPage(double usable, {required Invoice invoice, required List<String> terms}) {
+  static int _rowsOnLastPage(double usable, {required Invoice invoice, required List<String> terms}) {
     final double totals = (invoice.showsAdvance ? 3 : 1) * PdfTheme.rowHeight;
-    final double closing = PdfTheme.headerRowHeight + totals + signaturesHeight + dividerBandHeight + termsHeight(terms);
-    return _atLeastOne((usable - closing) ~/ PdfTheme.rowHeight);
+    final double closing = PdfTheme.headerRowHeight + totals + signaturesHeight + dividerBandHeight + _termsHeight(terms);
+    return math.max(1, (usable - closing) ~/ PdfTheme.rowHeight);
   }
 
-  static double termsHeight(List<String> terms) {
+  static double _termsHeight(List<String> terms) {
     if (terms.isEmpty) return 0;
     double height = termsHeadingHeight;
     for (final String term in terms) {
@@ -104,22 +112,18 @@ abstract final class ReceiptBuilder {
     return height;
   }
 
-  static List<List<InvoiceItem>> paginate({required List<InvoiceItem> items, required int pageRows, required int lastPageRows}) {
+  static List<List<InvoiceItem>> _paginate({required List<InvoiceItem> items, required int pageRows, required int lastPageRows}) {
     if (items.length <= lastPageRows) return <List<InvoiceItem>>[items];
     final List<List<InvoiceItem>> pages = <List<InvoiceItem>>[];
     int index = 0;
     while (items.length - index > lastPageRows) {
-      final int take = _atLeastOne(_min(pageRows, items.length - index - 1));
+      final int take = math.max(1, math.min(pageRows, items.length - index - 1));
       pages.add(items.sublist(index, index + take));
       index += take;
     }
     pages.add(items.sublist(index));
     return pages;
   }
-
-  static int _atLeastOne(int value) => value < 1 ? 1 : value;
-
-  static int _min(int a, int b) => a < b ? a : b;
 
   static pw.Widget _page({
     required bool isLastPage,
@@ -147,16 +151,5 @@ abstract final class ReceiptBuilder {
         buildPageFooter(pageNumber, pageCount),
       ],
     );
-  }
-
-  static Future<pw.MemoryImage?> _loadLogo(BusinessProfile profile) async {
-    if (!profile.hasLogo) return null;
-    final File file = File(profile.logoPath);
-    if (!file.existsSync()) return null;
-    final String stamp = '${profile.logoPath}|${file.lastModifiedSync().millisecondsSinceEpoch}';
-    if (stamp == _logoStamp) return _logoCache;
-    _logoCache = pw.MemoryImage(await file.readAsBytes());
-    _logoStamp = stamp;
-    return _logoCache;
   }
 }

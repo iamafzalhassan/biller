@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/utils/mock_items.dart';
 import '../../../models/business_profile.dart';
 import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
@@ -14,17 +13,10 @@ import 'billing_state.dart';
 class BillingController extends Notifier<BillingState> {
   static const Uuid _uuid = Uuid();
 
-  @override
-  BillingState build() {
-    final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
-    final bool hasDraft = ref.read(draftRepositoryProvider).draft != null;
-    return BillingState(isPrinting: false, isRestorable: hasDraft, formRevision: 0, pendingInvoiceNumber: pending, invoice: _blankInvoice(pending));
-  }
-
   void restoreDraft() {
     final Invoice? draft = ref.read(draftRepositoryProvider).draft;
     if (draft == null) return;
-    state = state.copyWith(isRestorable: false, formRevision: state.formRevision + 1, invoice: draft);
+    state = state.copyWith(isRestorable: false, formSeed: state.formSeed + 1, invoice: draft);
   }
 
   Future<void> discardDraft() async {
@@ -38,13 +30,24 @@ class BillingController extends Notifier<BillingState> {
 
   void setAdvance(int cents) => _update(state.invoice.copyWith(advanceCents: cents));
 
+  void addMockItems() {
+    if (!kDebugMode) return;
+    _update(state.invoice.copyWith(items: <InvoiceItem>[...state.invoice.items, ...MockItems.generate()]));
+  }
+
   void addItem({required String description, required num qty, required int unitPriceCents}) {
     final InvoiceItem item = InvoiceItem(unitPriceCents: unitPriceCents, qty: qty, description: description, id: _uuid.v4());
     _update(state.invoice.copyWith(items: <InvoiceItem>[...state.invoice.items, item]));
   }
 
   void updateItem({required String id, required String description, required num qty, required int unitPriceCents}) {
-    _updateItem(id, (InvoiceItem i) => i.copyWith(unitPriceCents: unitPriceCents, qty: qty, description: description));
+    _update(
+      state.invoice.copyWith(
+        items: state.invoice.items
+            .map((InvoiceItem i) => i.id == id ? i.copyWith(unitPriceCents: unitPriceCents, qty: qty, description: description) : i)
+            .toList(),
+      ),
+    );
   }
 
   (int, InvoiceItem)? removeItem(String id) {
@@ -62,25 +65,15 @@ class BillingController extends Notifier<BillingState> {
     _update(state.invoice.copyWith(items: items));
   }
 
-  void loadForEdit(Invoice original) {
-    state = state.copyWith(
-      isRestorable: false,
-      formRevision: state.formRevision + 1,
-      invoice: original.copyWith(isRevised: true, previousTotalCents: original.totalCents),
-    );
-  }
-
   Future<Uint8List> buildPreviewPdf() => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: state.invoice);
 
   Future<Uint8List> commit() async {
     state = state.copyWith(isPrinting: true);
     try {
       final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
-      final Invoice invoice = state.invoice.isRevised
-          ? state.invoice
-          : state.invoice.copyWith(invoiceNumber: ref.read(settingsRepositoryProvider).pendingInvoiceNumber, createdAt: DateTime.now());
+      final Invoice invoice = state.invoice.copyWith(invoiceNumber: ref.read(settingsRepositoryProvider).pendingInvoiceNumber, createdAt: DateTime.now());
       final Uint8List bytes = await ReceiptBuilder.build(profile: profile, invoice: invoice);
-      if (!invoice.isRevised) await ref.read(settingsRepositoryProvider).commitPendingInvoiceNumber();
+      await ref.read(settingsRepositoryProvider).commitPendingInvoiceNumber();
       await ref.read(recentInvoicesRepositoryProvider).save(invoice);
       ref.invalidate(recentControllerProvider);
       await _archive(invoice, bytes);
@@ -95,13 +88,7 @@ class BillingController extends Notifier<BillingState> {
 
   void startNewBill() {
     final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
-    state = BillingState(
-      isPrinting: false,
-      isRestorable: false,
-      formRevision: state.formRevision + 1,
-      pendingInvoiceNumber: pending,
-      invoice: _blankInvoice(pending),
-    );
+    state = BillingState(isPrinting: false, isRestorable: false, formSeed: state.formSeed + 1, pendingInvoiceNumber: pending, invoice: _blankInvoice(pending));
   }
 
   Future<void> _archive(Invoice invoice, Uint8List bytes) async {
@@ -112,15 +99,25 @@ class BillingController extends Notifier<BillingState> {
     }
   }
 
-  void _updateItem(String id, InvoiceItem Function(InvoiceItem) transform) {
-    _update(state.invoice.copyWith(items: state.invoice.items.map((InvoiceItem i) => i.id == id ? transform(i) : i).toList()));
-  }
-
   void _update(Invoice invoice) {
     state = state.copyWith(invoice: invoice);
     ref.read(draftRepositoryProvider).saveDebounced(invoice);
   }
 
   Invoice _blankInvoice(String invoiceNumber) =>
-      Invoice(isRevised: false, advanceCents: 0, customerName: '', invoiceNumber: invoiceNumber, items: const <InvoiceItem>[], createdAt: DateTime.now());
+      Invoice(advanceCents: 0, customerName: '', invoiceNumber: invoiceNumber, items: const <InvoiceItem>[], createdAt: DateTime.now());
+
+  @override
+  BillingState build() {
+    final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
+    final Invoice? draft = ref.read(draftRepositoryProvider).draft;
+    return BillingState(
+      isPrinting: false,
+      isRestorable: draft != null,
+      formSeed: 0,
+      pendingInvoiceNumber: pending,
+      draftSavedAt: draft?.createdAt,
+      invoice: _blankInvoice(pending),
+    );
+  }
 }

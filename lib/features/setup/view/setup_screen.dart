@@ -1,22 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/router.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/formatters/phone_formatter.dart';
-import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/pin_boxes.dart';
+import '../../../core/widgets/profile_text_field.dart';
 import '../../../core/widgets/recovery_code_box.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
+import '../controller/setup_step.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -26,9 +24,6 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
-  static const int lastFieldStep = 6;
-  static const int totalSteps = 8;
-
   final FocusNode _buildingFocus = FocusNode();
   final FocusNode _cityFocus = FocusNode();
   final FocusNode _deviceIdFocus = FocusNode();
@@ -54,32 +49,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   final TextEditingController _prefixController = TextEditingController(text: 'INV');
   final TextEditingController _streetController = TextEditingController();
 
-  int _step = 0;
-
   String _recoveryCode = '';
 
   List<String> _terms = BusinessProfile.defaultTerms;
 
-  String get _stepTitle {
-    switch (_step) {
-      case 0:
-        return 'Business Name';
-      case 1:
-        return 'Address';
-      case 2:
-        return 'Phone Numbers';
-      case 3:
-        return 'Email';
-      case 4:
-        return 'Terms and Conditions';
-      case 5:
-        return 'Invoice Numbering';
-      case 6:
-        return 'Set a 4-Digit PIN';
-      default:
-        return 'Write This Down';
-    }
-  }
+  SetupStep _step = SetupStep.first;
+
+  bool get _canAdvance => switch (_step) {
+    SetupStep.businessName => _nameController.text.trim().isNotEmpty,
+    SetupStep.address => _noController.text.trim().isNotEmpty && _streetController.text.trim().isNotEmpty && _cityController.text.trim().isNotEmpty,
+    SetupStep.phones => _phone1Controller.text.trim().isNotEmpty && !_hasPhoneError,
+    SetupStep.email => Validators.isValidEmail(_emailController.text),
+    SetupStep.numbering => _prefixController.text.trim().isNotEmpty && Validators.isValidDeviceId(_deviceIdController.text.toUpperCase()),
+    SetupStep.pin => Validators.isValidPin(_pinController.text),
+    SetupStep.terms || SetupStep.recoveryCode => true,
+  };
 
   bool get _hasEmailError => _emailController.text.trim().isNotEmpty && !Validators.isValidEmail(_emailController.text);
 
@@ -88,25 +72,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     _phone2Controller,
     _phone3Controller,
   ].any((TextEditingController controller) => !Validators.isValidPhone(controller.text));
-
-  bool get _canAdvance {
-    switch (_step) {
-      case 0:
-        return _nameController.text.trim().isNotEmpty;
-      case 1:
-        return _noController.text.trim().isNotEmpty && _streetController.text.trim().isNotEmpty && _cityController.text.trim().isNotEmpty;
-      case 2:
-        return _phone1Controller.text.trim().isNotEmpty && !_hasPhoneError;
-      case 3:
-        return Validators.isValidEmail(_emailController.text);
-      case 5:
-        return _prefixController.text.trim().isNotEmpty && Validators.isValidDeviceId(_deviceIdController.text.toUpperCase());
-      case 6:
-        return Validators.isValidPin(_pinController.text);
-      default:
-        return true;
-    }
-  }
 
   List<String> get _phones => <String>[
     _phone1Controller.text,
@@ -128,58 +93,94 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     terms: _terms,
   );
 
+  void _refresh(String _) => setState(() {});
+
   void _submitStep() {
     if (_canAdvance) unawaited(_next());
   }
 
   Future<void> _next() async {
-    if (_step < lastFieldStep) {
-      setState(() => _step++);
+    if (_step != SetupStep.pin) {
+      _goTo(_step.next);
       return;
     }
+    SoftKeyboard.dismiss();
     ref.read(setupControllerProvider.notifier).update(_profile);
     final String code = await ref.read(setupControllerProvider.notifier).finish(_pinController.text);
     if (!mounted) return;
     setState(() {
       _recoveryCode = code;
-      _step++;
+      _step = SetupStep.recoveryCode;
     });
   }
 
-  void _back() {
-    if (_step == 0) return;
-    setState(() => _step--);
+  void _back() => _goTo(_step.previous);
+
+  void _goTo(SetupStep step) {
+    if (step == _step) return;
+    if (!step.opensKeyboard) SoftKeyboard.dismiss();
+    setState(() => _step = step);
   }
 
-  void _finish() => Navigator.of(context).pushAndRemoveUntil(Routes.billing(), (Route<dynamic> route) => false);
-
-  Widget _body() {
-    switch (_step) {
-      case 0:
-        return _step0();
-      case 1:
-        return _step1();
-      case 2:
-        return _step2();
-      case 3:
-        return _step3();
-      case 4:
-        return _step4();
-      case 5:
-        return _step5();
-      case 6:
-        return _step6();
-      default:
-        return _step7();
-    }
+  void _finish() {
+    SoftKeyboard.dismiss();
+    unawaited(Navigator.of(context).pushAndRemoveUntil(Routes.billing(), (Route<dynamic> route) => false));
   }
 
-  Widget _step0() => _stepFrame(
+  ProfileTextField _field({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String label,
+    bool autofocus = false,
+    bool isUpperCase = true,
+    int? maxLength,
+    FocusNode? nextFocus,
+    TextInputType? keyboardType,
+  }) {
+    return ProfileTextField(
+      autofocus: autofocus,
+      controller: controller,
+      focusNode: focusNode,
+      isUpperCase: isUpperCase,
+      keyboardType: keyboardType,
+      label: label,
+      maxLength: maxLength,
+      nextFocus: nextFocus,
+      onChanged: _refresh,
+      onDone: _submitStep,
+    );
+  }
+
+  ProfileTextField _phoneField(TextEditingController controller, FocusNode focusNode, String label, {bool autofocus = false, FocusNode? nextFocus}) {
+    return ProfileTextField.phone(
+      autofocus: autofocus,
+      controller: controller,
+      focusNode: focusNode,
+      label: label,
+      nextFocus: nextFocus,
+      onChanged: _refresh,
+      onDone: _submitStep,
+    );
+  }
+
+  Widget _stepFrame({required String hint, required List<Widget> children}) {
+    return Column(
+      key: ValueKey<SetupStep>(_step),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(hint, style: AppTextStyles.listSecondary),
+        const SizedBox(height: AppSpacing.xl),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _businessNameStep() => _stepFrame(
     hint: 'Printed at the top of every receipt',
     children: <Widget>[_field(autofocus: true, controller: _nameController, focusNode: _nameFocus, label: 'Business Name')],
   );
 
-  Widget _step1() => _stepFrame(
+  Widget _addressStep() => _stepFrame(
     hint: 'Printed under the business name',
     children: <Widget>[
       _field(autofocus: true, controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
@@ -192,7 +193,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ],
   );
 
-  Widget _step2() => _stepFrame(
+  Widget _phonesStep() => _stepFrame(
     hint: 'Up to three lines, printed side by side on the receipt header',
     children: <Widget>[
       _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', autofocus: true, nextFocus: _phone2Focus),
@@ -205,21 +206,28 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ],
   );
 
-  Widget _step3() => _stepFrame(
+  Widget _emailStep() => _stepFrame(
     hint: 'Kept on file as the owner contact',
     children: <Widget>[
-      _field(autofocus: true, controller: _emailController, focusNode: _emailFocus, isUpper: false, keyboardType: TextInputType.emailAddress, label: 'Email'),
+      _field(
+        autofocus: true,
+        controller: _emailController,
+        focusNode: _emailFocus,
+        isUpperCase: false,
+        keyboardType: TextInputType.emailAddress,
+        label: 'Email',
+      ),
       if (_hasEmailError) const SizedBox(height: AppSpacing.sm),
       if (_hasEmailError) const Text('Enter a valid email address, like name@example.com', maxLines: 1, style: AppTextStyles.errorHint),
     ],
   );
 
-  Widget _step4() => _stepFrame(
+  Widget _termsStep() => _stepFrame(
     hint: 'Printed at the foot of the receipt',
     children: <Widget>[TermsEditor(isEditable: true, terms: _terms, onChanged: (List<String> terms) => _terms = terms)],
   );
 
-  Widget _step5() => _stepFrame(
+  Widget _numberingStep() => _stepFrame(
     hint: 'Each device needs its own letter, so two counters never share a number',
     children: <Widget>[
       Row(
@@ -244,83 +252,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ],
   );
 
-  Widget _step6() => _stepFrame(
+  Widget _pinStep() => _stepFrame(
     hint: 'The PIN protects the settings screen only',
     children: <Widget>[
       Center(
-        child: PinBoxes(
-          autofocus: true,
-          controller: _pinController,
-          hasError: false,
-          onChanged: (String _) => setState(() {}),
-          onCompleted: (String _) => setState(() {}),
-        ),
+        child: PinBoxes(autofocus: true, controller: _pinController, hasError: false, onChanged: _refresh, onCompleted: _refresh),
       ),
     ],
   );
 
-  Widget _step7() => _stepFrame(
+  Widget _recoveryCodeStep() => _stepFrame(
     hint: 'The only way to reset a forgotten PIN. It is shown once and cannot be recovered later',
     children: <Widget>[RecoveryCodeBox(code: _recoveryCode)],
   );
 
-  Widget _stepFrame({required String hint, required List<Widget> children}) {
-    return Column(
-      key: ValueKey<int>(_step),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Text(hint, style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.xl),
-        ...children,
-      ],
-    );
-  }
-
-  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {bool autofocus = false, FocusNode? nextFocus}) => _field(
-    autofocus: autofocus,
-    controller: controller,
-    focusNode: focusNode,
-    isPhone: true,
-    isUpper: false,
-    keyboardType: TextInputType.phone,
-    label: label,
-    nextFocus: nextFocus,
-  );
-
-  Widget _field({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required String label,
-    bool autofocus = false,
-    bool isPhone = false,
-    bool isUpper = true,
-    int? maxLength,
-    FocusNode? nextFocus,
-    TextInputType? keyboardType,
-  }) {
-    return AppTextField(
-      autofocus: autofocus,
-      controller: controller,
-      focusNode: focusNode,
-      inputFormatters: isPhone
-          ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
-          : isUpper
-          ? const <TextInputFormatter>[UpperCaseFormatter()]
-          : null,
-      keyboardType: keyboardType,
-      label: label,
-      maxLength: maxLength,
-      onChanged: (String _) => setState(() {}),
-      onSubmitted: (String _) => nextFocus == null ? _submitStep() : nextFocus.requestFocus(),
-      textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
-      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
-    );
-  }
+  Widget _body() => switch (_step) {
+    SetupStep.businessName => _businessNameStep(),
+    SetupStep.address => _addressStep(),
+    SetupStep.phones => _phonesStep(),
+    SetupStep.email => _emailStep(),
+    SetupStep.terms => _termsStep(),
+    SetupStep.numbering => _numberingStep(),
+    SetupStep.pin => _pinStep(),
+    SetupStep.recoveryCode => _recoveryCodeStep(),
+  };
 
   @override
   void initState() {
     super.initState();
-    unawaited(SoftKeyboard.openOnStartup(_nameFocus, () => mounted));
+    unawaited(SoftKeyboard.openFor(_nameFocus, () => mounted && _step == SetupStep.businessName));
   }
 
   @override
@@ -353,19 +313,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isRecoveryStep = _step > lastFieldStep;
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leading: _step > 0 ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: _back, tooltip: 'Back') : null,
+        leading: _step.isFirst ? null : IconButton(icon: const Icon(Icons.arrow_back), onPressed: _back, tooltip: 'Back'),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text(_stepTitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
+            Text(_step.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
             const SizedBox(height: AppSpacing.xxs),
-            Text('STEP ${_step + 1} OF $totalSteps', maxLines: 1, style: AppTextStyles.listSecondary),
+            Text('STEP ${_step.position} OF ${SetupStep.count}', maxLines: 1, style: AppTextStyles.listSecondary),
           ],
         ),
       ),
@@ -375,15 +334,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Expanded(child: SingleChildScrollView(child: _body())),
+              Expanded(
+                child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, child: _body()),
+              ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
-                onPressed: isRecoveryStep
+                onPressed: _step.isLast
                     ? _finish
                     : _canAdvance
                     ? () => unawaited(_next())
                     : null,
-                child: Text(isRecoveryStep ? 'Finish Setup' : 'Next', maxLines: 1),
+                child: Text(_step.isLast ? 'Finish Setup' : 'Next', maxLines: 1),
               ),
             ],
           ),

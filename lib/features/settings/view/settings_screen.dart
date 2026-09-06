@@ -8,25 +8,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/router.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
-import '../../../core/formatters/phone_formatter.dart';
-import '../../../core/formatters/upper_case_formatter.dart';
 import '../../../core/utils/invoice_number_gen.dart';
 import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/profile_text_field.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/terms_editor.dart';
 import '../../../data/repositories/settings_repository.dart';
 import '../../../models/business_profile.dart';
+import '../../../models/printer_settings.dart';
+import '../../../models/thermal_paper.dart';
+import '../widgets/logo_section.dart';
+import '../widgets/numbering_section.dart';
 import '../widgets/pin_gate.dart';
+import '../widgets/printer_section.dart';
 import '../widgets/recovery_sheet.dart';
+import '../widgets/security_section.dart';
+import '../widgets/terms_section.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -36,6 +41,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  static const int logoQuality = 90;
+  static const int logoMaxWidth = 600;
+  static const int retentionMaxDigits = 3;
+
   final FocusNode _buildingFocus = FocusNode();
   final FocusNode _cityFocus = FocusNode();
   final FocusNode _currentPinFocus = FocusNode();
@@ -66,6 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _streetController = TextEditingController();
 
   bool _isEditingTerms = false;
+  bool _isLoadingDevices = false;
   bool _isUnlocked = false;
 
   String _appVersion = '';
@@ -73,10 +83,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   List<String> _terms = BusinessProfile.defaultTerms;
 
+  List<BluetoothInfo> _devices = <BluetoothInfo>[];
+
+  PrinterSettings _printer = PrinterSettings.empty;
+
+  String get _nextInvoiceNumber => InvoiceNumberGen.build(
+    sequence: ref.read(settingsRepositoryProvider).nextSequence,
+    deviceId: _deviceIdController.text.trim().toUpperCase(),
+    prefix: _prefixController.text.trim().toUpperCase(),
+  );
+
+  List<String> get _phones => <String>[
+    _phone1Controller.text,
+    _phone2Controller.text,
+    _phone3Controller.text,
+  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
+
+  int get _retentionDays => int.tryParse(_retentionController.text.trim()) ?? SettingsRepository.defaultRetentionDays;
+
+  Future<void> _loadVersion() async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = 'Biller ${info.version} (${info.buildNumber})');
+  }
+
+  void _refresh(String _) => setState(() {});
+
   Future<bool> _unlock(String pin) async {
     final bool isValid = await ref.read(authRepositoryProvider).verifyPin(pin);
-    if (isValid && mounted) setState(() => _isUnlocked = true);
-    return isValid;
+    if (!isValid || !mounted) return isValid;
+    SoftKeyboard.dismiss();
+    setState(() => _isUnlocked = true);
+    return true;
   }
 
   Future<void> _recoverPin() async {
@@ -95,197 +133,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!mounted) return;
     if (isReset) {
       context.showSuccessSnack('PIN reset. Use your new PIN the next time you open Settings.');
-    } else {
-      context.showErrorSnack('That recovery code did not match. Check the code you wrote down during setup.');
+      setState(() => _isUnlocked = true);
+      return;
     }
-    if (isReset) setState(() => _isUnlocked = true);
+    context.showErrorSnack('That recovery code did not match. Check the code you wrote down during setup.');
   }
 
   Future<void> _changePin() async {
+    SoftKeyboard.dismiss();
     final String current = _currentPinController.text;
     final String next = _newPinController.text;
-    if (current.length != 4 || next.length != 4) {
-      context.showErrorSnack('Both PINs must be exactly 4 digits. Nothing has been changed yet.');
+    if (!Validators.isValidPin(current) || !Validators.isValidPin(next)) {
+      context.showErrorSnack('Both PINs must be exactly ${Validators.pinLength} digits. Nothing has been changed yet.');
       return;
     }
     final bool isChanged = await ref.read(authRepositoryProvider).changePin(currentPin: current, newPin: next);
     if (!mounted) return;
-    if (isChanged) {
-      context.showSuccessSnack('PIN changed. Use the new PIN the next time you open Settings.');
-    } else {
+    if (!isChanged) {
       context.showErrorSnack('Current PIN was incorrect. Your PIN has not been changed.');
+      return;
     }
-    if (!isChanged) return;
+    context.showSuccessSnack('PIN changed. Use the new PIN the next time you open Settings.');
     _currentPinController.clear();
     _newPinController.clear();
   }
 
-  List<String> get _phones => <String>[
-    _phone1Controller.text,
-    _phone2Controller.text,
-    _phone3Controller.text,
-  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
-
-  String get _nextInvoiceNumber => InvoiceNumberGen.build(
-    sequence: ref.read(settingsRepositoryProvider).nextSequence,
-    deviceId: _deviceIdController.text.trim().toUpperCase(),
-    prefix: _prefixController.text.trim().toUpperCase(),
-  );
-
-  int get _retentionDays => int.tryParse(_retentionController.text.trim()) ?? SettingsRepository.defaultRetentionDays;
-
-  Future<void> _save() async {
-    if (_phones.isEmpty || _phones.any((String phone) => !Validators.isValidPhone(phone))) {
-      context.showErrorSnack('Enter at least one phone number, each 10 digits starting with 0. Nothing has been saved yet.');
-      return;
-    }
-    if (!Validators.isValidEmail(_emailController.text)) {
-      context.showErrorSnack('Enter a valid email address, like name@example.com. Nothing has been saved yet.');
-      return;
-    }
-    if (_prefixController.text.trim().isEmpty || !Validators.isValidDeviceId(_deviceIdController.text.trim().toUpperCase())) {
-      context.showErrorSnack('Enter an invoice prefix and a single-letter device ID, like INV and A. Nothing has been saved yet.');
-      return;
-    }
-    final BusinessProfile existing = ref.read(settingsRepositoryProvider).profile;
-    final BusinessProfile profile = BusinessProfile(
-      addressBuilding: _buildingController.text.trim(),
-      addressCity: _cityController.text.trim(),
-      addressNo: _noController.text.trim(),
-      addressStreet: _streetController.text.trim(),
-      deviceId: _deviceIdController.text.trim().toUpperCase(),
-      invoicePrefix: _prefixController.text.trim().toUpperCase(),
-      logoPath: _logoPath,
-      name: _nameController.text.trim(),
-      ownerEmail: _emailController.text.trim(),
-      phones: _phones,
-      terms: _terms,
-    );
-    await ref.read(settingsRepositoryProvider).saveRetentionDays(_retentionDays);
-    await ref.read(settingsControllerProvider.notifier).save(profile);
-    if (existing.logoPath != _logoPath) await _deleteLogoFile(existing.logoPath);
-    if (!mounted) return;
-    ref.invalidate(recentControllerProvider);
-    if (existing.deviceId != profile.deviceId || existing.invoicePrefix != profile.invoicePrefix) ref.invalidate(billingControllerProvider);
-    context.showSuccessSnack('Settings saved. The changes appear on the next receipt you print.');
-    Navigator.of(context).pop();
-  }
-
-  Widget _field({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required String label,
-    bool isPhone = false,
-    ValueChanged<String>? onChanged,
-    bool isUpper = true,
-    int? maxLength,
-    FocusNode? nextFocus,
-    TextInputType? keyboardType,
-  }) {
-    return AppTextField(
-      controller: controller,
-      focusNode: focusNode,
-      inputFormatters: isPhone
-          ? const <TextInputFormatter>[SriLankaPhoneFormatter()]
-          : isUpper
-          ? const <TextInputFormatter>[UpperCaseFormatter()]
-          : null,
-      keyboardType: keyboardType,
-      label: label,
-      maxLength: maxLength,
-      onChanged: onChanged,
-      onSubmitted: (String _) => nextFocus == null ? FocusManager.instance.primaryFocus?.unfocus() : nextFocus.requestFocus(),
-      textCapitalization: isUpper ? TextCapitalization.characters : TextCapitalization.none,
-      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
-    );
-  }
-
-  Widget _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) => _field(
-    controller: controller,
-    focusNode: focusNode,
-    isPhone: true,
-    isUpper: false,
-    keyboardType: TextInputType.phone,
-    label: label,
-    nextFocus: nextFocus,
-  );
-
-  void _refresh(String _) => setState(() {});
-
-  Widget _retentionField() {
-    return AppTextField(
-      controller: _retentionController,
-      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-      keyboardType: TextInputType.number,
-      label: 'Days to Keep Invoices',
-      maxLength: 3,
-      onSubmitted: (String _) => FocusManager.instance.primaryFocus?.unfocus(),
-      textInputAction: TextInputAction.done,
-    );
-  }
-
-  Future<void> _resetSetup() async {
-    await ref.read(settingsRepositoryProvider).resetSetup();
-    await ref.read(authRepositoryProvider).clearCredentials();
-    if (!mounted) return;
-    ref.invalidate(billingControllerProvider);
-    ref.invalidate(settingsControllerProvider);
-    await Navigator.of(context).pushAndRemoveUntil(Routes.setup(), (Route<dynamic> route) => false);
-  }
-
-  Widget _sectionHeading(String label) => SectionHeader(label: label);
-
-  Widget _changePinTile() {
-    return ExpansionTile(
-      leading: const Icon(Icons.lock_outline, size: AppSpacing.iconTile),
-      title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
-      children: <Widget>[
-        const SizedBox(height: AppSpacing.lg),
-        _pinField(_currentPinController, _currentPinFocus, 'Current PIN', nextFocus: _newPinFocus),
-        const SizedBox(height: AppSpacing.md),
-        _pinField(_newPinController, _newPinFocus, 'New PIN'),
-        const SizedBox(height: AppSpacing.lg),
-        FilledButton(onPressed: () => unawaited(_changePin()), child: const Text('Update PIN', maxLines: 1)),
-      ],
-    );
-  }
-
-  Widget _resetTile() {
-    return ExpansionTile(
-      leading: const Icon(Icons.restart_alt, size: AppSpacing.iconTile),
-      title: const Text('Reset and run setup again', maxLines: 1, style: AppTextStyles.listPrimary),
-      children: <Widget>[
-        const SizedBox(height: AppSpacing.lg),
-        const Text('Clears the business profile, PIN, invoice sequence and saved draft, then reopens the setup wizard.', style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.lg),
-        OutlinedButton(
-          onPressed: () => unawaited(_resetSetup()),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger,
-            side: const BorderSide(color: AppColors.danger),
-          ),
-          child: const Text('Reset Everything', maxLines: 1),
-        ),
-      ],
-    );
-  }
-
-  Widget _pinField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) {
-    return AppTextField(
-      controller: controller,
-      focusNode: focusNode,
-      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-      keyboardType: TextInputType.number,
-      label: label,
-      maxLength: 4,
-      obscureText: true,
-      onSubmitted: (String _) => nextFocus == null ? unawaited(_changePin()) : nextFocus.requestFocus(),
-      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
-    );
-  }
-
   Future<void> _pickLogo() async {
-    final XFile? picked = await ImagePicker().pickImage(imageQuality: 90, maxWidth: 600, source: ImageSource.gallery);
+    SoftKeyboard.dismiss();
+    final XFile? picked = await ImagePicker().pickImage(imageQuality: logoQuality, maxWidth: logoMaxWidth.toDouble(), source: ImageSource.gallery);
     if (picked == null || !mounted) return;
     final Directory base = await getApplicationDocumentsDirectory();
     final String stamp = '${DateTime.now().millisecondsSinceEpoch}';
@@ -314,164 +189,205 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _loadVersion() async {
-    final PackageInfo info = await PackageInfo.fromPlatform();
+  Future<void> _loadPrinters() async {
+    setState(() => _isLoadingDevices = true);
+    final bool isReady = await ref.read(printerRepositoryProvider).isBluetoothReady();
+    final List<BluetoothInfo> devices = isReady ? await ref.read(printerRepositoryProvider).pairedDevices() : <BluetoothInfo>[];
     if (!mounted) return;
-    setState(() => _appVersion = 'Biller ${info.version} (${info.buildNumber})');
+    setState(() {
+      _devices = devices;
+      _isLoadingDevices = false;
+    });
+    if (!isReady) context.showErrorSnack('Bluetooth is off or the permission was refused. Turn Bluetooth on and allow nearby devices, then tap Refresh.');
   }
 
-  Widget _logoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _sectionHeading('RECEIPT LOGO'),
-        Row(
-          children: <Widget>[
-            Container(
-              alignment: Alignment.center,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusCard), color: AppColors.surfaceField),
-              height: AppSpacing.logoPreview,
-              width: AppSpacing.logoPreview,
-              child: _logoPath.isEmpty
-                  ? const Icon(Icons.image_outlined, color: AppColors.textTertiary, size: AppSpacing.iconPlaceholder)
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                      child: Image.file(File(_logoPath), key: ValueKey<String>(_logoPath), fit: BoxFit.cover),
-                    ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                _logoPath.isEmpty ? 'No logo. It prints above the business name.' : 'Prints above the business name on every receipt.',
-                style: AppTextStyles.listSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.upload_outlined, size: AppSpacing.iconButton),
-                label: Text(_logoPath.isEmpty ? 'Upload Logo' : 'Replace Logo', maxLines: 1),
-                onPressed: () => unawaited(_pickLogo()),
-              ),
-            ),
-            if (_logoPath.isNotEmpty) const SizedBox(width: AppSpacing.md),
-            if (_logoPath.isNotEmpty)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _removeLogo,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                  ),
-                  child: const Text('Remove', maxLines: 1),
-                ),
-              ),
-          ],
-        ),
-      ],
+  void _setPrinter(PrinterSettings settings) {
+    setState(() => _printer = settings);
+    if (settings.isThermal && _devices.isEmpty && !_isLoadingDevices) unawaited(_loadPrinters());
+  }
+
+  Future<void> _save() async {
+    SoftKeyboard.dismiss();
+    if (_phones.isEmpty || _phones.any((String phone) => !Validators.isValidPhone(phone))) {
+      context.showErrorSnack('Enter at least one phone number, each 10 digits starting with 0. Nothing has been saved yet.');
+      return;
+    }
+    if (!Validators.isValidEmail(_emailController.text)) {
+      context.showErrorSnack('Enter a valid email address, like name@example.com. Nothing has been saved yet.');
+      return;
+    }
+    if (_prefixController.text.trim().isEmpty || !Validators.isValidDeviceId(_deviceIdController.text.trim().toUpperCase())) {
+      context.showErrorSnack('Enter an invoice prefix and a single-letter device ID, like INV and A. Nothing has been saved yet.');
+      return;
+    }
+    final BusinessProfile existing = ref.read(settingsRepositoryProvider).profile;
+    final BusinessProfile profile = BusinessProfile(
+      addressBuilding: _buildingController.text.trim(),
+      addressCity: _cityController.text.trim(),
+      addressNo: _noController.text.trim(),
+      addressStreet: _streetController.text.trim(),
+      deviceId: _deviceIdController.text.trim().toUpperCase(),
+      invoicePrefix: _prefixController.text.trim().toUpperCase(),
+      logoPath: _logoPath,
+      name: _nameController.text.trim(),
+      ownerEmail: _emailController.text.trim(),
+      phones: _phones,
+      terms: _terms,
+    );
+    await ref.read(printerRepositoryProvider).save(_printer);
+    await ref.read(settingsRepositoryProvider).saveRetentionDays(_retentionDays);
+    await ref.read(settingsControllerProvider.notifier).save(profile);
+    if (existing.logoPath != _logoPath) await _deleteLogoFile(existing.logoPath);
+    if (!mounted) return;
+    ref.invalidate(printerSettingsProvider);
+    ref.invalidate(recentControllerProvider);
+    if (existing.deviceId != profile.deviceId || existing.invoicePrefix != profile.invoicePrefix) ref.invalidate(billingControllerProvider);
+    context.showSuccessSnack('Settings saved. The changes appear on the next receipt you print.');
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _resetSetup() async {
+    SoftKeyboard.dismiss();
+    await ref.read(settingsRepositoryProvider).resetSetup();
+    await ref.read(authRepositoryProvider).clearCredentials();
+    if (!mounted) return;
+    ref.invalidate(billingControllerProvider);
+    ref.invalidate(settingsControllerProvider);
+    await Navigator.of(context).pushAndRemoveUntil(Routes.setup(), (Route<dynamic> route) => false);
+  }
+
+  ProfileTextField _field({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String label,
+    bool isUpperCase = true,
+    FocusNode? nextFocus,
+    TextInputType? keyboardType,
+  }) {
+    return ProfileTextField(
+      controller: controller,
+      focusNode: focusNode,
+      isUpperCase: isUpperCase,
+      keyboardType: keyboardType,
+      label: label,
+      nextFocus: nextFocus,
+      onDone: SoftKeyboard.dismiss,
     );
   }
 
-  Widget _termsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _sectionHeading('TERMS AND CONDITIONS'),
-        TermsEditor(isEditable: _isEditingTerms, terms: _terms, onChanged: (List<String> terms) => _terms = terms),
-        const SizedBox(height: AppSpacing.md),
-        OutlinedButton.icon(
-          icon: Icon(_isEditingTerms ? Icons.check : Icons.edit_outlined, size: AppSpacing.iconButton),
-          label: Text(_isEditingTerms ? 'Done' : 'Edit Conditions', maxLines: 1),
-          onPressed: () => setState(() => _isEditingTerms = !_isEditingTerms),
-        ),
-      ],
+  ProfileTextField _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) {
+    return ProfileTextField.phone(controller: controller, focusNode: focusNode, label: label, nextFocus: nextFocus, onDone: SoftKeyboard.dismiss);
+  }
+
+  Widget _retentionField() {
+    return AppTextField(
+      controller: _retentionController,
+      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+      keyboardType: TextInputType.number,
+      label: 'Days to Keep Invoices',
+      maxLength: retentionMaxDigits,
+      onSubmitted: (String _) => SoftKeyboard.dismiss(),
+      textInputAction: TextInputAction.done,
     );
   }
+
+  Widget _inset(List<Widget> children) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children),
+  );
 
   Widget _form() {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.xl),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl, top: AppSpacing.lg),
       children: <Widget>[
-        _logoSection(),
-        const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('BUSINESS'),
-        _field(controller: _nameController, focusNode: _nameFocus, label: 'Business Name', nextFocus: _phone1Focus),
-        const SizedBox(height: AppSpacing.md),
-        _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
-        const SizedBox(height: AppSpacing.md),
-        _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (Optional)', nextFocus: _phone3Focus),
-        const SizedBox(height: AppSpacing.md),
-        _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (Optional)', nextFocus: _emailFocus),
-        const SizedBox(height: AppSpacing.md),
-        _field(
-          controller: _emailController,
-          focusNode: _emailFocus,
-          isUpper: false,
-          keyboardType: TextInputType.emailAddress,
-          label: 'Email',
-          nextFocus: _noFocus,
+        _inset(<Widget>[
+          const SectionHeader(label: 'RECEIPT LOGO'),
+          LogoSection(logoPath: _logoPath, onPick: () => unawaited(_pickLogo()), onRemove: _removeLogo),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'BUSINESS'),
+          _field(controller: _nameController, focusNode: _nameFocus, label: 'Business Name', nextFocus: _phone1Focus),
+          const SizedBox(height: AppSpacing.md),
+          _phoneField(_phone1Controller, _phone1Focus, 'Phone 1', nextFocus: _phone2Focus),
+          const SizedBox(height: AppSpacing.md),
+          _phoneField(_phone2Controller, _phone2Focus, 'Phone 2 (Optional)', nextFocus: _phone3Focus),
+          const SizedBox(height: AppSpacing.md),
+          _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (Optional)', nextFocus: _emailFocus),
+          const SizedBox(height: AppSpacing.md),
+          _field(
+            controller: _emailController,
+            focusNode: _emailFocus,
+            isUpperCase: false,
+            keyboardType: TextInputType.emailAddress,
+            label: 'Email',
+            nextFocus: _noFocus,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'ADDRESS'),
+          _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
+          const SizedBox(height: AppSpacing.md),
+          _field(controller: _streetController, focusNode: _streetFocus, label: 'Street', nextFocus: _cityFocus),
+          const SizedBox(height: AppSpacing.md),
+          _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
+          const SizedBox(height: AppSpacing.md),
+          _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (Optional)'),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'TERMS AND CONDITIONS'),
+          TermsSection(
+            isEditing: _isEditingTerms,
+            terms: _terms,
+            onChanged: (List<String> terms) => _terms = terms,
+            onToggle: () => setState(() => _isEditingTerms = !_isEditingTerms),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'RECEIPT PRINTER'),
+        ]),
+        PrinterSection(
+          devices: _devices,
+          isLoadingDevices: _isLoadingDevices,
+          settings: _printer,
+          onPaperChanged: (ThermalPaper paper) => _setPrinter(_printer.copyWith(paper: paper)),
+          onRefreshDevices: () => unawaited(_loadPrinters()),
+          onSelectDevice: (String address) =>
+              _setPrinter(_printer.copyWith(address: address, name: _devices.firstWhere((BluetoothInfo device) => device.macAdress == address).name)),
+          onTargetChanged: (PrintTarget target) => _setPrinter(_printer.copyWith(target: target)),
         ),
-        const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('ADDRESS'),
-        _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
-        const SizedBox(height: AppSpacing.md),
-        _field(controller: _streetController, focusNode: _streetFocus, label: 'Street', nextFocus: _cityFocus),
-        const SizedBox(height: AppSpacing.md),
-        _field(controller: _cityController, focusNode: _cityFocus, label: 'City', nextFocus: _buildingFocus),
-        const SizedBox(height: AppSpacing.md),
-        _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (Optional)'),
-        const SizedBox(height: AppSpacing.xl),
-        _termsSection(),
-        const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('INVOICE NUMBERING'),
-        const Text(
-          'Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.',
-          style: AppTextStyles.listSecondary,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              flex: 2,
-              child: _field(
-                controller: _prefixController,
-                focusNode: _prefixFocus,
-                label: 'Prefix',
-                maxLength: 6,
-                nextFocus: _deviceIdFocus,
-                onChanged: _refresh,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _field(controller: _deviceIdController, focusNode: _deviceIdFocus, label: 'Device', maxLength: 1, onChanged: _refresh),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text('Next invoice: $_nextInvoiceNumber', maxLines: 1, style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('INVOICE HISTORY'),
-        const Text(
-          'Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.',
-          style: AppTextStyles.listSecondary,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _retentionField(),
-        const SizedBox(height: AppSpacing.xl),
-        _sectionHeading('SECURITY'),
-        _changePinTile(),
-        if (kDebugMode) const SizedBox(height: AppSpacing.sm),
-        if (kDebugMode) _resetTile(),
-        const SizedBox(height: AppSpacing.xl),
-        FilledButton(onPressed: () => unawaited(_save()), child: const Text('Save', maxLines: 1)),
-        const SizedBox(height: AppSpacing.xl),
-        Text(_appVersion, style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
+        _inset(<Widget>[
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'INVOICE NUMBERING'),
+          NumberingSection(
+            deviceIdController: _deviceIdController,
+            deviceIdFocus: _deviceIdFocus,
+            nextInvoiceNumber: _nextInvoiceNumber,
+            prefixController: _prefixController,
+            prefixFocus: _prefixFocus,
+            onChanged: _refresh,
+            onDone: SoftKeyboard.dismiss,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'INVOICE HISTORY'),
+          const Text(
+            'Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.',
+            style: AppTextStyles.listSecondary,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _retentionField(),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(label: 'SECURITY'),
+          SecuritySection(
+            currentPinController: _currentPinController,
+            currentPinFocus: _currentPinFocus,
+            isResettable: kDebugMode,
+            newPinController: _newPinController,
+            newPinFocus: _newPinFocus,
+            onChangePin: () => unawaited(_changePin()),
+            onReset: () => unawaited(_resetSetup()),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          FilledButton(onPressed: () => unawaited(_save()), child: const Text('Save', maxLines: 1)),
+          const SizedBox(height: AppSpacing.xl),
+          Text(_appVersion, style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
+        ]),
       ],
     );
   }
@@ -482,18 +398,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
     _buildingController.text = profile.addressBuilding;
     _cityController.text = profile.addressCity;
+    _deviceIdController.text = profile.deviceId;
     _emailController.text = profile.ownerEmail;
     _nameController.text = profile.name;
     _noController.text = profile.addressNo;
+    _prefixController.text = profile.invoicePrefix;
+    _streetController.text = profile.addressStreet;
     final List<String> phones = profile.printablePhones;
     _phone1Controller.text = phones.isNotEmpty ? phones[0] : '';
     _phone2Controller.text = phones.length > 1 ? phones[1] : '';
     _phone3Controller.text = phones.length > 2 ? phones[2] : '';
     _retentionController.text = '${ref.read(settingsRepositoryProvider).retentionDays}';
-    _prefixController.text = profile.invoicePrefix;
-    _deviceIdController.text = profile.deviceId;
-    _streetController.text = profile.addressStreet;
     _logoPath = profile.logoPath;
+    _printer = ref.read(printerRepositoryProvider).settings;
     _terms = profile.terms;
     unawaited(_loadVersion());
   }

@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/draft_repository.dart';
+import '../data/repositories/printer_repository.dart';
 import '../data/repositories/receipt_storage_repository.dart';
 import '../data/repositories/recent_invoices_repository.dart';
 import '../data/repositories/settings_repository.dart';
+import '../data/sources/bluetooth_printer_source.dart';
 import '../data/sources/prefs_source.dart';
 import '../data/sources/receipt_file_source.dart';
 import '../data/sources/secure_storage_source.dart';
@@ -16,6 +18,8 @@ import '../features/settings/controller/settings_controller.dart';
 import '../features/setup/controller/setup_controller.dart';
 import '../models/business_profile.dart';
 import '../models/invoice.dart';
+import '../models/printer_settings.dart';
+import '../printing/print_dispatcher.dart';
 
 final Provider<PrefsSource> prefsSourceProvider = Provider<PrefsSource>(
   (Ref ref) => throw UnimplementedError('prefsSourceProvider must be overridden in main'),
@@ -46,6 +50,16 @@ final Provider<DraftRepository> draftRepositoryProvider = Provider<DraftReposito
 final Provider<RecentInvoicesRepository> recentInvoicesRepositoryProvider = Provider<RecentInvoicesRepository>(
   (Ref ref) => RecentInvoicesRepository(ref.watch(sqfliteSourceProvider)),
 );
+
+final Provider<BluetoothPrinterSource> bluetoothPrinterSourceProvider = Provider<BluetoothPrinterSource>((Ref ref) => BluetoothPrinterSource());
+
+final Provider<PrinterRepository> printerRepositoryProvider = Provider<PrinterRepository>(
+  (Ref ref) => PrinterRepository(ref.watch(bluetoothPrinterSourceProvider), ref.watch(prefsSourceProvider)),
+);
+
+final Provider<PrinterSettings> printerSettingsProvider = Provider<PrinterSettings>((Ref ref) => ref.watch(printerRepositoryProvider).settings);
+
+final Provider<PrintDispatcher> printDispatcherProvider = Provider<PrintDispatcher>((Ref ref) => PrintDispatcher(ref.watch(printerRepositoryProvider)));
 
 final Provider<SettingsRepository> settingsRepositoryProvider = Provider<SettingsRepository>((Ref ref) => SettingsRepository(ref.watch(prefsSourceProvider)));
 

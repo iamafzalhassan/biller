@@ -9,28 +9,21 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
-import '../../../core/utils/soft_keyboard.dart';
 import '../../../models/invoice.dart';
-import '../../preview/controller/print_service.dart';
+import '../../../printing/print_outcome.dart';
 import '../widgets/invoice_actions_sheet.dart';
 import '../widgets/recent_invoice_tile.dart';
-
-const int noteLines = 2;
 
 class RecentScreen extends ConsumerWidget {
   const RecentScreen({super.key});
 
+  static const int noteLines = 2;
+
   Future<void> _openActions(BuildContext context, WidgetRef ref, Invoice invoice) async {
-    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => InvoiceActionsSheet(
         invoice: invoice,
-        onEditAndReprint: () {
-          Navigator.of(sheetContext).pop();
-          ref.read(billingControllerProvider.notifier).loadForEdit(invoice);
-          Navigator.of(context).pop();
-        },
         onReprint: () {
           Navigator.of(sheetContext).pop();
           unawaited(_reprint(context, ref, invoice));
@@ -42,27 +35,28 @@ class RecentScreen extends ConsumerWidget {
       ),
       showDragHandle: true,
     );
-    SoftKeyboard.dismiss();
+  }
+
+  Future<void> _reprint(BuildContext context, WidgetRef ref, Invoice invoice) async {
+    PrintOutcome outcome;
+    try {
+      final Uint8List bytes = await ref.read(recentControllerProvider.notifier).buildPdf(invoice);
+      outcome = await ref.read(printDispatcherProvider).send(profile: ref.read(settingsRepositoryProvider).profile, invoice: invoice, bytes: bytes);
+    } catch (_) {
+      outcome = PrintOutcome.buildFailed;
+    }
+    if (!context.mounted || outcome.isSilent) return;
+    context.showErrorSnack(outcome.message(invoice.invoiceNumber));
   }
 
   Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
     try {
       final String path = await ref.read(recentControllerProvider.notifier).saveCopy(invoice);
       if (!context.mounted) return;
-      context.showSuccessSnack('Copy saved to $path. Open it from your Files app under Downloads.');
+      context.showSuccessSnack('Copy saved. Open it from your Files app under Downloads.');
     } catch (_) {
       if (!context.mounted) return;
       context.showErrorSnack('${invoice.invoiceNumber} could not be saved to Downloads. Check the phone storage and try again.');
-    }
-  }
-
-  Future<void> _reprint(BuildContext context, WidgetRef ref, Invoice invoice) async {
-    try {
-      final Uint8List bytes = await ref.read(recentControllerProvider.notifier).buildPdf(invoice);
-      await PrintService.layout(bytes, name: invoice.invoiceNumber);
-    } catch (_) {
-      if (!context.mounted) return;
-      context.showErrorSnack('${invoice.invoiceNumber} could not be sent to the printer. Check that the printer is on the same WiFi network and try again.');
     }
   }
 

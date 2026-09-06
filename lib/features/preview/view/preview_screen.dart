@@ -10,7 +10,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/extensions/context_ext.dart';
-import '../controller/print_service.dart';
+import '../../../printing/print_outcome.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
   const PreviewScreen({super.key});
@@ -45,15 +45,12 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _sendToPrinter(Uint8List bytes, String number) async {
-    bool hasFailed = false;
-    try {
-      await PrintService.layout(bytes, name: number);
-    } catch (_) {
-      hasFailed = true;
-    }
+    final PrintOutcome outcome = await ref
+        .read(printDispatcherProvider)
+        .send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
     ref.read(billingControllerProvider.notifier).startNewBill();
     if (!mounted) return;
-    if (hasFailed) context.showErrorSnack('$number could not be sent to the printer. It is saved, so you can reprint it from Recent invoices.');
+    if (!outcome.isSilent) context.showErrorSnack(outcome.message(number));
     Navigator.of(context).pop();
   }
 

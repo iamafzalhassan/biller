@@ -1,10 +1,14 @@
 package com.example.biller
 
+import android.Manifest
 import android.content.ContentValues
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -15,8 +19,11 @@ class MainActivity : FlutterActivity() {
     private companion object {
         const val CHANNEL = "biller/receipts"
         const val SUB_DIR = "Biller/Receipts"
+        const val BLUETOOTH_PERMISSION_CODE = 4821
         val RELATIVE_DIR = "${Environment.DIRECTORY_DOWNLOADS}/$SUB_DIR"
     }
+
+    private var pendingPermissionResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -35,9 +42,35 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 }
+                "requestBluetoothPermission" -> requestBluetoothPermission(result)
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun requestBluetoothPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            result.success(true)
+            return
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            result.success(true)
+            return
+        }
+        if (pendingPermissionResult != null) {
+            result.success(false)
+            return
+        }
+        pendingPermissionResult = result
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_CONNECT), BLUETOOTH_PERMISSION_CODE)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != BLUETOOTH_PERMISSION_CODE) return
+        val result = pendingPermissionResult ?: return
+        pendingPermissionResult = null
+        result.success(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
     }
 
     private fun saveReceipt(fileName: String, bytes: ByteArray): String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) saveViaMediaStore(fileName, bytes) else saveViaFilePath(fileName, bytes)

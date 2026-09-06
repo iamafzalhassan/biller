@@ -18,9 +18,9 @@ class TermsEditor extends StatefulWidget {
 }
 
 class _TermsEditorState extends State<TermsEditor> {
-  static final RegExp _breakPattern = RegExp(r'\n[ \t]*\n');
+  static const String _separator = '\n\n';
 
-  static const String separator = '\n\n';
+  static final RegExp _breakPattern = RegExp(r'\n[ \t]*\n');
 
   final TextEditingController _controller = TextEditingController();
 
@@ -53,14 +53,14 @@ class _TermsEditorState extends State<TermsEditor> {
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.terms.join(separator);
+    _controller.text = widget.terms.join(_separator);
   }
 
   @override
   void didUpdateWidget(covariant TermsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isEditable == widget.isEditable) return;
-    _controller.text = widget.terms.join(separator);
+    _controller.text = widget.terms.join(_separator);
   }
 
   @override

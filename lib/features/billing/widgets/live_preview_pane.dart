@@ -22,7 +22,7 @@ class LivePreviewPane extends ConsumerStatefulWidget {
 class _LivePreviewPaneState extends ConsumerState<LivePreviewPane> {
   static const int debounceMs = 500;
 
-  int _revision = 0;
+  int _previewSeed = 0;
 
   Invoice? _snapshot;
 
@@ -33,7 +33,7 @@ class _LivePreviewPaneState extends ConsumerState<LivePreviewPane> {
     _debounce = Timer(const Duration(milliseconds: debounceMs), () {
       if (!mounted) return;
       setState(() {
-        _revision++;
+        _previewSeed++;
         _snapshot = invoice;
       });
     });
@@ -62,7 +62,7 @@ class _LivePreviewPaneState extends ConsumerState<LivePreviewPane> {
       );
     }
     return PdfPreview(
-      key: ValueKey<int>(_revision),
+      key: ValueKey<int>(_previewSeed),
       allowPrinting: false,
       allowSharing: false,
       build: _build,

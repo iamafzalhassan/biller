@@ -1,12 +1,11 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 abstract final class SoftKeyboard {
-  static const int startupAttempts = 10;
-  static const int startupIntervalMs = 250;
+  static const int openAttempts = 8;
+  static const int openIntervalMs = 150;
 
   static bool get isOpen {
     final FlutterView? view = WidgetsBinding.instance.platformDispatcher.implicitView;
@@ -18,17 +17,20 @@ abstract final class SoftKeyboard {
     WidgetsBinding.instance.addPostFrameCallback((Duration _) => _release());
   }
 
-  static void _release() {
-    FocusManager.instance.primaryFocus?.unfocus();
-    unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.hide'));
+  static Future<void> openFor(FocusNode node, bool Function() isActive) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!isActive()) return;
+    node.requestFocus();
+    for (int attempt = 0; attempt < openAttempts; attempt++) {
+      if (!isActive() || !node.hasFocus) return;
+      await SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+      if (isOpen) return;
+      await Future<void>.delayed(const Duration(milliseconds: openIntervalMs));
+    }
   }
 
-  static Future<void> openOnStartup(FocusNode node, bool Function() isMounted) async {
-    for (int attempt = 0; attempt < startupAttempts; attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: startupIntervalMs));
-      if (!isMounted() || isOpen) return;
-      if (!node.hasFocus) node.requestFocus();
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-    }
+  static void _release() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide').ignore();
   }
 }

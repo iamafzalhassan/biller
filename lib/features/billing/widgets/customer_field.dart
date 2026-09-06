@@ -16,6 +16,7 @@ class CustomerField extends StatelessWidget {
     required this.onNameChanged,
     required this.onNameSubmitted,
     required this.onPhoneChanged,
+    required this.onPhoneSubmitted,
     required this.phoneController,
     required this.phoneFocus,
   });
@@ -32,6 +33,7 @@ class CustomerField extends StatelessWidget {
   final ValueChanged<String> onPhoneChanged;
 
   final VoidCallback onNameSubmitted;
+  final VoidCallback onPhoneSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +60,7 @@ class CustomerField extends StatelessWidget {
           keyboardType: TextInputType.phone,
           label: 'Phone',
           onChanged: onPhoneChanged,
+          onSubmitted: (String _) => onPhoneSubmitted(),
           textInputAction: TextInputAction.done,
         ),
         if (hasPhoneError) const SizedBox(height: AppSpacing.xs),

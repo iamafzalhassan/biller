@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
+import '../utils/validators.dart';
 
 class PinBoxes extends StatefulWidget {
   const PinBoxes({
@@ -32,7 +33,9 @@ class PinBoxes extends StatefulWidget {
 class _PinBoxesState extends State<PinBoxes> {
   static const double stripWidth = AppSpacing.pinBox * length + AppSpacing.md * (length - 1);
 
-  static const int length = 4;
+  static const int length = Validators.pinLength;
+
+  static const TextStyle _hiddenInput = TextStyle(color: Colors.transparent, fontSize: 1, height: 0.01);
 
   final FocusNode _focusNode = FocusNode();
 
@@ -118,19 +121,14 @@ class _PinBoxesState extends State<PinBoxes> {
                   maxLength: length,
                   onChanged: _handleChanged,
                   showCursor: false,
-                  style: const TextStyle(color: Colors.transparent, fontSize: 1, height: 0.01),
+                  style: _hiddenInput,
                 ),
               ),
             ],
           ),
         ),
         if (widget.hasError) const SizedBox(height: AppSpacing.md),
-        if (widget.hasError)
-          const Text(
-            'Incorrect PIN',
-            maxLines: 1,
-            style: TextStyle(color: AppColors.danger, fontFamily: AppTextStyles.fontFamily, fontSize: 13, height: 1.2),
-          ),
+        if (widget.hasError) const Text('Incorrect PIN', maxLines: 1, style: AppTextStyles.errorHint),
       ],
     );
   }

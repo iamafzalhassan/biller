@@ -4,9 +4,6 @@ import '../../../app/providers.dart';
 import '../../../models/business_profile.dart';
 
 class SettingsController extends Notifier<BusinessProfile> {
-  @override
-  BusinessProfile build() => ref.read(settingsRepositoryProvider).profile;
-
   Future<void> save(BusinessProfile profile) async {
     await ref.read(settingsRepositoryProvider).saveProfile(profile);
     state = profile;
@@ -18,4 +15,7 @@ class SettingsController extends Notifier<BusinessProfile> {
     state = profile;
     ref.invalidate(billingControllerProvider);
   }
+
+  @override
+  BusinessProfile build() => ref.read(settingsRepositoryProvider).profile;
 }

@@ -1,10 +1,7 @@
 import 'invoice_item.dart';
 
 class Invoice {
-  final bool isRevised;
-
   final int advanceCents;
-  final int? previousTotalCents;
 
   final String customerName;
   final String invoiceNumber;
@@ -15,9 +12,7 @@ class Invoice {
   final DateTime createdAt;
 
   const Invoice({
-    required this.isRevised,
     required this.advanceCents,
-    this.previousTotalCents,
     required this.customerName,
     required this.invoiceNumber,
     this.customerPhone,
@@ -26,9 +21,7 @@ class Invoice {
   });
 
   factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
-    isRevised: json['isRevised'] as bool? ?? false,
     advanceCents: json['advanceCents'] as int? ?? 0,
-    previousTotalCents: json['previousTotalCents'] as int?,
     customerName: json['customerName'] as String? ?? '',
     invoiceNumber: json['invoiceNumber'] as String? ?? '',
     customerPhone: json['customerPhone'] as String?,
@@ -36,41 +29,28 @@ class Invoice {
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
   );
 
-  int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
-
   int get balanceCents => totalCents - advanceCents;
-
-  bool get showsAdvance => advanceCents > 0;
 
   bool get isPrintable => items.any((InvoiceItem i) => i.isPrintable);
 
   List<InvoiceItem> get printableItems => items.where((InvoiceItem i) => i.isPrintable).toList();
 
-  Invoice copyWith({
-    bool? isRevised,
-    int? advanceCents,
-    int? previousTotalCents,
-    bool clearPreviousTotal = false,
-    String? customerName,
-    String? invoiceNumber,
-    String? customerPhone,
-    List<InvoiceItem>? items,
-    DateTime? createdAt,
-  }) => Invoice(
-    isRevised: isRevised ?? this.isRevised,
-    advanceCents: advanceCents ?? this.advanceCents,
-    previousTotalCents: clearPreviousTotal ? null : previousTotalCents ?? this.previousTotalCents,
-    customerName: customerName ?? this.customerName,
-    invoiceNumber: invoiceNumber ?? this.invoiceNumber,
-    customerPhone: customerPhone ?? this.customerPhone,
-    items: items ?? this.items,
-    createdAt: createdAt ?? this.createdAt,
-  );
+  bool get showsAdvance => advanceCents > 0;
+
+  int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
+
+  Invoice copyWith({int? advanceCents, String? customerName, String? invoiceNumber, String? customerPhone, List<InvoiceItem>? items, DateTime? createdAt}) =>
+      Invoice(
+        advanceCents: advanceCents ?? this.advanceCents,
+        customerName: customerName ?? this.customerName,
+        invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+        customerPhone: customerPhone ?? this.customerPhone,
+        items: items ?? this.items,
+        createdAt: createdAt ?? this.createdAt,
+      );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'isRevised': isRevised,
     'advanceCents': advanceCents,
-    'previousTotalCents': previousTotalCents,
     'customerName': customerName,
     'invoiceNumber': invoiceNumber,
     'customerPhone': customerPhone,
@@ -89,9 +69,7 @@ class Invoice {
   @override
   bool operator ==(Object other) =>
       other is Invoice &&
-      other.isRevised == isRevised &&
       other.advanceCents == advanceCents &&
-      other.previousTotalCents == previousTotalCents &&
       other.customerName == customerName &&
       other.invoiceNumber == invoiceNumber &&
       other.customerPhone == customerPhone &&
@@ -99,7 +77,7 @@ class Invoice {
       _sameItems(other.items);
 
   @override
-  int get hashCode => Object.hash(isRevised, advanceCents, previousTotalCents, customerName, invoiceNumber, customerPhone, createdAt, Object.hashAll(items));
+  int get hashCode => Object.hash(advanceCents, customerName, invoiceNumber, customerPhone, createdAt, Object.hashAll(items));
 
   @override
   String toString() => 'Invoice($invoiceNumber, $customerName, $totalCents)';

@@ -28,11 +28,11 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
 
   final TextEditingController _controller = TextEditingController();
 
-  bool get _isValid => _cents > 0 && _cents <= widget.totalCents;
+  int get _cents => _controller.text.asCentsOrNull ?? 0;
 
   bool get _isOverTotal => _cents > widget.totalCents;
 
-  int get _cents => _controller.text.asCentsOrNull ?? 0;
+  bool get _isValid => _cents > 0 && _cents <= widget.totalCents;
 
   void _save() {
     if (!_isValid) return;

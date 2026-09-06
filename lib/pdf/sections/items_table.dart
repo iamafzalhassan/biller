@@ -4,7 +4,7 @@ import '../../core/extensions/cents_formatting_ext.dart';
 import '../../models/invoice_item.dart';
 import '../pdf_theme.dart';
 
-const int descriptionMaxLines = 2;
+const int _descriptionMaxLines = 2;
 
 const Map<int, pw.TableColumnWidth> _columnWidths = <int, pw.TableColumnWidth>{
   0: pw.FixedColumnWidth(PdfTheme.indexColumn),
@@ -45,7 +45,7 @@ pw.TableRow _itemRow(int number, InvoiceItem item) {
   return pw.TableRow(
     children: <pw.Widget>[
       _cell('$number', PdfTheme.body, pw.TextAlign.center, PdfTheme.rowHeight),
-      _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight, maxLines: descriptionMaxLines),
+      _cell(item.description, PdfTheme.body, pw.TextAlign.left, PdfTheme.rowHeight, maxLines: _descriptionMaxLines),
       _cell(item.qty.asQty, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
       _cell(item.unitPriceCents.asAmount, PdfTheme.body, pw.TextAlign.right, PdfTheme.rowHeight),
       _cell(item.amountCents.asAmount, PdfTheme.bodyStrong, pw.TextAlign.right, PdfTheme.rowHeight),

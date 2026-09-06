@@ -29,13 +29,7 @@ pw.Widget buildMetaRow(Invoice invoice) {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: <pw.Widget>[
-              pw.Row(
-                mainAxisSize: pw.MainAxisSize.min,
-                children: <pw.Widget>[
-                  if (invoice.isRevised) _revisedTag(),
-                  pw.Text(invoice.invoiceNumber, maxLines: 1, style: PdfTheme.metaStrong),
-                ],
-              ),
+              pw.Text(invoice.invoiceNumber, maxLines: 1, style: PdfTheme.metaStrong),
               pw.SizedBox(height: PdfTheme.gapXs),
               pw.Text(_dateFormat.format(invoice.createdAt), maxLines: 1, style: PdfTheme.meta),
             ],
@@ -44,17 +38,5 @@ pw.Widget buildMetaRow(Invoice invoice) {
       ),
       pw.SizedBox(height: PdfTheme.gapMd),
     ],
-  );
-}
-
-pw.Widget _revisedTag() {
-  return pw.Container(
-    margin: const pw.EdgeInsets.only(right: PdfTheme.gapSm),
-    padding: const pw.EdgeInsets.symmetric(horizontal: PdfTheme.chipPadX, vertical: PdfTheme.chipPadY),
-    decoration: pw.BoxDecoration(
-      border: pw.Border.all(color: PdfTheme.ink, width: PdfTheme.ruleStrong),
-      borderRadius: pw.BorderRadius.circular(2),
-    ),
-    child: pw.Text('REVISED', maxLines: 1, style: PdfTheme.label),
   );
 }

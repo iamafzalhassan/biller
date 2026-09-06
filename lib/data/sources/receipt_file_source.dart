@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/constants/app_channels.dart';
+
 class ReceiptFileSource {
   static const String folderLabel = 'Download/Biller/Receipts';
 
-  static const MethodChannel _channel = MethodChannel('biller/receipts');
-
   Future<String> write(String fileName, Uint8List bytes) async {
     if (Platform.isAndroid) {
-      final String? savedPath = await _channel.invokeMethod<String>('saveReceipt', <String, Object>{'fileName': fileName, 'bytes': bytes});
+      final String? savedPath = await AppChannels.receipts.invokeMethod<String>('saveReceipt', <String, Object>{'fileName': fileName, 'bytes': bytes});
       if (savedPath != null) return savedPath;
     }
     return _writeToAppDirectory(fileName, bytes);

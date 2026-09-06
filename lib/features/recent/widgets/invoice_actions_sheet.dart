@@ -8,11 +8,10 @@ import '../../../core/widgets/dotted_divider.dart';
 import '../../../models/invoice.dart';
 
 class InvoiceActionsSheet extends StatelessWidget {
-  const InvoiceActionsSheet({super.key, required this.invoice, required this.onEditAndReprint, required this.onReprint, required this.onSaveCopy});
+  const InvoiceActionsSheet({super.key, required this.invoice, required this.onReprint, required this.onSaveCopy});
 
   final Invoice invoice;
 
-  final VoidCallback onEditAndReprint;
   final VoidCallback onReprint;
   final VoidCallback onSaveCopy;
 
@@ -33,7 +32,7 @@ class InvoiceActionsSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -51,7 +50,6 @@ class InvoiceActionsSheet extends StatelessWidget {
             child: DottedDivider(),
           ),
           _action(Icons.print_outlined, 'Reprint', onReprint),
-          _action(Icons.edit_outlined, 'Edit & Reprint', onEditAndReprint),
           _action(Icons.folder_outlined, 'Save a Copy', onSaveCopy),
           const SizedBox(height: AppSpacing.md),
         ],

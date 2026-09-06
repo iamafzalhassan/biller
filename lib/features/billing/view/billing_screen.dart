@@ -13,11 +13,11 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/context_ext.dart';
 import '../../../core/responsive/responsive_builder.dart';
+import '../../../core/utils/mock_items.dart';
 import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
-import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
-import '../../preview/controller/print_service.dart';
+import '../../../printing/print_outcome.dart';
 import '../controller/billing_controller.dart';
 import '../controller/billing_state.dart';
 import '../widgets/advance_sheet.dart';
@@ -27,7 +27,7 @@ import '../widgets/item_entry_sheet.dart';
 import '../widgets/item_row.dart';
 import '../widgets/live_preview_pane.dart';
 import '../widgets/totals_section.dart';
-import 'layouts/billing_phone_layout.dart';
+import 'layouts/billing_form.dart';
 import 'layouts/billing_tablet_layout.dart';
 
 final DateFormat _appBarDateFormat = DateFormat('d MMM, h:mm a');
@@ -40,6 +40,8 @@ class BillingScreen extends ConsumerStatefulWidget {
 }
 
 class _BillingScreenState extends ConsumerState<BillingScreen> {
+  static const int scrollMs = 250;
+
   final FocusNode _nameFocus = FocusNode();
   final FocusNode _phoneFocus = FocusNode();
 
@@ -50,8 +52,27 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   BillingController get _controller => ref.read(billingControllerProvider.notifier);
 
+  void _reseedFields(BillingState state) {
+    _nameController.text = state.invoice.customerName;
+    _phoneController.text = state.invoice.customerPhone ?? '';
+  }
+
+  void _focusName() => unawaited(SoftKeyboard.openFor(_nameFocus, () => mounted));
+
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final Future<void> scroll = _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: scrollMs),
+      );
+      unawaited(scroll);
+    });
+  }
+
   Future<void> _openSheet({InvoiceItem? item}) async {
-    SoftKeyboard.dismiss();
+    final int before = ref.read(billingControllerProvider).invoice.items.length;
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => ItemEntrySheet(
@@ -62,7 +83,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 Navigator.of(sheetContext).pop();
                 _removeItem(item.id);
               },
-        onSave: (String description, num qty, int unitPriceCents, bool addAnother) {
+        onSave: (String description, num qty, int unitPriceCents) {
           if (item == null) {
             _controller.addItem(description: description, qty: qty, unitPriceCents: unitPriceCents);
           } else {
@@ -74,10 +95,19 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       showDragHandle: true,
     );
     SoftKeyboard.dismiss();
+    if (mounted && ref.read(billingControllerProvider).invoice.items.length > before) _scrollToEnd();
+  }
+
+  void _removeItem(String id) {
+    final (int, InvoiceItem)? removed = _controller.removeItem(id);
+    if (removed == null) return;
+    context.showBriefSnack(
+      'Item removed from this bill. Tap Undo if you did not mean to delete it.',
+      action: SnackBarAction(label: 'Undo', onPressed: () => _controller.reinsertItem(removed.$1, removed.$2)),
+    );
   }
 
   Future<void> _openAdvanceSheet(int advanceCents) async {
-    SoftKeyboard.dismiss();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => AdvanceSheet(
@@ -92,18 +122,13 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     SoftKeyboard.dismiss();
   }
 
-  void _removeItem(String id) {
-    final (int, InvoiceItem)? removed = _controller.removeItem(id);
-    if (removed == null) return;
-    context.showBriefSnack(
-      'Item removed from this bill. Tap Undo if you did not mean to delete it.',
-      action: SnackBarAction(label: 'Undo', onPressed: () => _controller.reinsertItem(removed.$1, removed.$2)),
-    );
+  Future<void> _openRoute(String route) async {
+    SoftKeyboard.dismiss();
+    await Navigator.of(context).pushNamed(route);
   }
 
-  Future<void> _openPreview() => Navigator.of(context).pushNamed(Routes.preview);
-
   Future<void> _printDirect() async {
+    SoftKeyboard.dismiss();
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
     final Uint8List? bytes = await _commit(number);
     if (bytes == null) return;
@@ -121,28 +146,20 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _sendToPrinter(Uint8List bytes, String number) async {
-    bool hasFailed = false;
-    try {
-      await PrintService.layout(bytes, name: number);
-    } catch (_) {
-      hasFailed = true;
-    }
+    final PrintOutcome outcome = await ref
+        .read(printDispatcherProvider)
+        .send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
     _controller.startNewBill();
     if (!mounted) return;
-    if (hasFailed) context.showErrorSnack('$number could not be sent to the printer. It is saved, so you can reprint it from Recent invoices.');
-  }
-
-  void _reseedFields(BillingState state) {
-    _nameController.text = state.invoice.customerName;
-    _phoneController.text = state.invoice.customerPhone ?? '';
+    if (!outcome.isSilent) context.showErrorSnack(outcome.message(number));
   }
 
   PreferredSizeWidget _appBar(BillingState state) {
     return AppBar(
       actions: <Widget>[
-        if (state.invoice.isRevised) IconButton(icon: const Icon(Icons.close), onPressed: _controller.startNewBill, tooltip: 'Discard Revision'),
-        IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => Navigator.of(context).pushNamed(Routes.recent), tooltip: 'Recent invoices'),
-        IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => Navigator.of(context).pushNamed(Routes.settings), tooltip: 'Settings'),
+        if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.addMockItems, tooltip: 'Add ${MockItems.count} mock items'),
+        IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => unawaited(_openRoute(Routes.recent)), tooltip: 'Recent invoices'),
+        IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => unawaited(_openRoute(Routes.settings)), tooltip: 'Settings'),
         const SizedBox(width: AppSpacing.sm),
       ],
       title: Column(
@@ -150,14 +167,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Flexible(
-                child: Text(state.invoice.invoiceNumber, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
-              ),
-              if (state.invoice.isRevised) const _RevisedChip(),
-            ],
-          ),
+          Text(state.invoice.invoiceNumber, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
           const SizedBox(height: AppSpacing.xxs),
           Text(_appBarDateFormat.format(state.invoice.createdAt), maxLines: 1, style: AppTextStyles.listSecondary),
         ],
@@ -173,16 +183,16 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       onNameChanged: _controller.setCustomerName,
       onNameSubmitted: _phoneFocus.requestFocus,
       onPhoneChanged: _controller.setCustomerPhone,
+      onPhoneSubmitted: SoftKeyboard.dismiss,
       phoneController: _phoneController,
       phoneFocus: _phoneFocus,
     );
   }
 
   Widget? _draftBanner(BillingState state) {
-    if (!state.isRestorable) return null;
-    final Invoice? draft = ref.read(draftRepositoryProvider).draft;
-    if (draft == null) return null;
-    return DraftBanner(onDiscard: _controller.discardDraft, onRestore: _controller.restoreDraft, savedAt: draft.createdAt);
+    final DateTime? savedAt = state.draftSavedAt;
+    if (!state.isRestorable || savedAt == null) return null;
+    return DraftBanner(onDiscard: _controller.discardDraft, onRestore: _controller.restoreDraft, savedAt: savedAt);
   }
 
   List<Widget> _itemRows(List<InvoiceItem> items) {
@@ -238,11 +248,23 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
+  Widget _form(BillingState state, Widget printButton) {
+    return BillingForm(
+      addItemButton: _addItemButton(),
+      customerField: _customerField(state),
+      draftBanner: _draftBanner(state),
+      itemRows: _itemRows(state.invoice.items),
+      printButton: printButton,
+      scrollController: _scrollController,
+      totalsSection: _totalsSection(state),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _reseedFields(ref.read(billingControllerProvider));
-    unawaited(SoftKeyboard.openOnStartup(_nameFocus, () => mounted));
+    _focusName();
     unawaited(WakelockPlus.enable());
   }
 
@@ -260,53 +282,31 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<BillingState>(billingControllerProvider, (BillingState? previous, BillingState next) {
-      if (previous != null && previous.formRevision != next.formRevision) _reseedFields(next);
+      if (previous == null || previous.formSeed == next.formSeed) return;
+      _reseedFields(next);
+      _focusName();
     });
 
     final BillingState state = ref.watch(billingControllerProvider);
-    final List<InvoiceItem> items = state.invoice.items;
+    final bool isThermal = ref.watch(printerSettingsProvider).isThermal;
 
     return Scaffold(
       appBar: _appBar(state),
       body: SafeArea(
         child: ResponsiveBuilder(
-          phone: (BuildContext context) => BillingPhoneLayout(
-            addItemButton: _addItemButton(),
-            customerField: _customerField(state),
-            draftBanner: _draftBanner(state),
-            itemRows: _itemRows(items),
-            printButton: _printButton(state, label: 'Preview & Print', onPrint: _openPreview),
-            scrollController: _scrollController,
-            totalsSection: _totalsSection(state),
+          phone: (BuildContext context) => _form(
+            state,
+            isThermal
+                ? _printButton(state, label: 'Print', onPrint: _printDirect)
+                : _printButton(state, label: 'Preview & Print', onPrint: () => _openRoute(Routes.preview)),
           ),
           tablet: (BuildContext context) => BillingTabletLayout(
-            addItemButton: _addItemButton(),
-            customerField: _customerField(state),
-            draftBanner: _draftBanner(state),
-            itemRows: _itemRows(items),
+            form: _form(state, _printButton(state, label: 'Print', onPrint: _printDirect)),
             previewPane: const LivePreviewPane(),
-            printButton: _printButton(state, label: 'Print', onPrint: _printDirect),
-            scrollController: _scrollController,
-            totalsSection: _totalsSection(state),
           ),
         ),
       ),
       resizeToAvoidBottomInset: true,
-    );
-  }
-}
-
-class _RevisedChip extends StatelessWidget {
-  const _RevisedChip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusChip), color: AppColors.warning.withValues(alpha: 0.15)),
-      margin: const EdgeInsets.only(left: AppSpacing.sm),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-      child: const Text('REVISED', maxLines: 1, style: AppTextStyles.chip),
     );
   }
 }

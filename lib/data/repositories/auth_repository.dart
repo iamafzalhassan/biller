@@ -14,8 +14,6 @@ class AuthRepository {
 
   AuthRepository(this._storage);
 
-  Future<bool> hasPin() async => (await _storage.read(SecureStorageSource.keyPin)) != null;
-
   Future<String> setPin(String pin) async {
     final String recoveryCode = _generateRecoveryCode();
     await _storage.write(SecureStorageSource.keyPin, PinHasher.hash(pin));
