@@ -118,7 +118,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _recoverPin() async {
-    SoftKeyboard.dismiss();
+    SoftKeyboard.release();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => RecoverySheet(onSubmit: (String code, String newPin) => unawaited(_applyRecovery(code, newPin))),

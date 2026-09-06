@@ -12,9 +12,11 @@ abstract final class SoftKeyboard {
     return view != null && view.viewInsets.bottom > 0;
   }
 
+  static void release() => FocusManager.instance.primaryFocus?.unfocus();
+
   static void dismiss() {
-    _release();
-    WidgetsBinding.instance.addPostFrameCallback((Duration _) => _release());
+    _hide();
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) => _hide());
   }
 
   static Future<void> openFor(FocusNode node, bool Function() isActive) async {
@@ -22,15 +24,14 @@ abstract final class SoftKeyboard {
     if (!isActive()) return;
     node.requestFocus();
     for (int attempt = 0; attempt < openAttempts; attempt++) {
-      if (!isActive() || !node.hasFocus) return;
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-      if (isOpen) return;
       await Future<void>.delayed(const Duration(milliseconds: openIntervalMs));
+      if (!isActive() || !node.hasFocus || isOpen) return;
+      await SystemChannels.textInput.invokeMethod<void>('TextInput.show');
     }
   }
 
-  static void _release() {
-    FocusManager.instance.primaryFocus?.unfocus();
+  static void _hide() {
+    release();
     SystemChannels.textInput.invokeMethod<void>('TextInput.hide').ignore();
   }
 }

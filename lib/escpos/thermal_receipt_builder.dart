@@ -118,5 +118,7 @@ abstract final class ThermalReceiptBuilder {
 
   static PaperSize _paperSize(ThermalPaper paper) => paper == ThermalPaper.mm58 ? PaperSize.mm58 : PaperSize.mm80;
 
-  static PosStyles _businessNameStyle(ThermalPaper paper) => paper == ThermalPaper.mm58 ? const PosStyles(align: PosAlign.center, bold: true) : const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2);
+  static PosStyles _businessNameStyle(ThermalPaper paper) => paper == ThermalPaper.mm58
+      ? const PosStyles(align: PosAlign.center, bold: true)
+      : const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2);
 }

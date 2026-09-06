@@ -7,7 +7,8 @@ import '../../core/constants/app_channels.dart';
 class BluetoothPrinterSource {
   static const Duration callTimeout = Duration(seconds: 12);
 
-  Future<bool> requestPermission() => _guard(AppChannels.receipts.invokeMethod<bool>('requestBluetoothPermission').then((bool? granted) => granted ?? false), false);
+  Future<bool> requestPermission() =>
+      _guard(AppChannels.receipts.invokeMethod<bool>('requestBluetoothPermission').then((bool? granted) => granted ?? false), false);
 
   Future<bool> isPermissionGranted() => _guard(PrintBluetoothThermal.isPermissionBluetoothGranted, false);
 

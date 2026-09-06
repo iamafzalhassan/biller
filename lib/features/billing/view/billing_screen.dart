@@ -50,14 +50,27 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  bool _wantsNameFocus = false;
+
   BillingController get _controller => ref.read(billingControllerProvider.notifier);
+
+  bool get _isCurrentRoute => ModalRoute.of(context)?.isCurrent ?? true;
 
   void _reseedFields(BillingState state) {
     _nameController.text = state.invoice.customerName;
     _phoneController.text = state.invoice.customerPhone ?? '';
   }
 
-  void _focusName() => unawaited(SoftKeyboard.openFor(_nameFocus, () => mounted));
+  void _requestNameFocus() {
+    _wantsNameFocus = true;
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) => _applyPendingFocus());
+  }
+
+  void _applyPendingFocus() {
+    if (!_wantsNameFocus || !mounted || !_isCurrentRoute) return;
+    _wantsNameFocus = false;
+    unawaited(SoftKeyboard.openFor(_nameFocus, () => mounted && _isCurrentRoute));
+  }
 
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
@@ -73,6 +86,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Future<void> _openSheet({InvoiceItem? item}) async {
     final int before = ref.read(billingControllerProvider).invoice.items.length;
+    SoftKeyboard.release();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => ItemEntrySheet(
@@ -108,6 +122,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _openAdvanceSheet(int advanceCents) async {
+    SoftKeyboard.release();
     await showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext sheetContext) => AdvanceSheet(
@@ -125,6 +140,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   Future<void> _openRoute(String route) async {
     SoftKeyboard.dismiss();
     await Navigator.of(context).pushNamed(route);
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) => _applyPendingFocus());
   }
 
   Future<void> _printDirect() async {
@@ -264,7 +281,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   void initState() {
     super.initState();
     _reseedFields(ref.read(billingControllerProvider));
-    _focusName();
+    _requestNameFocus();
     unawaited(WakelockPlus.enable());
   }
 
@@ -284,7 +301,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     ref.listen<BillingState>(billingControllerProvider, (BillingState? previous, BillingState next) {
       if (previous == null || previous.formSeed == next.formSeed) return;
       _reseedFields(next);
-      _focusName();
+      _requestNameFocus();
     });
 
     final BillingState state = ref.watch(billingControllerProvider);
@@ -296,9 +313,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         child: ResponsiveBuilder(
           phone: (BuildContext context) => _form(
             state,
-            isThermal
-                ? _printButton(state, label: 'Print', onPrint: _printDirect)
-                : _printButton(state, label: 'Preview & Print', onPrint: () => _openRoute(Routes.preview)),
+            isThermal ? _printButton(state, label: 'Print', onPrint: _printDirect) : _printButton(state, label: 'Preview & Print', onPrint: () => _openRoute(Routes.preview)),
           ),
           tablet: (BuildContext context) => BillingTabletLayout(
             form: _form(state, _printButton(state, label: 'Print', onPrint: _printDirect)),
