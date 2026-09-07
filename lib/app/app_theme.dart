@@ -6,13 +6,7 @@ import '../core/constants/app_text_styles.dart';
 
 abstract final class AppTheme {
   static ThemeData get light {
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      error: AppColors.danger,
-      primary: AppColors.primary,
-      onPrimary: AppColors.primaryOn,
-      seedColor: AppColors.primary,
-      surface: AppColors.surfaceBase,
-    );
+    final ColorScheme scheme = ColorScheme.fromSeed(error: AppColors.danger, primary: AppColors.primary, onPrimary: AppColors.primaryOn, seedColor: AppColors.primary, surface: AppColors.surfaceBase);
     return ThemeData(
       colorScheme: scheme,
       fontFamily: AppTextStyles.fontFamily,
@@ -57,11 +51,7 @@ abstract final class AppTheme {
       dividerTheme: const DividerThemeData(color: AppColors.divider, space: AppSpacing.hairline, thickness: AppSpacing.hairline),
       filledButtonTheme: FilledButtonThemeData(style: _filledButtonStyle),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(
-          foregroundColor: AppColors.textSecondary,
-          minimumSize: const Size.square(AppSpacing.iconButtonSize),
-          shape: const CircleBorder(),
-        ),
+        style: IconButton.styleFrom(foregroundColor: AppColors.textSecondary, minimumSize: const Size.square(AppSpacing.iconButtonSize), shape: const CircleBorder()),
       ),
       inputDecorationTheme: _inputDecorationTheme,
       listTileTheme: const ListTileThemeData(
@@ -69,19 +59,9 @@ abstract final class AppTheme {
         minVerticalPadding: AppSpacing.md,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(style: _outlinedButtonStyle),
-      snackBarTheme: const SnackBarThemeData(
-        actionTextColor: AppColors.primaryOn,
-        backgroundColor: AppColors.surfaceInverse,
-        behavior: SnackBarBehavior.fixed,
-        contentTextStyle: AppTextStyles.snack,
-        shape: RoundedRectangleBorder(),
-      ),
+      snackBarTheme: const SnackBarThemeData(actionTextColor: AppColors.primaryOn, backgroundColor: AppColors.surfaceInverse, behavior: SnackBarBehavior.fixed, contentTextStyle: AppTextStyles.snack, shape: RoundedRectangleBorder()),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          minimumSize: const Size(0, AppSpacing.touchTarget),
-          textStyle: AppTextStyles.listPrimary,
-        ),
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary, minimumSize: const Size(0, AppSpacing.touchTarget), textStyle: AppTextStyles.listPrimary),
       ),
       textSelectionTheme: const TextSelectionThemeData(cursorColor: AppColors.primary),
     );

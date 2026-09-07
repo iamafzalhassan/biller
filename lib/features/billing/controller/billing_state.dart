@@ -10,16 +10,10 @@ class BillingState {
   final String pendingInvoiceNumber;
 
   final DateTime? draftSavedAt;
+
   final Invoice invoice;
 
-  const BillingState({
-    required this.isPrinting,
-    required this.isRestorable,
-    required this.formSeed,
-    required this.pendingInvoiceNumber,
-    this.draftSavedAt,
-    required this.invoice,
-  });
+  const BillingState({required this.isPrinting, required this.isRestorable, required this.formSeed, required this.pendingInvoiceNumber, this.draftSavedAt, required this.invoice});
 
   String get blockingReason {
     if (Validators.isBlank(invoice.customerName)) return 'Enter the customer name before printing. It is printed at the top of the bill.';
@@ -30,15 +24,14 @@ class BillingState {
 
   bool get canPrint => blockingReason.isEmpty && !isPrinting;
 
-  BillingState copyWith({bool? isPrinting, bool? isRestorable, int? formSeed, String? pendingInvoiceNumber, DateTime? draftSavedAt, Invoice? invoice}) =>
-      BillingState(
-        isPrinting: isPrinting ?? this.isPrinting,
-        isRestorable: isRestorable ?? this.isRestorable,
-        formSeed: formSeed ?? this.formSeed,
-        pendingInvoiceNumber: pendingInvoiceNumber ?? this.pendingInvoiceNumber,
-        draftSavedAt: draftSavedAt ?? this.draftSavedAt,
-        invoice: invoice ?? this.invoice,
-      );
+  BillingState copyWith({bool? isPrinting, bool? isRestorable, int? formSeed, String? pendingInvoiceNumber, DateTime? draftSavedAt, Invoice? invoice}) => BillingState(
+    isPrinting: isPrinting ?? this.isPrinting,
+    isRestorable: isRestorable ?? this.isRestorable,
+    formSeed: formSeed ?? this.formSeed,
+    pendingInvoiceNumber: pendingInvoiceNumber ?? this.pendingInvoiceNumber,
+    draftSavedAt: draftSavedAt ?? this.draftSavedAt,
+    invoice: invoice ?? this.invoice,
+  );
 
   @override
   bool operator ==(Object other) =>

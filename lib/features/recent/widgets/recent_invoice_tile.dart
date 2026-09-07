@@ -39,12 +39,7 @@ class RecentInvoiceTile extends StatelessWidget {
               children: <Widget>[
                 Text(invoice.customerName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listPrimary),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  '${invoice.invoiceNumber}  ·  ${_timeFormat.format(invoice.createdAt)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.listSecondary,
-                ),
+                Text('${invoice.invoiceNumber}  ·  ${_timeFormat.format(invoice.createdAt)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
                 const SizedBox(height: AppSpacing.sm),
                 Text(invoice.totalCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
               ],

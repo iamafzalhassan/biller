@@ -72,12 +72,7 @@ class RecentScreen extends ConsumerWidget {
           const Icon(Icons.schedule_outlined, color: AppColors.textSecondary, size: AppSpacing.iconHint),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(
-              'Invoices are kept for $days days, then removed from this list.',
-              maxLines: noteLines,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.listSecondary,
-            ),
+            child: Text('Invoices are kept for $days days, then removed from this list.', maxLines: noteLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
           ),
         ],
       ),
@@ -114,11 +109,7 @@ class RecentScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           const Text('No invoices yet', maxLines: 1, style: AppTextStyles.listPrimary),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Every bill you print appears here for $days days, ready to reprint or save again.',
-            style: AppTextStyles.listSecondary,
-            textAlign: TextAlign.center,
-          ),
+          Text('Every bill you print appears here for $days days, ready to reprint or save again.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
         ],
       ),
     );
@@ -141,8 +132,7 @@ class RecentScreen extends ConsumerWidget {
                   child: data.isEmpty
                       ? _emptyList(days)
                       : ListView.builder(
-                          itemBuilder: (BuildContext context, int index) =>
-                              RecentInvoiceTile(invoice: data[index], onTap: () => unawaited(_openActions(context, ref, data[index]))),
+                          itemBuilder: (BuildContext context, int index) => RecentInvoiceTile(invoice: data[index], onTap: () => unawaited(_openActions(context, ref, data[index]))),
                           itemCount: data.length,
                           padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.xl),
                           physics: const AlwaysScrollableScrollPhysics(),

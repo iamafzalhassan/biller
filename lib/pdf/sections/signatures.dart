@@ -3,11 +3,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../pdf_theme.dart';
 
 pw.Widget buildSignatures() {
-  return pw.Row(
-    crossAxisAlignment: pw.CrossAxisAlignment.end,
-    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    children: <pw.Widget>[_signature('CUSTOMER SIGNATURE'), _signature('AUTHORISED SIGNATURE')],
-  );
+  return pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.end, mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: <pw.Widget>[_signature('CUSTOMER SIGNATURE'), _signature('AUTHORISED SIGNATURE')]);
 }
 
 pw.Widget _signature(String label) {

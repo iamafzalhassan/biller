@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 final NumberFormat _groups = NumberFormat('#,##0', 'en_US');
 
 class ThousandsFormatter extends TextInputFormatter {
-  const ThousandsFormatter({this.decimalPlaces = 2});
-
   final int decimalPlaces;
+
+  const ThousandsFormatter({this.decimalPlaces = 2});
 
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {

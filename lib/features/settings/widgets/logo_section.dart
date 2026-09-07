@@ -40,12 +40,7 @@ class LogoSection extends StatelessWidget {
           children: <Widget>[
             _preview(),
             const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                _hasLogo ? 'Prints above the business name on every receipt.' : 'No logo. It prints above the business name.',
-                style: AppTextStyles.listSecondary,
-              ),
-            ),
+            Expanded(child: Text(_hasLogo ? 'Prints above the business name on every receipt.' : 'No logo. It prints above the business name.', style: AppTextStyles.listSecondary)),
           ],
         ),
         const SizedBox(height: AppSpacing.md),

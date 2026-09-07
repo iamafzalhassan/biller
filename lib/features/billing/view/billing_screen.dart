@@ -125,12 +125,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     SoftKeyboard.release();
     await showModalBottomSheet<void>(
       context: context,
-      builder: (BuildContext sheetContext) => AdvanceSheet(
-        advanceCents: advanceCents,
-        totalCents: ref.read(billingControllerProvider).invoice.totalCents,
-        onRemove: () => _controller.setAdvance(0),
-        onSave: _controller.setAdvance,
-      ),
+      builder: (BuildContext sheetContext) => AdvanceSheet(advanceCents: advanceCents, totalCents: ref.read(billingControllerProvider).invoice.totalCents, onRemove: () => _controller.setAdvance(0), onSave: _controller.setAdvance),
       isScrollControlled: true,
       showDragHandle: true,
     );
@@ -163,9 +158,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _sendToPrinter(Uint8List bytes, String number) async {
-    final PrintOutcome outcome = await ref
-        .read(printDispatcherProvider)
-        .send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
+    final PrintOutcome outcome = await ref.read(printDispatcherProvider).send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
     _controller.startNewBill();
     if (!mounted) return;
     if (!outcome.isSilent) context.showErrorSnack(outcome.message(number));
@@ -311,10 +304,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       appBar: _appBar(state),
       body: SafeArea(
         child: ResponsiveBuilder(
-          phone: (BuildContext context) => _form(
-            state,
-            isThermal ? _printButton(state, label: 'Print', onPrint: _printDirect) : _printButton(state, label: 'Preview & Print', onPrint: () => _openRoute(Routes.preview)),
-          ),
+          phone: (BuildContext context) => _form(state, isThermal ? _printButton(state, label: 'Print', onPrint: _printDirect) : _printButton(state, label: 'Preview & Print', onPrint: () => _openRoute(Routes.preview))),
           tablet: (BuildContext context) => BillingTabletLayout(
             form: _form(state, _printButton(state, label: 'Print', onPrint: _printDirect)),
             previewPane: const LivePreviewPane(),

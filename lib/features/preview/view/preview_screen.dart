@@ -45,9 +45,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _sendToPrinter(Uint8List bytes, String number) async {
-    final PrintOutcome outcome = await ref
-        .read(printDispatcherProvider)
-        .send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
+    final PrintOutcome outcome = await ref.read(printDispatcherProvider).send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
     ref.read(billingControllerProvider.notifier).startNewBill();
     if (!mounted) return;
     if (!outcome.isSilent) context.showErrorSnack(outcome.message(number));
@@ -82,12 +80,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
               border: Border(top: BorderSide(color: AppColors.divider)),
               color: AppColors.surfaceCard,
             ),
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.lg,
-              AppSpacing.screenPadding,
-              AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-            ),
+            padding: EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.lg + MediaQuery.paddingOf(context).bottom),
             child: FilledButton(onPressed: _isPrinting ? null : () => unawaited(_print()), child: const Text('Print', maxLines: 1)),
           ),
         ],

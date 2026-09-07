@@ -24,8 +24,7 @@ class _TermsEditorState extends State<TermsEditor> {
 
   final TextEditingController _controller = TextEditingController();
 
-  void _publish(String value) =>
-      widget.onChanged(value.split(_breakPattern).map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
+  void _publish(String value) => widget.onChanged(value.split(_breakPattern).map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
 
   Widget _numberedTerms() {
     return Column(
@@ -72,13 +71,6 @@ class _TermsEditorState extends State<TermsEditor> {
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditable) return _numberedTerms();
-    return AppTextField(
-      controller: _controller,
-      isGrowable: true,
-      keyboardType: TextInputType.multiline,
-      label: 'Conditions (Blank Line Between Each)',
-      onChanged: _publish,
-      textCapitalization: TextCapitalization.sentences,
-    );
+    return AppTextField(controller: _controller, isGrowable: true, keyboardType: TextInputType.multiline, label: 'Conditions (Blank Line Between Each)', onChanged: _publish, textCapitalization: TextCapitalization.sentences);
   }
 }

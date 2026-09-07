@@ -8,22 +8,22 @@ import '../constants/app_text_styles.dart';
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
-    required this.controller,
-    required this.label,
     this.autofocus = false,
-    this.focusNode,
-    this.inputFormatters,
     this.isGrowable = false,
-    this.keyboardType,
-    this.maxLength,
     this.obscureText = false,
-    this.onChanged,
-    this.onSubmitted,
-    this.prefixText,
     this.selectAllOnFocus = false,
+    this.maxLength,
+    required this.label,
+    this.prefixText,
+    this.inputFormatters,
+    this.focusNode,
     this.textAlign = TextAlign.start,
     this.textCapitalization = TextCapitalization.none,
+    required this.controller,
     this.textInputAction,
+    this.keyboardType,
+    this.onChanged,
+    this.onSubmitted,
   });
 
   final bool autofocus;

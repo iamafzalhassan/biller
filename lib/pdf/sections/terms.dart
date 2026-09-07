@@ -2,9 +2,9 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../pdf_theme.dart';
 
-const int _termsMaxLines = 3;
-
 const double _termsWrapChars = 72;
+
+const int _termsMaxLines = 3;
 
 int termLineCount(String term) {
   final int lines = (term.trim().length / _termsWrapChars).ceil();

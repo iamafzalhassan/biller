@@ -13,7 +13,7 @@ import '../../../core/widgets/sheet_frame.dart';
 import '../../../models/invoice_item.dart';
 
 class ItemEntrySheet extends StatefulWidget {
-  const ItemEntrySheet({super.key, required this.item, required this.onDelete, required this.onSave});
+  const ItemEntrySheet({super.key, required this.item, required this.onSave, required this.onDelete});
 
   final InvoiceItem? item;
 
@@ -70,13 +70,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     Navigator.of(context).pop();
   }
 
-  Widget _numberField({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required String label,
-    required TextInputAction textInputAction,
-    required VoidCallback onSubmitted,
-  }) {
+  Widget _numberField({required TextEditingController controller, required FocusNode focusNode, required String label, required TextInputAction textInputAction, required VoidCallback onSubmitted}) {
     return AppTextField(
       controller: controller,
       focusNode: focusNode,
@@ -153,13 +147,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
         Row(
           children: <Widget>[
             Expanded(
-              child: _numberField(
-                controller: _qtyController,
-                focusNode: _qtyFocus,
-                label: 'Qty',
-                onSubmitted: _priceFocus.requestFocus,
-                textInputAction: TextInputAction.next,
-              ),
+              child: _numberField(controller: _qtyController, focusNode: _qtyFocus, label: 'Qty', onSubmitted: _priceFocus.requestFocus, textInputAction: TextInputAction.next),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(

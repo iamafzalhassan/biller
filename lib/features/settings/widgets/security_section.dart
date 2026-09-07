@@ -11,10 +11,10 @@ class SecuritySection extends StatelessWidget {
   const SecuritySection({
     super.key,
     required this.isResettable,
-    required this.currentPinController,
     required this.currentPinFocus,
-    required this.newPinController,
     required this.newPinFocus,
+    required this.currentPinController,
+    required this.newPinController,
     required this.onChangePin,
     required this.onReset,
   });

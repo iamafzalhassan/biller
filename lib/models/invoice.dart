@@ -11,14 +11,7 @@ class Invoice {
 
   final DateTime createdAt;
 
-  const Invoice({
-    required this.advanceCents,
-    required this.customerName,
-    required this.invoiceNumber,
-    this.customerPhone,
-    required this.items,
-    required this.createdAt,
-  });
+  const Invoice({required this.advanceCents, required this.customerName, required this.invoiceNumber, this.customerPhone, required this.items, required this.createdAt});
 
   factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
     advanceCents: json['advanceCents'] as int? ?? 0,
@@ -39,15 +32,14 @@ class Invoice {
 
   int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
 
-  Invoice copyWith({int? advanceCents, String? customerName, String? invoiceNumber, String? customerPhone, List<InvoiceItem>? items, DateTime? createdAt}) =>
-      Invoice(
-        advanceCents: advanceCents ?? this.advanceCents,
-        customerName: customerName ?? this.customerName,
-        invoiceNumber: invoiceNumber ?? this.invoiceNumber,
-        customerPhone: customerPhone ?? this.customerPhone,
-        items: items ?? this.items,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  Invoice copyWith({int? advanceCents, String? customerName, String? invoiceNumber, String? customerPhone, List<InvoiceItem>? items, DateTime? createdAt}) => Invoice(
+    advanceCents: advanceCents ?? this.advanceCents,
+    customerName: customerName ?? this.customerName,
+    invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+    customerPhone: customerPhone ?? this.customerPhone,
+    items: items ?? this.items,
+    createdAt: createdAt ?? this.createdAt,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'advanceCents': advanceCents,
@@ -68,13 +60,7 @@ class Invoice {
 
   @override
   bool operator ==(Object other) =>
-      other is Invoice &&
-      other.advanceCents == advanceCents &&
-      other.customerName == customerName &&
-      other.invoiceNumber == invoiceNumber &&
-      other.customerPhone == customerPhone &&
-      other.createdAt == createdAt &&
-      _sameItems(other.items);
+      other is Invoice && other.advanceCents == advanceCents && other.customerName == customerName && other.invoiceNumber == invoiceNumber && other.customerPhone == customerPhone && other.createdAt == createdAt && _sameItems(other.items);
 
   @override
   int get hashCode => Object.hash(advanceCents, customerName, invoiceNumber, customerPhone, createdAt, Object.hashAll(items));

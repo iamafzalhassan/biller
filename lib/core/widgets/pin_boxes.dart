@@ -7,15 +7,7 @@ import '../constants/app_text_styles.dart';
 import '../utils/validators.dart';
 
 class PinBoxes extends StatefulWidget {
-  const PinBoxes({
-    super.key,
-    required this.autofocus,
-    required this.controller,
-    required this.hasError,
-    required this.onChanged,
-    required this.onCompleted,
-    this.enabled = true,
-  });
+  const PinBoxes({super.key, required this.autofocus, this.enabled = true, required this.hasError, required this.controller, required this.onChanged, required this.onCompleted});
 
   final bool autofocus;
   final bool enabled;

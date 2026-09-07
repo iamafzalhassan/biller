@@ -8,7 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/pin_boxes.dart';
 
 class PinGate extends StatefulWidget {
-  const PinGate({super.key, required this.onRecover, required this.onSubmit});
+  const PinGate({super.key, required this.onSubmit, required this.onRecover});
 
   final Future<bool> Function(String) onSubmit;
 
@@ -85,22 +85,10 @@ class _PinGateState extends State<PinGate> {
           const Text('The PIN protects the settings screen only', style: AppTextStyles.listSecondary),
           const SizedBox(height: AppSpacing.xl),
           Center(
-            child: PinBoxes(
-              autofocus: true,
-              controller: _controller,
-              enabled: !_isLocked,
-              hasError: _hasError,
-              onChanged: _clearError,
-              onCompleted: (String value) => unawaited(_submit(value)),
-            ),
+            child: PinBoxes(autofocus: true, controller: _controller, enabled: !_isLocked, hasError: _hasError, onChanged: _clearError, onCompleted: (String value) => unawaited(_submit(value))),
           ),
           if (_isLocked) const SizedBox(height: AppSpacing.md),
-          if (_isLocked)
-            Text(
-              'Too many wrong PINs. Try again in $_lockRemaining seconds, or use your recovery code.',
-              style: AppTextStyles.listSecondary,
-              textAlign: TextAlign.center,
-            ),
+          if (_isLocked) Text('Too many wrong PINs. Try again in $_lockRemaining seconds, or use your recovery code.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
           const Spacer(),
           OutlinedButton(onPressed: widget.onRecover, child: const Text('Use Recovery Code', maxLines: 1)),
         ],

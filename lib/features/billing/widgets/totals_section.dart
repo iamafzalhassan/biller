@@ -9,15 +9,7 @@ import '../../../core/extensions/context_ext.dart';
 import '../../../core/widgets/dotted_divider.dart';
 
 class TotalsSection extends StatelessWidget {
-  const TotalsSection({
-    super.key,
-    required this.advanceCents,
-    required this.balanceCents,
-    required this.hasItems,
-    required this.showsAdvance,
-    required this.totalCents,
-    required this.onAdvanceTap,
-  });
+  const TotalsSection({super.key, required this.hasItems, required this.showsAdvance, required this.advanceCents, required this.balanceCents, required this.totalCents, required this.onAdvanceTap});
 
   final bool hasItems;
   final bool showsAdvance;

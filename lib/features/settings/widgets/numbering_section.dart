@@ -5,16 +5,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/profile_text_field.dart';
 
 class NumberingSection extends StatelessWidget {
-  const NumberingSection({
-    super.key,
-    required this.nextInvoiceNumber,
-    required this.deviceIdController,
-    required this.deviceIdFocus,
-    required this.prefixController,
-    required this.prefixFocus,
-    required this.onChanged,
-    required this.onDone,
-  });
+  const NumberingSection({super.key, required this.nextInvoiceNumber, required this.deviceIdFocus, required this.prefixFocus, required this.deviceIdController, required this.prefixController, required this.onChanged, required this.onDone});
 
   static const int deviceIdLength = 1;
   static const int prefixFlex = 2;
@@ -37,35 +28,18 @@ class NumberingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const Text(
-          'Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.',
-          style: AppTextStyles.listSecondary,
-        ),
+        const Text('Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.', style: AppTextStyles.listSecondary),
         const SizedBox(height: AppSpacing.md),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Expanded(
               flex: prefixFlex,
-              child: ProfileTextField(
-                controller: prefixController,
-                focusNode: prefixFocus,
-                label: 'Prefix',
-                maxLength: prefixLength,
-                nextFocus: deviceIdFocus,
-                onChanged: onChanged,
-              ),
+              child: ProfileTextField(controller: prefixController, focusNode: prefixFocus, label: 'Prefix', maxLength: prefixLength, nextFocus: deviceIdFocus, onChanged: onChanged),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: ProfileTextField(
-                controller: deviceIdController,
-                focusNode: deviceIdFocus,
-                label: 'Device',
-                maxLength: deviceIdLength,
-                onChanged: onChanged,
-                onDone: onDone,
-              ),
+              child: ProfileTextField(controller: deviceIdController, focusNode: deviceIdFocus, label: 'Device', maxLength: deviceIdLength, onChanged: onChanged, onDone: onDone),
             ),
           ],
         ),

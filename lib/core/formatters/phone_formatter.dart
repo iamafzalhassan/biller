@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 
 class SriLankaPhoneFormatter extends TextInputFormatter {
-  const SriLankaPhoneFormatter();
-
   static const int length = 10;
 
   static const String countryCode = '94';
+
+  const SriLankaPhoneFormatter();
 
   static String normalise(String value) {
     String digits = value.replaceAll(RegExp('[^0-9]'), '');

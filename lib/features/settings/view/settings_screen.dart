@@ -41,8 +41,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  static const int logoQuality = 90;
   static const int logoMaxWidth = 600;
+  static const int logoQuality = 90;
   static const int retentionMaxDigits = 3;
 
   final FocusNode _buildingFocus = FocusNode();
@@ -81,23 +81,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _appVersion = '';
   String _logoPath = '';
 
-  List<String> _terms = BusinessProfile.defaultTerms;
-
   List<BluetoothInfo> _devices = <BluetoothInfo>[];
+
+  List<String> _terms = BusinessProfile.defaultTerms;
 
   PrinterSettings _printer = PrinterSettings.empty;
 
-  String get _nextInvoiceNumber => InvoiceNumberGen.build(
-    sequence: ref.read(settingsRepositoryProvider).nextSequence,
-    deviceId: _deviceIdController.text.trim().toUpperCase(),
-    prefix: _prefixController.text.trim().toUpperCase(),
-  );
+  String get _nextInvoiceNumber => InvoiceNumberGen.build(sequence: ref.read(settingsRepositoryProvider).nextSequence, deviceId: _deviceIdController.text.trim().toUpperCase(), prefix: _prefixController.text.trim().toUpperCase());
 
-  List<String> get _phones => <String>[
-    _phone1Controller.text,
-    _phone2Controller.text,
-    _phone3Controller.text,
-  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
+  List<String> get _phones => <String>[_phone1Controller.text, _phone2Controller.text, _phone3Controller.text].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
 
   int get _retentionDays => int.tryParse(_retentionController.text.trim()) ?? SettingsRepository.defaultRetentionDays;
 
@@ -256,23 +248,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await Navigator.of(context).pushAndRemoveUntil(Routes.setup(), (Route<dynamic> route) => false);
   }
 
-  ProfileTextField _field({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required String label,
-    bool isUpperCase = true,
-    FocusNode? nextFocus,
-    TextInputType? keyboardType,
-  }) {
-    return ProfileTextField(
-      controller: controller,
-      focusNode: focusNode,
-      isUpperCase: isUpperCase,
-      keyboardType: keyboardType,
-      label: label,
-      nextFocus: nextFocus,
-      onDone: SoftKeyboard.dismiss,
-    );
+  ProfileTextField _field({required TextEditingController controller, required FocusNode focusNode, required String label, bool isUpperCase = true, FocusNode? nextFocus, TextInputType? keyboardType}) {
+    return ProfileTextField(controller: controller, focusNode: focusNode, isUpperCase: isUpperCase, keyboardType: keyboardType, label: label, nextFocus: nextFocus, onDone: SoftKeyboard.dismiss);
   }
 
   ProfileTextField _phoneField(TextEditingController controller, FocusNode focusNode, String label, {FocusNode? nextFocus}) {
@@ -314,14 +291,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: AppSpacing.md),
           _phoneField(_phone3Controller, _phone3Focus, 'Phone 3 (Optional)', nextFocus: _emailFocus),
           const SizedBox(height: AppSpacing.md),
-          _field(
-            controller: _emailController,
-            focusNode: _emailFocus,
-            isUpperCase: false,
-            keyboardType: TextInputType.emailAddress,
-            label: 'Email',
-            nextFocus: _noFocus,
-          ),
+          _field(controller: _emailController, focusNode: _emailFocus, isUpperCase: false, keyboardType: TextInputType.emailAddress, label: 'Email', nextFocus: _noFocus),
           const SizedBox(height: AppSpacing.xl),
           const SectionHeader(label: 'ADDRESS'),
           _field(controller: _noController, focusNode: _noFocus, label: 'No', nextFocus: _streetFocus),
@@ -333,12 +303,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _field(controller: _buildingController, focusNode: _buildingFocus, label: 'Building (Optional)'),
           const SizedBox(height: AppSpacing.xl),
           const SectionHeader(label: 'TERMS AND CONDITIONS'),
-          TermsSection(
-            isEditing: _isEditingTerms,
-            terms: _terms,
-            onChanged: (List<String> terms) => _terms = terms,
-            onToggle: () => setState(() => _isEditingTerms = !_isEditingTerms),
-          ),
+          TermsSection(isEditing: _isEditingTerms, terms: _terms, onChanged: (List<String> terms) => _terms = terms, onToggle: () => setState(() => _isEditingTerms = !_isEditingTerms)),
           const SizedBox(height: AppSpacing.xl),
           const SectionHeader(label: 'RECEIPT PRINTER'),
         ]),
@@ -348,8 +313,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           settings: _printer,
           onPaperChanged: (ThermalPaper paper) => _setPrinter(_printer.copyWith(paper: paper)),
           onRefreshDevices: () => unawaited(_loadPrinters()),
-          onSelectDevice: (String address) =>
-              _setPrinter(_printer.copyWith(address: address, name: _devices.firstWhere((BluetoothInfo device) => device.macAdress == address).name)),
+          onSelectDevice: (String address) => _setPrinter(_printer.copyWith(address: address, name: _devices.firstWhere((BluetoothInfo device) => device.macAdress == address).name)),
           onTargetChanged: (PrintTarget target) => _setPrinter(_printer.copyWith(target: target)),
         ),
         _inset(<Widget>[
@@ -366,10 +330,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: AppSpacing.xl),
           const SectionHeader(label: 'INVOICE HISTORY'),
-          const Text(
-            'Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.',
-            style: AppTextStyles.listSecondary,
-          ),
+          const Text('Printed invoices stay in the Recent list for this many days, then drop off. Saved PDF files in Downloads are never deleted.', style: AppTextStyles.listSecondary),
           const SizedBox(height: AppSpacing.md),
           _retentionField(),
           const SizedBox(height: AppSpacing.xl),

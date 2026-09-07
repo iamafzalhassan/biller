@@ -4,16 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/section_header.dart';
 
 class BillingForm extends StatelessWidget {
-  const BillingForm({
-    super.key,
-    required this.itemRows,
-    required this.scrollController,
-    required this.addItemButton,
-    required this.customerField,
-    required this.draftBanner,
-    required this.printButton,
-    required this.totalsSection,
-  });
+  const BillingForm({super.key, required this.itemRows, required this.scrollController, required this.addItemButton, required this.customerField, required this.draftBanner, required this.printButton, required this.totalsSection});
 
   final List<Widget> itemRows;
 

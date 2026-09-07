@@ -8,16 +8,7 @@ import '../../../models/printer_settings.dart';
 import '../../../models/thermal_paper.dart';
 
 class PrinterSection extends StatelessWidget {
-  const PrinterSection({
-    super.key,
-    required this.devices,
-    required this.isLoadingDevices,
-    required this.settings,
-    required this.onPaperChanged,
-    required this.onRefreshDevices,
-    required this.onSelectDevice,
-    required this.onTargetChanged,
-  });
+  const PrinterSection({super.key, required this.isLoadingDevices, required this.devices, required this.settings, required this.onTargetChanged, required this.onSelectDevice, required this.onPaperChanged, required this.onRefreshDevices});
 
   static const EdgeInsets tilePadding = EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding);
 
@@ -57,10 +48,7 @@ class PrinterSection extends StatelessWidget {
       return _inset(
         const Padding(
           padding: EdgeInsets.only(bottom: AppSpacing.md),
-          child: Text(
-            'No paired printers found. Pair the printer in the phone Bluetooth settings first, then tap Refresh.',
-            style: AppTextStyles.listSecondary,
-          ),
+          child: Text('No paired printers found. Pair the printer in the phone Bluetooth settings first, then tap Refresh.', style: AppTextStyles.listSecondary),
         ),
       );
     }

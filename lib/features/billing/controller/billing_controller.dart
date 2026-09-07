@@ -43,9 +43,7 @@ class BillingController extends Notifier<BillingState> {
   void updateItem({required String id, required String description, required num qty, required int unitPriceCents}) {
     _update(
       state.invoice.copyWith(
-        items: state.invoice.items
-            .map((InvoiceItem i) => i.id == id ? i.copyWith(unitPriceCents: unitPriceCents, qty: qty, description: description) : i)
-            .toList(),
+        items: state.invoice.items.map((InvoiceItem i) => i.id == id ? i.copyWith(unitPriceCents: unitPriceCents, qty: qty, description: description) : i).toList(),
       ),
     );
   }
@@ -104,20 +102,12 @@ class BillingController extends Notifier<BillingState> {
     ref.read(draftRepositoryProvider).saveDebounced(invoice);
   }
 
-  Invoice _blankInvoice(String invoiceNumber) =>
-      Invoice(advanceCents: 0, customerName: '', invoiceNumber: invoiceNumber, items: const <InvoiceItem>[], createdAt: DateTime.now());
+  Invoice _blankInvoice(String invoiceNumber) => Invoice(advanceCents: 0, customerName: '', invoiceNumber: invoiceNumber, items: const <InvoiceItem>[], createdAt: DateTime.now());
 
   @override
   BillingState build() {
     final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
     final Invoice? draft = ref.read(draftRepositoryProvider).draft;
-    return BillingState(
-      isPrinting: false,
-      isRestorable: draft != null,
-      formSeed: 0,
-      pendingInvoiceNumber: pending,
-      draftSavedAt: draft?.createdAt,
-      invoice: _blankInvoice(pending),
-    );
+    return BillingState(isPrinting: false, isRestorable: draft != null, formSeed: 0, pendingInvoiceNumber: pending, draftSavedAt: draft?.createdAt, invoice: _blankInvoice(pending));
   }
 }

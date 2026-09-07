@@ -21,11 +21,7 @@ const pw.BorderSide _rule = pw.BorderSide(color: PdfTheme.hairline, width: PdfTh
 const pw.TableBorder _tableBorder = pw.TableBorder(top: _rule, bottom: _rule, horizontalInside: _rule);
 
 pw.Widget buildItemsTable(List<InvoiceItem> items, int startIndex) {
-  return pw.Table(
-    border: _tableBorder,
-    columnWidths: _columnWidths,
-    children: <pw.TableRow>[_headerRow(), for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i])],
-  );
+  return pw.Table(border: _tableBorder, columnWidths: _columnWidths, children: <pw.TableRow>[_headerRow(), for (int i = 0; i < items.length; i++) _itemRow(startIndex + i, items[i])]);
 }
 
 pw.TableRow _headerRow() {

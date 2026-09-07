@@ -64,8 +64,7 @@ class BusinessProfile {
     terms: (json['terms'] as List<dynamic>?)?.map((dynamic e) => e as String).toList() ?? defaultTerms,
   );
 
-  String get addressLine =>
-      <String>[addressNo, addressStreet, addressCity, addressBuilding].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
+  String get addressLine => <String>[addressNo, addressStreet, addressCity, addressBuilding].map((String part) => part.trim()).where((String part) => part.isNotEmpty).join(', ');
 
   bool get hasLogo => logoPath.trim().isNotEmpty;
 

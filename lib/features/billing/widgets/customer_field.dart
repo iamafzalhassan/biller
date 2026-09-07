@@ -11,14 +11,14 @@ class CustomerField extends StatelessWidget {
   const CustomerField({
     super.key,
     required this.hasPhoneError,
-    required this.nameController,
     required this.nameFocus,
-    required this.onNameChanged,
-    required this.onNameSubmitted,
-    required this.onPhoneChanged,
-    required this.onPhoneSubmitted,
-    required this.phoneController,
     required this.phoneFocus,
+    required this.nameController,
+    required this.phoneController,
+    required this.onNameChanged,
+    required this.onPhoneChanged,
+    required this.onNameSubmitted,
+    required this.onPhoneSubmitted,
   });
 
   final bool hasPhoneError;

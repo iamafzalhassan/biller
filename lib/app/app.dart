@@ -25,8 +25,7 @@ class _BillerAppState extends ConsumerState<BillerApp> with WidgetsBindingObserv
     }
   }
 
-  Widget _dismissOnTapOutside(Widget? child) =>
-      GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child);
+  Widget _dismissOnTapOutside(Widget? child) => GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child);
 
   @override
   void initState() {

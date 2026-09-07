@@ -10,7 +10,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/sheet_frame.dart';
 
 class AdvanceSheet extends StatefulWidget {
-  const AdvanceSheet({super.key, required this.advanceCents, required this.totalCents, required this.onRemove, required this.onSave});
+  const AdvanceSheet({super.key, required this.advanceCents, required this.totalCents, required this.onSave, required this.onRemove});
 
   final int advanceCents;
   final int totalCents;

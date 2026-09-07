@@ -67,17 +67,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   bool get _hasEmailError => _emailController.text.trim().isNotEmpty && !Validators.isValidEmail(_emailController.text);
 
-  bool get _hasPhoneError => <TextEditingController>[
-    _phone1Controller,
-    _phone2Controller,
-    _phone3Controller,
-  ].any((TextEditingController controller) => !Validators.isValidPhone(controller.text));
+  bool get _hasPhoneError => <TextEditingController>[_phone1Controller, _phone2Controller, _phone3Controller].any((TextEditingController controller) => !Validators.isValidPhone(controller.text));
 
-  List<String> get _phones => <String>[
-    _phone1Controller.text,
-    _phone2Controller.text,
-    _phone3Controller.text,
-  ].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
+  List<String> get _phones => <String>[_phone1Controller.text, _phone2Controller.text, _phone3Controller.text].map((String phone) => phone.trim()).where((String phone) => phone.isNotEmpty).toList();
 
   BusinessProfile get _profile => BusinessProfile(
     addressBuilding: _buildingController.text.trim(),
@@ -152,15 +144,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   ProfileTextField _phoneField(TextEditingController controller, FocusNode focusNode, String label, {bool autofocus = false, FocusNode? nextFocus}) {
-    return ProfileTextField.phone(
-      autofocus: autofocus,
-      controller: controller,
-      focusNode: focusNode,
-      label: label,
-      nextFocus: nextFocus,
-      onChanged: _refresh,
-      onDone: _submitStep,
-    );
+    return ProfileTextField.phone(autofocus: autofocus, controller: controller, focusNode: focusNode, label: label, nextFocus: nextFocus, onChanged: _refresh, onDone: _submitStep);
   }
 
   Widget _stepFrame({required String hint, required List<Widget> children}) {
@@ -209,14 +193,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _emailStep() => _stepFrame(
     hint: 'Kept on file as the owner contact',
     children: <Widget>[
-      _field(
-        autofocus: true,
-        controller: _emailController,
-        focusNode: _emailFocus,
-        isUpperCase: false,
-        keyboardType: TextInputType.emailAddress,
-        label: 'Email',
-      ),
+      _field(autofocus: true, controller: _emailController, focusNode: _emailFocus, isUpperCase: false, keyboardType: TextInputType.emailAddress, label: 'Email'),
       if (_hasEmailError) const SizedBox(height: AppSpacing.sm),
       if (_hasEmailError) const Text('Enter a valid email address, like name@example.com', maxLines: 1, style: AppTextStyles.errorHint),
     ],
@@ -243,12 +220,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         ],
       ),
       const SizedBox(height: AppSpacing.md),
-      Text(
-        'Bills will be numbered ${_prefixController.text.toUpperCase()}-${_deviceIdController.text.toUpperCase()}-0001',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.listSecondary,
-      ),
+      Text('Bills will be numbered ${_prefixController.text.toUpperCase()}-${_deviceIdController.text.toUpperCase()}-0001', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
     ],
   );
 

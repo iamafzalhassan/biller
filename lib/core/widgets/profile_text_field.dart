@@ -8,32 +8,24 @@ import 'app_text_field.dart';
 class ProfileTextField extends StatelessWidget {
   const ProfileTextField({
     super.key,
-    required this.controller,
-    required this.focusNode,
-    required this.label,
     this.autofocus = false,
     this.isPhone = false,
     this.isUpperCase = true,
-    this.keyboardType,
     this.maxLength,
+    required this.label,
+    required this.focusNode,
     this.nextFocus,
+    required this.controller,
+    this.keyboardType,
     this.onChanged,
     this.onDone,
   });
 
-  const ProfileTextField.phone({
-    super.key,
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    this.autofocus = false,
-    this.nextFocus,
-    this.onChanged,
-    this.onDone,
-  }) : isPhone = true,
-       isUpperCase = false,
-       keyboardType = TextInputType.phone,
-       maxLength = null;
+  const ProfileTextField.phone({super.key, this.autofocus = false, required this.label, required this.focusNode, this.nextFocus, required this.controller, this.onChanged, this.onDone})
+    : isPhone = true,
+      isUpperCase = false,
+      keyboardType = TextInputType.phone,
+      maxLength = null;
 
   final bool autofocus;
   final bool isPhone;

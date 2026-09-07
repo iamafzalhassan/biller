@@ -10,8 +10,6 @@ class ResponsiveBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) => Breakpoints.isTabletWidth(constraints.maxWidth) ? tablet(context) : phone(context),
-    );
+    return LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) => Breakpoints.isTabletWidth(constraints.maxWidth) ? tablet(context) : phone(context));
   }
 }

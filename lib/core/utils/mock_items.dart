@@ -26,11 +26,6 @@ abstract final class MockItems {
 
   static List<InvoiceItem> generate() => List<InvoiceItem>.generate(
     count,
-    (int index) => InvoiceItem(
-      unitPriceCents: _prices[index % _prices.length],
-      qty: _quantities[index % _quantities.length],
-      description: '${_descriptions[index % _descriptions.length]} ${index + 1}',
-      id: _uuid.v4(),
-    ),
+    (int index) => InvoiceItem(unitPriceCents: _prices[index % _prices.length], qty: _quantities[index % _quantities.length], description: '${_descriptions[index % _descriptions.length]} ${index + 1}', id: _uuid.v4()),
   );
 }

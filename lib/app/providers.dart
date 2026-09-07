@@ -21,9 +21,7 @@ import '../models/invoice.dart';
 import '../models/printer_settings.dart';
 import '../printing/print_dispatcher.dart';
 
-final Provider<PrefsSource> prefsSourceProvider = Provider<PrefsSource>(
-  (Ref ref) => throw UnimplementedError('prefsSourceProvider must be overridden in main'),
-);
+final Provider<PrefsSource> prefsSourceProvider = Provider<PrefsSource>((Ref ref) => throw UnimplementedError('prefsSourceProvider must be overridden in main'));
 
 final Provider<SecureStorageSource> secureStorageSourceProvider = Provider<SecureStorageSource>((Ref ref) => SecureStorageSource());
 
@@ -35,9 +33,7 @@ final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((R
 
 final Provider<ReceiptFileSource> receiptFileSourceProvider = Provider<ReceiptFileSource>((Ref ref) => ReceiptFileSource());
 
-final Provider<ReceiptStorageRepository> receiptStorageRepositoryProvider = Provider<ReceiptStorageRepository>(
-  (Ref ref) => ReceiptStorageRepository(ref.watch(receiptFileSourceProvider)),
-);
+final Provider<ReceiptStorageRepository> receiptStorageRepositoryProvider = Provider<ReceiptStorageRepository>((Ref ref) => ReceiptStorageRepository(ref.watch(receiptFileSourceProvider)));
 
 final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>((Ref ref) => AuthRepository(ref.watch(secureStorageSourceProvider)));
 
@@ -47,15 +43,11 @@ final Provider<DraftRepository> draftRepositoryProvider = Provider<DraftReposito
   return repository;
 });
 
-final Provider<RecentInvoicesRepository> recentInvoicesRepositoryProvider = Provider<RecentInvoicesRepository>(
-  (Ref ref) => RecentInvoicesRepository(ref.watch(sqfliteSourceProvider)),
-);
+final Provider<RecentInvoicesRepository> recentInvoicesRepositoryProvider = Provider<RecentInvoicesRepository>((Ref ref) => RecentInvoicesRepository(ref.watch(sqfliteSourceProvider)));
 
 final Provider<BluetoothPrinterSource> bluetoothPrinterSourceProvider = Provider<BluetoothPrinterSource>((Ref ref) => BluetoothPrinterSource());
 
-final Provider<PrinterRepository> printerRepositoryProvider = Provider<PrinterRepository>(
-  (Ref ref) => PrinterRepository(ref.watch(bluetoothPrinterSourceProvider), ref.watch(prefsSourceProvider)),
-);
+final Provider<PrinterRepository> printerRepositoryProvider = Provider<PrinterRepository>((Ref ref) => PrinterRepository(ref.watch(bluetoothPrinterSourceProvider), ref.watch(prefsSourceProvider)));
 
 final Provider<PrinterSettings> printerSettingsProvider = Provider<PrinterSettings>((Ref ref) => ref.watch(printerRepositoryProvider).settings);
 
@@ -65,12 +57,8 @@ final Provider<SettingsRepository> settingsRepositoryProvider = Provider<Setting
 
 final NotifierProvider<BillingController, BillingState> billingControllerProvider = NotifierProvider<BillingController, BillingState>(BillingController.new);
 
-final AsyncNotifierProvider<RecentController, List<Invoice>> recentControllerProvider = AsyncNotifierProvider<RecentController, List<Invoice>>(
-  RecentController.new,
-);
+final AsyncNotifierProvider<RecentController, List<Invoice>> recentControllerProvider = AsyncNotifierProvider<RecentController, List<Invoice>>(RecentController.new);
 
-final NotifierProvider<SettingsController, BusinessProfile> settingsControllerProvider = NotifierProvider<SettingsController, BusinessProfile>(
-  SettingsController.new,
-);
+final NotifierProvider<SettingsController, BusinessProfile> settingsControllerProvider = NotifierProvider<SettingsController, BusinessProfile>(SettingsController.new);
 
 final NotifierProvider<SetupController, BusinessProfile> setupControllerProvider = NotifierProvider<SetupController, BusinessProfile>(SetupController.new);

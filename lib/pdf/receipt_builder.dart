@@ -57,16 +57,7 @@ abstract final class ReceiptBuilder {
           margin: const pw.EdgeInsets.all(marginPt),
           pageFormat: PdfPageFormat.a5,
           theme: pw.ThemeData.withFont(base: PdfTheme.regular, bold: PdfTheme.bold),
-          build: (pw.Context context) => _page(
-            profile: profile,
-            invoice: invoice,
-            logo: logo,
-            items: pages[page],
-            firstNumber: firstNumber,
-            isLastPage: page == pages.length - 1,
-            pageNumber: page + 1,
-            pageCount: pages.length,
-          ),
+          build: (pw.Context context) => _page(profile: profile, invoice: invoice, logo: logo, items: pages[page], firstNumber: firstNumber, isLastPage: page == pages.length - 1, pageNumber: page + 1, pageCount: pages.length),
         ),
       );
     }
@@ -87,12 +78,7 @@ abstract final class ReceiptBuilder {
   static double _headerHeight(BusinessProfile profile, {required bool hasLogo}) {
     final String address = profile.addressLine;
     final int addressLines = address.isEmpty ? 0 : (address.length > addressWrapChars ? 2 : 1);
-    return (hasLogo ? logoBlockHeight : 0) +
-        businessNameHeight +
-        addressLines * addressLineHeight +
-        (profile.phoneLine.isEmpty ? 0 : addressLineHeight) +
-        headerRuleBandHeight +
-        metaBlockHeight;
+    return (hasLogo ? logoBlockHeight : 0) + businessNameHeight + addressLines * addressLineHeight + (profile.phoneLine.isEmpty ? 0 : addressLineHeight) + headerRuleBandHeight + metaBlockHeight;
   }
 
   static int _rowsPerPage(double usable) => math.max(1, (usable - PdfTheme.headerRowHeight) ~/ PdfTheme.rowHeight);

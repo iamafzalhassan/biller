@@ -38,13 +38,7 @@ class SqfliteSource {
   }
 
   Future<Database> _open() {
-    return _opening ??= openDatabase(
-      databaseName,
-      version: schemaVersion,
-      onCreate: (Database db, int version) => _createTable(db),
-      onUpgrade: _rebuild,
-      onDowngrade: _rebuild,
-    );
+    return _opening ??= openDatabase(databaseName, version: schemaVersion, onCreate: (Database db, int version) => _createTable(db), onUpgrade: _rebuild, onDowngrade: _rebuild);
   }
 
   Future<void> _rebuild(Database db, int from, int to) async {

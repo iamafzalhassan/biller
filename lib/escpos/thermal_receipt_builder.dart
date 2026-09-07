@@ -106,19 +106,13 @@ abstract final class ThermalReceiptBuilder {
     return bytes;
   }
 
-  static List<int> _pair(Generator generator, String label, String value) => generator.row(<PosColumn>[
-    PosColumn(text: label, styles: _label, width: _labelColumns - 2),
-    PosColumn(text: value, styles: _value, width: _valueColumns + 2),
-  ]);
+  static List<int> _pair(Generator generator, String label, String value) => generator.row(<PosColumn>[PosColumn(text: label, styles: _label, width: _labelColumns - 2), PosColumn(text: value, styles: _value, width: _valueColumns + 2)]);
 
-  static List<int> _amount(Generator generator, String label, String value, {required bool isBold}) => generator.row(<PosColumn>[
-    PosColumn(text: label, styles: _label, width: _labelColumns),
-    PosColumn(text: value, styles: isBold ? _valueBold : _value, width: _valueColumns),
-  ]);
+  static List<int> _amount(Generator generator, String label, String value, {required bool isBold}) =>
+      generator.row(<PosColumn>[PosColumn(text: label, styles: _label, width: _labelColumns), PosColumn(text: value, styles: isBold ? _valueBold : _value, width: _valueColumns)]);
 
   static PaperSize _paperSize(ThermalPaper paper) => paper == ThermalPaper.mm58 ? PaperSize.mm58 : PaperSize.mm80;
 
-  static PosStyles _businessNameStyle(ThermalPaper paper) => paper == ThermalPaper.mm58
-      ? const PosStyles(align: PosAlign.center, bold: true)
-      : const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2);
+  static PosStyles _businessNameStyle(ThermalPaper paper) =>
+      paper == ThermalPaper.mm58 ? const PosStyles(align: PosAlign.center, bold: true) : const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2);
 }
