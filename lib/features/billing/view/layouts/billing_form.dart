@@ -26,7 +26,7 @@ class BillingForm extends StatelessWidget {
     return ListView(
       controller: scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.xl + MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom),
       children: <Widget>[
         if (draftBanner != null) _inset(draftBanner!),
         _inset(const SectionHeader(label: 'CUSTOMER')),
