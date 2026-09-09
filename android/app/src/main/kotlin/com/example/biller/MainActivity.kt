@@ -18,7 +18,7 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val CHANNEL = "biller/receipts"
-        const val SUB_DIR = "Biller/Receipts"
+        const val SUB_DIR = "Biller/Invoices"
         const val BLUETOOTH_PERMISSION_CODE = 4821
         val RELATIVE_DIR = "${Environment.DIRECTORY_DOWNLOADS}/$SUB_DIR"
     }
