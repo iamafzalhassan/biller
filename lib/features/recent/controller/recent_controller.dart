@@ -7,9 +7,7 @@ import '../../../models/invoice.dart';
 import '../../../pdf/receipt_builder.dart';
 
 class RecentController extends AsyncNotifier<List<Invoice>> {
-  Future<void> refresh() async {
-    state = await AsyncValue.guard(_load);
-  }
+  Future<void> refresh() async => state = await AsyncValue.guard(_load);
 
   Future<Uint8List> buildPdf(Invoice invoice) => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: invoice);
 

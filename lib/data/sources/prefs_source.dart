@@ -13,9 +13,7 @@ class PrefsSource {
 
   late final SharedPreferences _prefs;
 
-  Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
-  }
+  Future<void> init() async => _prefs = await SharedPreferences.getInstance();
 
   bool getBool(String key, {bool fallback = false}) => _prefs.getBool(key) ?? fallback;
 

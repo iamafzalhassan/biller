@@ -10,6 +10,8 @@ formatter:
 
 linter:
   rules:
-    - prefer_single_quotes
-    - require_trailing_commas
-    - unawaited_futures
+    directives_ordering: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    slash_for_doc_comments: false
+    unawaited_futures: true
