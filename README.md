@@ -40,6 +40,7 @@ Biller replaces handwritten bills at a busy wholesale counter, where speed matte
 - Pending number committed only after a bill is successfully built
 
 **Security**
+- One-time, offline device activation: the app only runs on devices the developer has approved (see [Device Activation](#device-activation))
 - 4-digit PIN gate protecting the Settings screen
 - PINs hashed with salted, iterated SHA-256 (10,000 rounds) and compared in constant time
 - One-time recovery code generated at setup for PIN reset
@@ -73,14 +74,68 @@ Biller replaces handwritten bills at a busy wholesale counter, where speed matte
 - **Local Storage:** sqflite, shared_preferences, flutter_secure_storage
 - **PDF & Printing:** pdf, printing
 - **Thermal Printing:** print_bluetooth_thermal, esc_pos_utils_plus
-- **Security:** crypto (SHA-256 PIN hashing)
+- **Security:** crypto (SHA-256 PIN hashing), ed25519_edwards (activation key signatures)
 - **Utilities:** intl, uuid, image_picker, path_provider, package_info_plus, wakelock_plus
 - **Typography:** Inter (bundled)
 
 ## Core Screens
 
-1. **Setup** - Step-by-step business onboarding with PIN and recovery code
-2. **Billing** - Customer details, item entry, advance and totals, with a live preview on tablets
-3. **Preview** - Full A5 receipt preview before printing
-4. **Recent Invoices** - Invoice history with reprint and save-a-copy actions
-5. **Settings** - PIN-protected business profile, logo, terms, numbering, printer and security
+1. **Activation** - Shown once per device until a valid activation key is entered
+2. **Setup** - Step-by-step business onboarding with PIN and recovery code
+3. **Billing** - Customer details, item entry, advance and totals, with a live preview on tablets
+4. **Preview** - Full A5 receipt preview before printing
+5. **Recent Invoices** - Invoice history with reprint and save-a-copy actions
+6. **Settings** - PIN-protected business profile, logo, terms, numbering, printer and security
+
+## Device Activation
+
+Biller is shared privately, not published. An APK file can be copied to any phone, so the app locks itself to devices the developer approves. There is no login and no server, and activation works fully offline.
+
+### How it works
+
+1. On first launch the app shows the **Activate Biller** screen with a **device code**, for example `3F2A-9C1B-7D4E-0A55`. The code comes from the phone's Android ID.
+2. The user copies the code and sends it to the developer.
+3. The developer signs the code with a private Ed25519 key that never leaves their computer, and sends back an **activation key**.
+4. The user taps **Paste Key**. The app checks the key against the public key built into the APK and opens.
+
+The key is checked again on every launch. It only works on the device it was made for, so copying the APK or the app's data to another phone does not carry the activation over. The public key inside the APK can check keys but cannot create them, so opening up the APK does not let anyone make their own key.
+
+### One-time setup (developer)
+
+Run this once, from the project root:
+
+```bash
+dart run tool/activation.dart keygen
+```
+
+This does two things:
+
+- Saves the private key to `%USERPROFILE%\.biller\activation_private_key`.
+- Writes the matching public key into `lib/core/licensing/activation_public_key.dart`.
+
+Then rebuild the release APK. An APK built before `keygen` has an empty public key and rejects every activation key.
+
+> **Back up the private key file** somewhere safe, such as a USB drive or private cloud storage. Never commit it or share it. Without it, no new device can be activated. Creating a new key pair would lock out every device already activated, so `keygen` refuses to overwrite an existing key.
+
+### Activating a device
+
+1. Install the release APK on the device and open it.
+2. Get the device code shown on the **Activate Biller** screen (the user can tap **Copy Code** and send it on WhatsApp).
+3. On the developer's computer, run:
+
+   ```bash
+   dart run tool/activation.dart sign 3F2A-9C1B-7D4E-0A55
+   ```
+
+   Replace the example with the real device code. Dashes and letter case do not matter.
+4. Send the printed **activation key** back. It is about 100 characters, so send it as text the user can copy.
+5. On the device, copy the key and tap **Paste Key**. The app activates and continues to Setup, or straight to Billing if the device was already set up.
+
+### Things to know
+
+- **Use the release APK's code.** Android gives each signing key its own Android ID, so a debug build and a release build on the same phone show different device codes. Always keep signing releases with the same keystore.
+- **Factory reset or new phone:** the device code changes, so sign the new code.
+- **Updating an existing install:** the Activation screen appears once. The business profile, invoice history and settings are kept.
+- **`UNAVAILABLE` device code:** the phone did not provide an Android ID, and it cannot be activated.
+- **Warning while signing:** if `sign` reports that the public key does not match your private key, the project's `activation_public_key.dart` was changed. Restore it from git before building, or keys will not be accepted.
+- **Limits:** this stops casual sharing of the APK. Like any check that runs on the device, a skilled reverse engineer could remove it. Building with `--obfuscate --split-debug-info=<dir>` makes that harder.
