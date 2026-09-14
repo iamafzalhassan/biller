@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsSource {
+  static const String keyActivationKey = 'activation_key';
   static const String keyDraft = 'draft_invoice';
   static const String keyPrinterAddress = 'printer_address';
   static const String keyPrinterName = 'printer_name';

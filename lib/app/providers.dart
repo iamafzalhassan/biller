@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/repositories/activation_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/draft_repository.dart';
 import '../data/repositories/printer_repository.dart';
@@ -7,10 +8,12 @@ import '../data/repositories/receipt_storage_repository.dart';
 import '../data/repositories/recent_invoices_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../data/sources/bluetooth_printer_source.dart';
+import '../data/sources/device_source.dart';
 import '../data/sources/prefs_source.dart';
 import '../data/sources/receipt_file_source.dart';
 import '../data/sources/secure_storage_source.dart';
 import '../data/sources/sqflite_source.dart';
+import '../features/activation/controller/activation_controller.dart';
 import '../features/billing/controller/billing_controller.dart';
 import '../features/billing/controller/billing_state.dart';
 import '../features/recent/controller/recent_controller.dart';
@@ -23,6 +26,8 @@ import '../printing/print_dispatcher.dart';
 
 final Provider<PrefsSource> prefsSourceProvider = Provider<PrefsSource>((Ref ref) => throw UnimplementedError('prefsSourceProvider must be overridden in main'));
 
+final Provider<DeviceSource> deviceSourceProvider = Provider<DeviceSource>((Ref ref) => throw UnimplementedError('deviceSourceProvider must be overridden in main'));
+
 final Provider<SecureStorageSource> secureStorageSourceProvider = Provider<SecureStorageSource>((Ref ref) => SecureStorageSource());
 
 final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((Ref ref) {
@@ -34,6 +39,8 @@ final Provider<SqfliteSource> sqfliteSourceProvider = Provider<SqfliteSource>((R
 final Provider<ReceiptFileSource> receiptFileSourceProvider = Provider<ReceiptFileSource>((Ref ref) => ReceiptFileSource());
 
 final Provider<ReceiptStorageRepository> receiptStorageRepositoryProvider = Provider<ReceiptStorageRepository>((Ref ref) => ReceiptStorageRepository(ref.watch(receiptFileSourceProvider)));
+
+final Provider<ActivationRepository> activationRepositoryProvider = Provider<ActivationRepository>((Ref ref) => ActivationRepository(ref.watch(deviceSourceProvider), ref.watch(prefsSourceProvider)));
 
 final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>((Ref ref) => AuthRepository(ref.watch(secureStorageSourceProvider)));
 
@@ -54,6 +61,8 @@ final Provider<PrinterSettings> printerSettingsProvider = Provider<PrinterSettin
 final Provider<PrintDispatcher> printDispatcherProvider = Provider<PrintDispatcher>((Ref ref) => PrintDispatcher(ref.watch(printerRepositoryProvider)));
 
 final Provider<SettingsRepository> settingsRepositoryProvider = Provider<SettingsRepository>((Ref ref) => SettingsRepository(ref.watch(prefsSourceProvider)));
+
+final NotifierProvider<ActivationController, bool> activationControllerProvider = NotifierProvider<ActivationController, bool>(ActivationController.new);
 
 final NotifierProvider<BillingController, BillingState> billingControllerProvider = NotifierProvider<BillingController, BillingState>(BillingController.new);
 

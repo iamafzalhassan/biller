@@ -6,10 +6,12 @@ import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 import '../extensions/context_ext.dart';
 
-class RecoveryCodeBox extends StatelessWidget {
-  const RecoveryCodeBox({super.key, required this.code});
+class CodeBox extends StatelessWidget {
+  const CodeBox({super.key, required this.code, required this.copiedMessage, required this.label});
 
   final String code;
+  final String copiedMessage;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class RecoveryCodeBox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
           child: Column(
             children: <Widget>[
-              const Text('RECOVERY CODE', maxLines: 1, style: AppTextStyles.overline, textAlign: TextAlign.center),
+              Text(label, maxLines: 1, style: AppTextStyles.overline, textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.md),
               FittedBox(
                 fit: BoxFit.scaleDown,
@@ -37,7 +39,7 @@ class RecoveryCodeBox extends StatelessWidget {
           onPressed: () {
             Clipboard.setData(ClipboardData(text: code));
             HapticFeedback.mediumImpact();
-            context.showSuccessSnack('Recovery code copied to the clipboard. Keep it somewhere safe outside this phone.');
+            context.showSuccessSnack(copiedMessage);
           },
         ),
       ],

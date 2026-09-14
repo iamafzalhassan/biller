@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
@@ -18,6 +19,7 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val CHANNEL = "biller/receipts"
+        const val DEVICE_CHANNEL = "biller/device"
         const val SUB_DIR = "Biller/Invoices"
         const val BLUETOOTH_PERMISSION_CODE = 4821
         val RELATIVE_DIR = "${Environment.DIRECTORY_DOWNLOADS}/$SUB_DIR"
@@ -43,6 +45,12 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "requestBluetoothPermission" -> requestBluetoothPermission(result)
+                else -> result.notImplemented()
+            }
+        }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEVICE_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "androidId" -> result.success(Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: "")
                 else -> result.notImplemented()
             }
         }

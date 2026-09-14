@@ -9,9 +9,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/soft_keyboard.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/code_box.dart';
 import '../../../core/widgets/pin_boxes.dart';
 import '../../../core/widgets/profile_text_field.dart';
-import '../../../core/widgets/recovery_code_box.dart';
 import '../../../core/widgets/terms_editor.dart';
 import '../../../models/business_profile.dart';
 import '../controller/setup_step.dart';
@@ -235,7 +235,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Widget _recoveryCodeStep() => _stepFrame(
     hint: 'The only way to reset a forgotten PIN. It is shown once and cannot be recovered later',
-    children: <Widget>[RecoveryCodeBox(code: _recoveryCode)],
+    children: <Widget>[CodeBox(code: _recoveryCode, copiedMessage: 'Recovery code copied to the clipboard. Keep it somewhere safe outside this phone.', label: 'RECOVERY CODE')],
   );
 
   Widget _body() => switch (_step) {
