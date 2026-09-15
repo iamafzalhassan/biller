@@ -104,6 +104,15 @@ tool/
 
 Back up the private key. Without it no new device can be activated, and generating a new pair locks out every device already activated.
 
+## Testing
+
+Unit tests live in `test/`, mirroring the `lib/` path of the code they cover:
+
+- **`test/core/utils/pin_hasher_test.dart`**: a PIN is stored as a salted hash, only the original PIN matches, every hash of the same PIN gets a fresh salt, and a plain stored value is rejected.
+- **`test/models/invoice_test.dart`**: totals are integer cents from printable items only, fractional quantities round to the cent, the advance produces the balance, and an invoice survives a JSON round trip.
+
+Run them with `flutter test`.
+
 ## Roadmap
 
 - Email a copy of each receipt to the owner address collected during setup
