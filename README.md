@@ -1,141 +1,110 @@
 # Biller
 
-A fast, offline-first Flutter billing application built for the counter of a wholesale wallet and handbag shop. The cashier types a customer name and item lines, taps Print, and hands over a clean A5 receipt, on both Android phones and tablets.
+![Flutter](https://img.shields.io/badge/Flutter-3.32%2B-02569B?logo=flutter&logoColor=white)
+![Riverpod](https://img.shields.io/badge/Riverpod-2.6-00A6A6)
+![SQLite](https://img.shields.io/badge/SQLite-sqflite-003B57?logo=sqlite&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 
-## Project Overview
+An offline billing app for the counter of a wholesale wallet and handbag shop, built with Flutter for Android phones and tablets. The cashier types a customer name and the item lines, taps Print, and hands over a clean A5 receipt.
 
-Biller replaces handwritten bills at a busy wholesale counter, where speed matters more than anything else. It needs no network or backend. Business details, invoice history and printer configuration all live on the device. Receipts go to a WiFi printer through the Android print system or straight to a Bluetooth thermal printer using ESC/POS.
+Biller needs no network and no backend. The business profile, invoice history and printer setup all live on the device. Receipts go to a WiFi printer through the Android print system, or straight to a Bluetooth thermal printer over ESC/POS.
 
-## Key Features
+## Features
 
-**Counter-Speed Billing**
-- Single-screen bill entry with customer name, phone and item lines
-- Item entry sheet with quantity, unit price and live line totals
-- Advance payment support with automatic balance calculation
-- Remove items with undo (the item is reinserted at its original position)
-- Screen stays awake while billing, using a wakelock
-- All text entry forced to uppercase through an input formatter and keyboard capitalization
+- **Counter-speed billing**: one screen for the customer name, phone and item lines, with quantity, unit price and live line totals. The screen stays awake while billing, and all text is entered in uppercase.
+- **Advance payments** with the balance calculated automatically.
+- **Undo on remove**: a removed item line can be restored to its original position from the snackbar.
+- **A5 PDF receipts** with a header, meta row, items table, totals, terms, signatures and footer, paginated across as many pages as the items need.
+- **WiFi printing** through the Android print framework.
+- **Bluetooth thermal printing** on 58 mm or 80 mm paper, using a custom ESC/POS receipt builder.
+- **Clear print outcomes**: no printer selected, Bluetooth off or a failed connection each explain what to do next, and every receipt can be reprinted.
+- **Draft recovery**: an unfinished bill is saved as you type and offered back when the app reopens.
+- **Invoice history** of up to 500 recent invoices, purged after a configurable 1 to 365 days, with reprint and save-a-copy actions. Every printed receipt is also archived as a PDF.
+- **Structured invoice numbers** in `PREFIX-DEVICE-0001` form, with a letter per device so several counters never issue the same number.
+- **Guided setup** in eight steps: business name, address, phone numbers, email, terms, numbering, PIN and recovery code.
+- **Settings behind a PIN**, including the business logo, printed terms, numbering, printer, paper size and history retention.
+- **Phone and tablet layouts**, with a live receipt preview beside the billing form on tablets.
+- **Offline device activation**, so a copied APK does not run on an unapproved phone.
 
-**Receipt Generation & Printing**
-- Pixel-aligned A5 PDF receipts built with the `pdf` package (header, meta row, items table, totals, terms, signatures, footer)
-- Multi-page pagination with dynamic header height calculation
-- WiFi / system printing through the Android print framework
-- Bluetooth thermal printing with a custom ESC/POS receipt builder (58 mm and 80 mm paper)
-- Clear, actionable print outcomes (no printer selected, Bluetooth off, connection failed), so a receipt can always be reprinted
+## Architecture
 
-**Draft Recovery**
-- In-progress bills auto-saved with a 400 ms debounce
-- Restore-or-discard banner when the app reopens with an unfinished bill
-- Drafts cleared automatically once a bill is committed
+- **Layered by responsibility.** `data` holds sources and repositories, `features` holds a controller, view and widgets per screen, and `models`, `pdf`, `escpos` and `printing` stay independent of each other.
+- **Riverpod controllers.** Each screen is driven by a `Notifier` or `AsyncNotifier`, and repositories and sources are wired through providers.
+- **Layering rules.** Widgets never touch repositories, controllers never import `BuildContext`, and the PDF layer never imports Material.
+- **One responsive breakpoint.** Only the view layer branches on screen size, at a single 600 dp width.
+- **No code generation.** `toJson`, `fromJson` and `copyWith` are written by hand.
 
-**Invoice History**
-- Recent invoices stored in SQLite with a 500-row cap
-- Configurable retention period (1 to 365 days) with automatic purging
-- Reprint or save a PDF copy of any past invoice
-- PDF receipts archived to device storage on every print
+## How the money works
 
-**Invoice Numbering**
-- Structured invoice numbers in `PREFIX-DEVICE-0001` format
-- Per-device letter so multiple counters never issue the same number
-- Pending number committed only after a bill is successfully built
+- **Money is integer cents.** Every amount is an `int` count of cents, never a `double`, from item lines to totals, advance and balance.
+- **One formatter at the edge.** The same `#,##0.00` formatter produces every amount on screen, in the PDF and on the thermal receipt, so they can never disagree.
+- **Totals are derived.** The total, advance line and balance are computed from the items each time, never stored separately.
 
-**Security**
-- One-time, offline device activation: the app only runs on devices the developer has approved (see [Device Activation](#device-activation))
-- 4-digit PIN gate protecting the Settings screen
-- PINs hashed with salted, iterated SHA-256 (10,000 rounds) and compared in constant time
-- One-time recovery code generated at setup for PIN reset
-- Credentials held in encrypted secure storage
+## How printing works
 
-**Guided Setup & Settings**
-- Eight-step onboarding: business name, address, phone numbers, email, terms, numbering, PIN, recovery code
-- Structured four-field business address composed for the receipt
-- Business logo upload from the gallery
-- Editable terms and conditions printed on every receipt
-- Printer selection, paper size and print target configuration
+1. **The number is consumed only after the PDF builds.** The invoice is stamped with the pending number and built first; the sequence advances, the invoice is saved to history and the draft is cleared only once that succeeds, so a failed build never skips a number.
+2. **The PDF is paginated by measurement.** The receipt builder works out how many rows fit on each page and on the last page, which also carries the totals, terms and signatures.
+3. **The dispatcher picks a route.** WiFi sends the PDF to the Android print system; thermal builds ESC/POS bytes and sends them to the paired printer.
+4. **Thermal layout is character-exact.** Text is wrapped to the 32 or 48 characters a line holds on 58 mm or 80 mm paper, with item descriptions indented under their line number.
+5. **Every outcome is explicit.** Sent, cancelled, no printer, Bluetooth unavailable, connection failed and build failed each map to a message, so the cashier always knows whether to reprint.
 
-**Responsive Layouts**
-- Dedicated phone and tablet layouts with a single 600dp width breakpoint
-- Tablet layout with a live receipt preview pane beside the billing form
+## Security
 
-## Architecture Highlights
+- **Device activation.** On first launch the app shows a device code derived from the Android ID. The developer signs it with an Ed25519 private key that never leaves their computer, and the app verifies the key against the public key built into the APK on every launch. A key only works on the device it was made for.
+- **PIN protection.** The Settings PIN and the one-time recovery code are hashed with a random 16-byte salt and 10,000 rounds of SHA-256, compared in constant time, and kept in encrypted secure storage.
+- **Limits.** Like any on-device check, activation stops casual sharing of the APK rather than a determined reverse engineer.
 
-- Layered structure: `data` (sources and repositories), `features` (controller, view, widgets), `models`, `pdf`, `escpos`, `printing`
-- Riverpod `Notifier` / `AsyncNotifier` controllers for predictable state handling
-- Provider-based dependency graph for loose coupling between repositories and data sources
-- Repository pattern over SharedPreferences, secure storage, SQLite and the file system
-- Strict layering rules: widgets never touch repositories, controllers never import `BuildContext`, and the PDF layer never imports Material
-- Money represented as integer cents everywhere, formatted only at the edge through one shared LKR formatter
-- Hand-written `toJson` / `fromJson` / `copyWith`, with no code generation
+## Tech stack
 
-## Technical Stack
+| Area | Choice |
+|---|---|
+| Language | Dart 3.8 |
+| UI | Flutter, Material 3, Inter |
+| State | flutter_riverpod |
+| Storage | sqflite, shared_preferences, flutter_secure_storage |
+| PDF and printing | pdf, printing |
+| Thermal printing | esc_pos_utils_plus, print_bluetooth_thermal |
+| Security | crypto, ed25519_edwards |
+| Utilities | intl, uuid, image_picker, path_provider, package_info_plus, wakelock_plus |
 
-- **Frontend:** Flutter, Dart 3.8+
-- **State Management:** flutter_riverpod
-- **Local Storage:** sqflite, shared_preferences, flutter_secure_storage
-- **PDF & Printing:** pdf, printing
-- **Thermal Printing:** print_bluetooth_thermal, esc_pos_utils_plus
-- **Security:** crypto (SHA-256 PIN hashing), ed25519_edwards (activation key signatures)
-- **Utilities:** intl, uuid, image_picker, path_provider, package_info_plus, wakelock_plus
-- **Typography:** Inter (bundled)
+## Design system
 
-## Core Screens
+Biller shares one design system with two other apps of mine: warm paper surfaces, navy ink, and a dotted divider as the signature motif. Colours, spacing and text styles are tokens in `core/constants`, every amount uses tabular figures so columns line up, and shared widgets (`AppTextField`, `SectionHeader`, `SheetFrame`, `DottedDivider`, `PinBoxes`, `CodeBox`) live in `core/widgets`. Screens never use a raw colour or a bare measurement.
 
-1. **Activation** - Shown once per device until a valid activation key is entered
-2. **Setup** - Step-by-step business onboarding with PIN and recovery code
-3. **Billing** - Customer details, item entry, advance and totals, with a live preview on tablets
-4. **Preview** - Full A5 receipt preview before printing
-5. **Recent Invoices** - Invoice history with reprint and save-a-copy actions
-6. **Settings** - PIN-protected business profile, logo, terms, numbering, printer and security
+## Code conventions
 
-## Device Activation
+- A strict member ordering convention for every class: fields sorted by type tier, then type, then name; methods ordered by call order.
+- No comments in source. Names, types and ordering carry the meaning.
+- `dart format` at a 240-column page width.
 
-Biller is shared privately, not published. An APK file can be copied to any phone, so the app locks itself to devices the developer approves. There is no login and no server, and activation works fully offline.
+## Project structure
 
-### How it works
-
-1. On first launch the app shows the **Activate Biller** screen with a **device code**, for example `3F2A-9C1B-7D4E-0A55`. The code comes from the phone's Android ID.
-2. The user copies the code and sends it to the developer.
-3. The developer signs the code with a private Ed25519 key that never leaves their computer, and sends back an **activation key**.
-4. The user taps **Paste Key**. The app checks the key against the public key built into the APK and opens.
-
-The key is checked again on every launch. It only works on the device it was made for, so copying the APK or the app's data to another phone does not carry the activation over. The public key inside the APK can check keys but cannot create them, so opening up the APK does not let anyone make their own key.
-
-### One-time setup (developer)
-
-Run this once, from the project root:
-
-```bash
-dart run tool/activation.dart keygen
+```
+lib/
+    main.dart
+    app/            App, theme, providers, routes
+    core/           Constants, formatters, licensing, responsive helpers, utils, shared widgets
+    data/           Repositories and sources (SQLite, preferences, secure storage, files, Bluetooth)
+    escpos/         ThermalReceiptBuilder
+    features/       activation, billing, preview, recent, settings, setup
+    models/         BusinessProfile, Invoice, InvoiceItem, PrinterSettings, ThermalPaper
+    pdf/            Receipt builder and its sections
+    printing/       PrintDispatcher, PrintOutcome, SystemPrintService
+tool/
+    activation.dart Key generation and device signing
 ```
 
-This does two things:
+## Building
 
-- Saves the private key to `%USERPROFILE%\.biller\activation_private_key`.
-- Writes the matching public key into `lib/core/licensing/activation_public_key.dart`.
+**Requirements:** Flutter 3.32 or later and the Android SDK.
 
-Then rebuild the release APK. An APK built before `keygen` has an empty public key and rejects every activation key.
+1. Generate the activation key pair once from the project root with `dart run tool/activation.dart keygen`. This writes the public key into `lib/core/licensing/activation_public_key.dart` and keeps the private key in your home folder.
+2. Run with `flutter run`, or build a release with `flutter build apk --release`.
+3. To activate a device, run `dart run tool/activation.dart sign <device code>` and enter the printed key in the app.
 
-> **Back up the private key file** somewhere safe, such as a USB drive or private cloud storage. Never commit it or share it. Without it, no new device can be activated. Creating a new key pair would lock out every device already activated, so `keygen` refuses to overwrite an existing key.
+Back up the private key. Without it no new device can be activated, and generating a new pair locks out every device already activated.
 
-### Activating a device
+## Roadmap
 
-1. Install the release APK on the device and open it.
-2. Get the device code shown on the **Activate Biller** screen (the user can tap **Copy Code** and send it on WhatsApp).
-3. On the developer's computer, run:
-
-   ```bash
-   dart run tool/activation.dart sign 3F2A-9C1B-7D4E-0A55
-   ```
-
-   Replace the example with the real device code. Dashes and letter case do not matter.
-4. Send the printed **activation key** back. It is about 100 characters, so send it as text the user can copy.
-5. On the device, copy the key and tap **Paste Key**. The app activates and continues to Setup, or straight to Billing if the device was already set up.
-
-### Things to know
-
-- **Use the release APK's code.** Android gives each signing key its own Android ID, so a debug build and a release build on the same phone show different device codes. Always keep signing releases with the same keystore.
-- **Factory reset or new phone:** the device code changes, so sign the new code.
-- **Updating an existing install:** the Activation screen appears once. The business profile, invoice history and settings are kept.
-- **`UNAVAILABLE` device code:** the phone did not provide an Android ID, and it cannot be activated.
-- **Warning while signing:** if `sign` reports that the public key does not match your private key, the project's `activation_public_key.dart` was changed. Restore it from git before building, or keys will not be accepted.
-- **Limits:** this stops casual sharing of the APK. Like any check that runs on the device, a skilled reverse engineer could remove it. Building with `--obfuscate --split-debug-info=<dir>` makes that harder.
+- Email a copy of each receipt to the owner address collected during setup
+- Export invoice history
