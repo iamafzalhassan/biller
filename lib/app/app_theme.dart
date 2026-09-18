@@ -5,6 +5,11 @@ import '../core/constants/app_spacing.dart';
 import '../core/constants/app_text_styles.dart';
 
 abstract final class AppTheme {
+  static final ButtonStyle dangerButton = OutlinedButton.styleFrom(
+    foregroundColor: AppColors.danger,
+    side: const BorderSide(color: AppColors.danger),
+  );
+
   static ThemeData get light {
     final ColorScheme scheme = ColorScheme.fromSeed(error: AppColors.danger, primary: AppColors.primary, onPrimary: AppColors.primaryOn, seedColor: AppColors.primary, surface: AppColors.surfaceBase);
     return ThemeData(

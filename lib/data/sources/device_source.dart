@@ -3,11 +3,9 @@ import '../../core/constants/app_channels.dart';
 class DeviceSource {
   static const String methodAndroidId = 'androidId';
 
-  late final String _androidId;
+  late final String androidId;
 
-  String get androidId => _androidId;
-
-  Future<void> init() async => _androidId = await _readAndroidId();
+  Future<void> init() async => androidId = await _readAndroidId();
 
   Future<String> _readAndroidId() async {
     try {

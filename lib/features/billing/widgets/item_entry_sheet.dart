@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../app/app_theme.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
@@ -89,14 +89,7 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
     if (_isEditing) {
       return SheetActions(
         primary: FilledButton(onPressed: _isValid ? () => _save(addAnother: false) : null, child: const Text('Save', maxLines: 1)),
-        secondary: OutlinedButton(
-          onPressed: widget.onDelete,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger,
-            side: const BorderSide(color: AppColors.danger),
-          ),
-          child: const Text('Delete', maxLines: 1),
-        ),
+        secondary: OutlinedButton(onPressed: widget.onDelete, style: AppTheme.dangerButton, child: const Text('Delete', maxLines: 1)),
       );
     }
     return SheetActions(
@@ -128,57 +121,55 @@ class _ItemEntrySheetState extends State<ItemEntrySheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SheetFrame(
-      title: _isEditing ? 'Edit Item' : 'Add Item',
-      children: <Widget>[
-        AppTextField(
-          autofocus: true,
-          controller: _descriptionController,
-          focusNode: _descriptionFocus,
-          inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
-          label: 'Description',
-          onChanged: (String _) => setState(() {}),
-          onSubmitted: (String _) => _qtyFocus.requestFocus(),
-          textCapitalization: TextCapitalization.characters,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: _numberField(controller: _qtyController, focusNode: _qtyFocus, label: 'Qty', onSubmitted: _priceFocus.requestFocus, textInputAction: TextInputAction.next),
+  Widget build(BuildContext context) => SheetFrame(
+    title: _isEditing ? 'Edit Item' : 'Add Item',
+    children: <Widget>[
+      AppTextField(
+        autofocus: true,
+        controller: _descriptionController,
+        focusNode: _descriptionFocus,
+        inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
+        label: 'Description',
+        onChanged: (String _) => setState(() {}),
+        onSubmitted: (String _) => _qtyFocus.requestFocus(),
+        textCapitalization: TextCapitalization.characters,
+        textInputAction: TextInputAction.next,
+      ),
+      const SizedBox(height: AppSpacing.md),
+      Row(
+        children: <Widget>[
+          Expanded(
+            child: _numberField(controller: _qtyController, focusNode: _qtyFocus, label: 'Qty', onSubmitted: _priceFocus.requestFocus, textInputAction: TextInputAction.next),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            flex: 2,
+            child: _numberField(
+              controller: _priceController,
+              focusNode: _priceFocus,
+              label: 'Unit Price',
+              onSubmitted: () => _save(addAnother: !_isEditing),
+              textInputAction: TextInputAction.done,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              flex: 2,
-              child: _numberField(
-                controller: _priceController,
-                focusNode: _priceFocus,
-                label: 'Unit Price',
-                onSubmitted: () => _save(addAnother: !_isEditing),
-                textInputAction: TextInputAction.done,
-              ),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      Row(
+        children: <Widget>[
+          const Text('AMOUNT', maxLines: 1, style: AppTextStyles.overline),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: FittedBox(
+              alignment: Alignment.centerRight,
+              fit: BoxFit.scaleDown,
+              child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Row(
-          children: <Widget>[
-            const Text('AMOUNT', maxLines: 1, style: AppTextStyles.overline),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: FittedBox(
-                alignment: Alignment.centerRight,
-                fit: BoxFit.scaleDown,
-                child: Text(_amountCents.asLkr, maxLines: 1, style: AppTextStyles.totalsValueBold),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        _actions(),
-      ],
-    );
-  }
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      _actions(),
+    ],
+  );
 }

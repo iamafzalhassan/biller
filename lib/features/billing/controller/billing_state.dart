@@ -32,17 +32,4 @@ class BillingState {
     draftSavedAt: draftSavedAt ?? this.draftSavedAt,
     invoice: invoice ?? this.invoice,
   );
-
-  @override
-  bool operator ==(Object other) =>
-      other is BillingState &&
-      other.isPrinting == isPrinting &&
-      other.isRestorable == isRestorable &&
-      other.formSeed == formSeed &&
-      other.pendingInvoiceNumber == pendingInvoiceNumber &&
-      other.draftSavedAt == draftSavedAt &&
-      other.invoice == invoice;
-
-  @override
-  int get hashCode => Object.hash(isPrinting, isRestorable, formSeed, pendingInvoiceNumber, draftSavedAt, invoice);
 }

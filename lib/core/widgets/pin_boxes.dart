@@ -73,68 +73,64 @@ class _PinBoxesState extends State<PinBoxes> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        SizedBox(
-          height: AppSpacing.pinBox,
-          width: stripWidth,
-          child: Stack(
-            alignment: Alignment.center,
-            children: <Widget>[
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[for (int index = 0; index < length; index++) _box(index)]),
-              Positioned.fill(
-                child: TextField(
-                  autocorrect: false,
-                  contextMenuBuilder: (BuildContext context, EditableTextState state) => const SizedBox.shrink(),
-                  controller: widget.controller,
-                  cursorColor: Colors.transparent,
-                  cursorWidth: 0,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    counterText: '',
-                    disabledBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    fillColor: Colors.transparent,
-                    filled: false,
-                    focusedBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    isDense: true,
-                  ),
-                  enabled: widget.enabled,
-                  enableInteractiveSelection: false,
-                  enableSuggestions: false,
-                  focusNode: _focusNode,
-                  inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-                  keyboardType: TextInputType.number,
-                  maxLength: length,
-                  onChanged: _handleChanged,
-                  showCursor: false,
-                  style: _hiddenInput,
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: <Widget>[
+      SizedBox(
+        height: AppSpacing.pinBox,
+        width: stripWidth,
+        child: Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[for (int index = 0; index < length; index++) _box(index)]),
+            Positioned.fill(
+              child: TextField(
+                autocorrect: false,
+                contextMenuBuilder: (BuildContext context, EditableTextState state) => const SizedBox.shrink(),
+                controller: widget.controller,
+                cursorColor: Colors.transparent,
+                cursorWidth: 0,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  counterText: '',
+                  disabledBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  fillColor: Colors.transparent,
+                  filled: false,
+                  focusedBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  isDense: true,
                 ),
+                enabled: widget.enabled,
+                enableInteractiveSelection: false,
+                enableSuggestions: false,
+                focusNode: _focusNode,
+                inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                keyboardType: TextInputType.number,
+                maxLength: length,
+                onChanged: _handleChanged,
+                showCursor: false,
+                style: _hiddenInput,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        if (widget.hasError) const SizedBox(height: AppSpacing.md),
-        if (widget.hasError) const Text('Incorrect PIN', maxLines: 1, style: AppTextStyles.errorHint),
-      ],
-    );
-  }
+      ),
+      if (widget.hasError) const SizedBox(height: AppSpacing.md),
+      if (widget.hasError) const Text('Incorrect PIN', maxLines: 1, style: AppTextStyles.errorHint),
+    ],
+  );
 }
 
 class _PinDot extends StatelessWidget {
   const _PinDot();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: AppColors.textPrimary, shape: BoxShape.circle),
-      height: AppSpacing.md,
-      width: AppSpacing.md,
-    );
-  }
+  Widget build(BuildContext context) => Container(
+    decoration: const BoxDecoration(color: AppColors.textPrimary, shape: BoxShape.circle),
+    height: AppSpacing.md,
+    width: AppSpacing.md,
+  );
 }

@@ -8,6 +8,7 @@ import '../../../models/business_profile.dart';
 import '../../../models/invoice.dart';
 import '../../../models/invoice_item.dart';
 import '../../../pdf/receipt_builder.dart';
+import '../../../printing/print_outcome.dart';
 import 'billing_state.dart';
 
 class BillingController extends Notifier<BillingState> {
@@ -65,7 +66,24 @@ class BillingController extends Notifier<BillingState> {
 
   Future<Uint8List> buildPreviewPdf() => ReceiptBuilder.build(profile: ref.read(settingsRepositoryProvider).profile, invoice: state.invoice);
 
-  Future<Uint8List> commit() async {
+  Future<PrintOutcome> printBill() async {
+    final Uint8List bytes;
+    try {
+      bytes = await _commit();
+    } catch (_) {
+      return PrintOutcome.commitFailed;
+    }
+    final PrintOutcome outcome = await ref.read(printDispatcherProvider).send(bytes: bytes, invoice: state.invoice, profile: ref.read(settingsRepositoryProvider).profile);
+    startNewBill();
+    return outcome;
+  }
+
+  void startNewBill() {
+    final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
+    state = BillingState(isPrinting: false, isRestorable: false, formSeed: state.formSeed + 1, pendingInvoiceNumber: pending, invoice: _blankInvoice(pending));
+  }
+
+  Future<Uint8List> _commit() async {
     state = state.copyWith(isPrinting: true);
     try {
       final BusinessProfile profile = ref.read(settingsRepositoryProvider).profile;
@@ -82,11 +100,6 @@ class BillingController extends Notifier<BillingState> {
       state = state.copyWith(isPrinting: false);
       rethrow;
     }
-  }
-
-  void startNewBill() {
-    final String pending = ref.read(settingsRepositoryProvider).pendingInvoiceNumber;
-    state = BillingState(isPrinting: false, isRestorable: false, formSeed: state.formSeed + 1, pendingInvoiceNumber: pending, invoice: _blankInvoice(pending));
   }
 
   Future<void> _archive(Invoice invoice, Uint8List bytes) async {

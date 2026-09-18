@@ -24,28 +24,26 @@ class NumberingSection extends StatelessWidget {
   final VoidCallback onDone;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const Text('Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.', style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              flex: prefixFlex,
-              child: ProfileTextField(controller: prefixController, focusNode: prefixFocus, label: 'Prefix', maxLength: prefixLength, nextFocus: deviceIdFocus, onChanged: onChanged),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: ProfileTextField(controller: deviceIdController, focusNode: deviceIdFocus, label: 'Device', maxLength: deviceIdLength, onChanged: onChanged, onDone: onDone),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text('Next invoice: $nextInvoiceNumber', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      const Text('Only future invoices are affected. Give each device its own letter so two tills can never print the same invoice number.', style: AppTextStyles.listSecondary),
+      const SizedBox(height: AppSpacing.md),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            flex: prefixFlex,
+            child: ProfileTextField(controller: prefixController, focusNode: prefixFocus, label: 'Prefix', maxLength: prefixLength, nextFocus: deviceIdFocus, onChanged: onChanged),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: ProfileTextField(controller: deviceIdController, focusNode: deviceIdFocus, label: 'Device', maxLength: deviceIdLength, onChanged: onChanged, onDone: onDone),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      Text('Next invoice: $nextInvoiceNumber', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
+    ],
+  );
 }

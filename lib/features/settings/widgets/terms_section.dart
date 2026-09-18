@@ -15,18 +15,16 @@ class TermsSection extends StatelessWidget {
   final VoidCallback onToggle;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        TermsEditor(isEditable: isEditing, terms: terms, onChanged: onChanged),
-        const SizedBox(height: AppSpacing.md),
-        OutlinedButton.icon(
-          icon: Icon(isEditing ? Icons.check : Icons.edit_outlined, size: AppSpacing.iconButton),
-          label: Text(isEditing ? 'Done' : 'Edit Conditions', maxLines: 1),
-          onPressed: onToggle,
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      TermsEditor(isEditable: isEditing, terms: terms, onChanged: onChanged),
+      const SizedBox(height: AppSpacing.md),
+      OutlinedButton.icon(
+        icon: Icon(isEditing ? Icons.check : Icons.edit_outlined, size: AppSpacing.iconButton),
+        label: Text(isEditing ? 'Done' : 'Edit Conditions', maxLines: 1),
+        onPressed: onToggle,
+      ),
+    ],
+  );
 }

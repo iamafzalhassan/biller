@@ -74,32 +74,6 @@ class BusinessProfile {
 
   List<String> get printableTerms => terms.map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList();
 
-  BusinessProfile copyWith({
-    String? addressBuilding,
-    String? addressCity,
-    String? addressNo,
-    String? addressStreet,
-    String? deviceId,
-    String? invoicePrefix,
-    String? logoPath,
-    String? name,
-    String? ownerEmail,
-    List<String>? phones,
-    List<String>? terms,
-  }) => BusinessProfile(
-    addressBuilding: addressBuilding ?? this.addressBuilding,
-    addressCity: addressCity ?? this.addressCity,
-    addressNo: addressNo ?? this.addressNo,
-    addressStreet: addressStreet ?? this.addressStreet,
-    deviceId: deviceId ?? this.deviceId,
-    invoicePrefix: invoicePrefix ?? this.invoicePrefix,
-    logoPath: logoPath ?? this.logoPath,
-    name: name ?? this.name,
-    ownerEmail: ownerEmail ?? this.ownerEmail,
-    phones: phones ?? this.phones,
-    terms: terms ?? this.terms,
-  );
-
   Map<String, dynamic> toJson() => <String, dynamic>{
     'addressBuilding': addressBuilding,
     'addressCity': addressCity,

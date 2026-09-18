@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../app/app_theme.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -41,48 +41,39 @@ class _RecoverySheetState extends State<RecoverySheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SheetFrame(
-      title: 'Use Recovery Code',
-      children: <Widget>[
-        const Text('The code shown once during setup. Entering it sets a new PIN.', style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.lg),
-        AppTextField(
-          autofocus: true,
-          controller: _codeController,
-          focusNode: _codeFocus,
-          label: 'Recovery Code',
-          onChanged: (String _) => setState(() {}),
-          onSubmitted: (String _) => _pinFocus.requestFocus(),
-          textCapitalization: TextCapitalization.characters,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppTextField(
-          controller: _pinController,
-          focusNode: _pinFocus,
-          inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-          keyboardType: TextInputType.number,
-          label: 'New 4-Digit PIN',
-          maxLength: 4,
-          obscureText: true,
-          onChanged: (String _) => setState(() {}),
-          onSubmitted: (String _) => _submit(),
-          textInputAction: TextInputAction.done,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        SheetActions(
-          primary: FilledButton(onPressed: _isValid ? _submit : null, child: const Text('Reset PIN', maxLines: 1)),
-          secondary: OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
-              side: const BorderSide(color: AppColors.danger),
-            ),
-            child: const Text('Cancel', maxLines: 1),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => SheetFrame(
+    title: 'Use Recovery Code',
+    children: <Widget>[
+      const Text('The code shown once during setup. Entering it sets a new PIN.', style: AppTextStyles.listSecondary),
+      const SizedBox(height: AppSpacing.lg),
+      AppTextField(
+        autofocus: true,
+        controller: _codeController,
+        focusNode: _codeFocus,
+        label: 'Recovery Code',
+        onChanged: (String _) => setState(() {}),
+        onSubmitted: (String _) => _pinFocus.requestFocus(),
+        textCapitalization: TextCapitalization.characters,
+        textInputAction: TextInputAction.next,
+      ),
+      const SizedBox(height: AppSpacing.md),
+      AppTextField(
+        controller: _pinController,
+        focusNode: _pinFocus,
+        inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+        keyboardType: TextInputType.number,
+        label: 'New 4-Digit PIN',
+        maxLength: 4,
+        obscureText: true,
+        onChanged: (String _) => setState(() {}),
+        onSubmitted: (String _) => _submit(),
+        textInputAction: TextInputAction.done,
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      SheetActions(
+        primary: FilledButton(onPressed: _isValid ? _submit : null, child: const Text('Reset PIN', maxLines: 1)),
+        secondary: OutlinedButton(onPressed: Navigator.of(context).pop, style: AppTheme.dangerButton, child: const Text('Cancel', maxLines: 1)),
+      ),
+    ],
+  );
 }

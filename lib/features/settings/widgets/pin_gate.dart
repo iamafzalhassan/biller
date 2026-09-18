@@ -76,23 +76,21 @@ class _PinGateState extends State<PinGate> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.screenPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          const Text('The PIN protects the settings screen only', style: AppTextStyles.listSecondary),
-          const SizedBox(height: AppSpacing.xl),
-          Center(
-            child: PinBoxes(autofocus: true, controller: _controller, enabled: !_isLocked, hasError: _hasError, onChanged: _clearError, onCompleted: (String value) => unawaited(_submit(value))),
-          ),
-          if (_isLocked) const SizedBox(height: AppSpacing.md),
-          if (_isLocked) Text('Too many wrong PINs. Try again in $_lockRemaining seconds, or use your recovery code.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
-          const Spacer(),
-          OutlinedButton(onPressed: widget.onRecover, child: const Text('Use Recovery Code', maxLines: 1)),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.screenPadding),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const Text('The PIN protects the settings screen only', style: AppTextStyles.listSecondary),
+        const SizedBox(height: AppSpacing.xl),
+        Center(
+          child: PinBoxes(autofocus: true, controller: _controller, enabled: !_isLocked, hasError: _hasError, onChanged: _clearError, onCompleted: (String value) => unawaited(_submit(value))),
+        ),
+        if (_isLocked) const SizedBox(height: AppSpacing.md),
+        if (_isLocked) Text('Too many wrong PINs. Try again in $_lockRemaining seconds, or use your recovery code.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
+        const Spacer(),
+        OutlinedButton(onPressed: widget.onRecover, child: const Text('Use Recovery Code', maxLines: 1)),
+      ],
+    ),
+  );
 }

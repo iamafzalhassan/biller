@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../app/app_theme.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/extensions/cents_formatting_ext.dart';
@@ -59,47 +59,29 @@ class _AdvanceSheetState extends State<AdvanceSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SheetFrame(
-      title: widget.advanceCents > 0 ? 'Edit Advance' : 'Add Advance',
-      children: <Widget>[
-        AppTextField(
-          autofocus: true,
-          controller: _controller,
-          focusNode: _focusNode,
-          inputFormatters: const <TextInputFormatter>[ThousandsFormatter()],
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          label: 'Advance',
-          onChanged: (String _) => setState(() {}),
-          onSubmitted: (String _) => _save(),
-          selectAllOnFocus: true,
-          textAlign: TextAlign.right,
-          textInputAction: TextInputAction.done,
-        ),
-        if (_isOverTotal) const SizedBox(height: AppSpacing.sm),
-        if (_isOverTotal) Text('Advance cannot exceed the total of ${widget.totalCents.asLkr}', style: AppTextStyles.errorHint),
-        const SizedBox(height: AppSpacing.lg),
-        SheetActions(
-          primary: FilledButton(onPressed: _isValid ? _save : null, child: const Text('Add Advance', maxLines: 1)),
-          secondary: widget.advanceCents > 0
-              ? OutlinedButton(
-                  onPressed: _remove,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                  ),
-                  child: const Text('Remove', maxLines: 1),
-                )
-              : OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                  ),
-                  child: const Text('Cancel', maxLines: 1),
-                ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => SheetFrame(
+    title: widget.advanceCents > 0 ? 'Edit Advance' : 'Add Advance',
+    children: <Widget>[
+      AppTextField(
+        autofocus: true,
+        controller: _controller,
+        focusNode: _focusNode,
+        inputFormatters: const <TextInputFormatter>[ThousandsFormatter()],
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        label: 'Advance',
+        onChanged: (String _) => setState(() {}),
+        onSubmitted: (String _) => _save(),
+        selectAllOnFocus: true,
+        textAlign: TextAlign.right,
+        textInputAction: TextInputAction.done,
+      ),
+      if (_isOverTotal) const SizedBox(height: AppSpacing.sm),
+      if (_isOverTotal) Text('Advance cannot exceed the total of ${widget.totalCents.asLkr}', style: AppTextStyles.errorHint),
+      const SizedBox(height: AppSpacing.lg),
+      SheetActions(
+        primary: FilledButton(onPressed: _isValid ? _save : null, child: const Text('Add Advance', maxLines: 1)),
+        secondary: OutlinedButton(onPressed: widget.advanceCents > 0 ? _remove : Navigator.of(context).pop, style: AppTheme.dangerButton, child: Text(widget.advanceCents > 0 ? 'Remove' : 'Cancel', maxLines: 1)),
+      ),
+    ],
+  );
 }

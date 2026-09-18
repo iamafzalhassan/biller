@@ -24,13 +24,11 @@ class Invoice {
 
   int get balanceCents => totalCents - advanceCents;
 
-  bool get isPrintable => items.any((InvoiceItem i) => i.isPrintable);
-
   List<InvoiceItem> get printableItems => items.where((InvoiceItem i) => i.isPrintable).toList();
 
   bool get showsAdvance => advanceCents > 0;
 
-  int get totalCents => items.where((InvoiceItem i) => i.isPrintable).fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
+  int get totalCents => printableItems.fold(0, (int sum, InvoiceItem i) => sum + i.amountCents);
 
   Invoice copyWith({int? advanceCents, String? customerName, String? invoiceNumber, String? customerPhone, List<InvoiceItem>? items, DateTime? createdAt}) => Invoice(
     advanceCents: advanceCents ?? this.advanceCents,
@@ -50,13 +48,7 @@ class Invoice {
     'createdAt': createdAt.toIso8601String(),
   };
 
-  bool _sameItems(List<InvoiceItem> other) {
-    if (other.length != items.length) return false;
-    for (int index = 0; index < items.length; index++) {
-      if (other[index] != items[index]) return false;
-    }
-    return true;
-  }
+  bool _sameItems(List<InvoiceItem> other) => other.length == items.length && items.indexed.every(((int, InvoiceItem) entry) => other[entry.$1] == entry.$2);
 
   @override
   bool operator ==(Object other) =>

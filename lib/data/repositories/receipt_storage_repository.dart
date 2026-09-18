@@ -8,7 +8,5 @@ class ReceiptStorageRepository {
 
   ReceiptStorageRepository(this._source);
 
-  String fileNameFor(Invoice invoice) => '${invoice.invoiceNumber}.pdf';
-
-  Future<String> save(Invoice invoice, Uint8List bytes) => _source.write(fileNameFor(invoice), bytes);
+  Future<String> save(Invoice invoice, Uint8List bytes) => _source.write('${invoice.invoiceNumber}.pdf', bytes);
 }

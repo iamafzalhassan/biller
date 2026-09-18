@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,15 +37,8 @@ class RecentScreen extends ConsumerWidget {
   }
 
   Future<void> _reprint(BuildContext context, WidgetRef ref, Invoice invoice) async {
-    PrintOutcome outcome;
-    try {
-      final Uint8List bytes = await ref.read(recentControllerProvider.notifier).buildPdf(invoice);
-      outcome = await ref.read(printDispatcherProvider).send(profile: ref.read(settingsRepositoryProvider).profile, invoice: invoice, bytes: bytes);
-    } catch (_) {
-      outcome = PrintOutcome.buildFailed;
-    }
-    if (!context.mounted || outcome.isSilent) return;
-    context.showErrorSnack(outcome.message(invoice.invoiceNumber));
+    final PrintOutcome outcome = await ref.read(recentControllerProvider.notifier).reprint(invoice);
+    if (context.mounted && !outcome.isSilent) context.showErrorSnack(outcome.message(invoice.invoiceNumber));
   }
 
   Future<void> _saveCopy(BuildContext context, WidgetRef ref, Invoice invoice) async {
@@ -60,60 +52,54 @@ class RecentScreen extends ConsumerWidget {
     }
   }
 
-  Widget _retentionNote(int days) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-        color: AppColors.surfaceSunken,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.schedule_outlined, color: AppColors.textSecondary, size: AppSpacing.iconHint),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text('Invoices are kept for $days days, then removed from this list.', maxLines: noteLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _retentionNote(int days) => Container(
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: AppColors.divider)),
+      color: AppColors.surfaceSunken,
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.md),
+    child: Row(
+      children: <Widget>[
+        const Icon(Icons.schedule_outlined, color: AppColors.textSecondary, size: AppSpacing.iconHint),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text('Invoices are kept for $days days, then removed from this list.', maxLines: noteLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.listSecondary),
+        ),
+      ],
+    ),
+  );
 
-  Widget _emptyList(int days) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) => ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: <Widget>[
-          ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: _emptyState(days),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _emptyList(int days) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) => ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: <Widget>[
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: _emptyState(days),
+        ),
+      ],
+    ),
+  );
 
-  Widget _emptyState(int days) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.screenPadding),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppColors.surfaceField, shape: BoxShape.circle),
-            height: AppSpacing.emptyStateIcon,
-            width: AppSpacing.emptyStateIcon,
-            child: const Icon(Icons.receipt_long_outlined, color: AppColors.textTertiary, size: AppSpacing.iconEmptyState),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const Text('No invoices yet', maxLines: 1, style: AppTextStyles.listPrimary),
-          const SizedBox(height: AppSpacing.sm),
-          Text('Every bill you print appears here for $days days, ready to reprint or save again.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
+  Widget _emptyState(int days) => Padding(
+    padding: const EdgeInsets.all(AppSpacing.screenPadding),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Container(
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(color: AppColors.surfaceField, shape: BoxShape.circle),
+          height: AppSpacing.emptyStateIcon,
+          width: AppSpacing.emptyStateIcon,
+          child: const Icon(Icons.receipt_long_outlined, color: AppColors.textTertiary, size: AppSpacing.iconEmptyState),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const Text('No invoices yet', maxLines: 1, style: AppTextStyles.listPrimary),
+        const SizedBox(height: AppSpacing.sm),
+        Text('Every bill you print appears here for $days days, ready to reprint or save again.', style: AppTextStyles.listSecondary, textAlign: TextAlign.center),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

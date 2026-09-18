@@ -79,51 +79,49 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(minHeight: AppSpacing.controlHeight, maxHeight: widget.isGrowable ? double.infinity : AppSpacing.controlHeight),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusField), color: AppColors.surfaceField),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.fieldLabel, textAlign: widget.textAlign),
-          TextField(
-            autofocus: widget.autofocus,
-            controller: widget.controller,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              constraints: const BoxConstraints(),
-              contentPadding: EdgeInsets.zero,
-              counterText: '',
-              disabledBorder: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              filled: false,
-              focusedBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              isCollapsed: true,
-              prefixStyle: AppTextStyles.fieldValue,
-              prefixText: widget.prefixText,
-            ),
-            focusNode: _focusNode,
-            inputFormatters: widget.inputFormatters,
-            keyboardType: widget.keyboardType,
-            maxLength: widget.maxLength,
-            maxLines: widget.isGrowable ? null : 1,
-            minLines: 1,
-            obscureText: widget.obscureText,
-            onChanged: widget.onChanged,
-            onSubmitted: widget.onSubmitted,
-            style: AppTextStyles.fieldValue,
-            textAlign: widget.textAlign,
-            textCapitalization: widget.textCapitalization,
-            textInputAction: widget.textInputAction,
+  Widget build(BuildContext context) => Container(
+    constraints: BoxConstraints(minHeight: AppSpacing.controlHeight, maxHeight: widget.isGrowable ? double.infinity : AppSpacing.controlHeight),
+    decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusField), color: AppColors.surfaceField),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.fieldLabel, textAlign: widget.textAlign),
+        TextField(
+          autofocus: widget.autofocus,
+          controller: widget.controller,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            constraints: const BoxConstraints(),
+            contentPadding: EdgeInsets.zero,
+            counterText: '',
+            disabledBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            filled: false,
+            focusedBorder: InputBorder.none,
+            focusedErrorBorder: InputBorder.none,
+            isCollapsed: true,
+            prefixStyle: AppTextStyles.fieldValue,
+            prefixText: widget.prefixText,
           ),
-        ],
-      ),
-    );
-  }
+          focusNode: _focusNode,
+          inputFormatters: widget.inputFormatters,
+          keyboardType: widget.keyboardType,
+          maxLength: widget.maxLength,
+          maxLines: widget.isGrowable ? null : 1,
+          minLines: 1,
+          obscureText: widget.obscureText,
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
+          style: AppTextStyles.fieldValue,
+          textAlign: widget.textAlign,
+          textCapitalization: widget.textCapitalization,
+          textInputAction: widget.textInputAction,
+        ),
+      ],
+    ),
+  );
 }

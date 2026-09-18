@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../app/app_theme.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
@@ -44,50 +44,37 @@ class SecuritySection extends StatelessWidget {
     );
   }
 
-  Widget _changePinTile() {
-    return ExpansionTile(
-      leading: const Icon(Icons.lock_outline, size: AppSpacing.iconTile),
-      title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
-      children: <Widget>[
-        const SizedBox(height: AppSpacing.lg),
-        _pinField(currentPinController, currentPinFocus, 'Current PIN', nextFocus: newPinFocus),
-        const SizedBox(height: AppSpacing.md),
-        _pinField(newPinController, newPinFocus, 'New PIN'),
-        const SizedBox(height: AppSpacing.lg),
-        FilledButton(onPressed: onChangePin, child: const Text('Update PIN', maxLines: 1)),
-      ],
-    );
-  }
+  Widget _changePinTile() => ExpansionTile(
+    leading: const Icon(Icons.lock_outline, size: AppSpacing.iconTile),
+    title: const Text('Change PIN', maxLines: 1, style: AppTextStyles.listPrimary),
+    children: <Widget>[
+      const SizedBox(height: AppSpacing.lg),
+      _pinField(currentPinController, currentPinFocus, 'Current PIN', nextFocus: newPinFocus),
+      const SizedBox(height: AppSpacing.md),
+      _pinField(newPinController, newPinFocus, 'New PIN'),
+      const SizedBox(height: AppSpacing.lg),
+      FilledButton(onPressed: onChangePin, child: const Text('Update PIN', maxLines: 1)),
+    ],
+  );
 
-  Widget _resetTile() {
-    return ExpansionTile(
-      leading: const Icon(Icons.restart_alt, size: AppSpacing.iconTile),
-      title: const Text('Reset and run setup again', maxLines: 1, style: AppTextStyles.listPrimary),
-      children: <Widget>[
-        const SizedBox(height: AppSpacing.lg),
-        const Text('Clears the business profile, PIN, invoice sequence and saved draft, then reopens the setup wizard.', style: AppTextStyles.listSecondary),
-        const SizedBox(height: AppSpacing.lg),
-        OutlinedButton(
-          onPressed: onReset,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger,
-            side: const BorderSide(color: AppColors.danger),
-          ),
-          child: const Text('Reset Everything', maxLines: 1),
-        ),
-      ],
-    );
-  }
+  Widget _resetTile() => ExpansionTile(
+    leading: const Icon(Icons.restart_alt, size: AppSpacing.iconTile),
+    title: const Text('Reset and run setup again', maxLines: 1, style: AppTextStyles.listPrimary),
+    children: <Widget>[
+      const SizedBox(height: AppSpacing.lg),
+      const Text('Clears the business profile, PIN, invoice sequence and saved draft, then reopens the setup wizard.', style: AppTextStyles.listSecondary),
+      const SizedBox(height: AppSpacing.lg),
+      OutlinedButton(onPressed: onReset, style: AppTheme.dangerButton, child: const Text('Reset Everything', maxLines: 1)),
+    ],
+  );
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _changePinTile(),
-        if (isResettable) const SizedBox(height: AppSpacing.sm),
-        if (isResettable) _resetTile(),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      _changePinTile(),
+      if (isResettable) const SizedBox(height: AppSpacing.sm),
+      if (isResettable) _resetTile(),
+    ],
+  );
 }

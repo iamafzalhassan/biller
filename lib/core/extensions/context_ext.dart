@@ -4,29 +4,23 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 
-enum SnackTone { error, neutral, success }
-
 extension ContextExt on BuildContext {
   static const int _maxLines = 2;
   static const int _visibleSeconds = 5;
 
-  void showBriefSnack(String message, {SnackBarAction? action}) => _showSnack(message, SnackTone.neutral, action);
+  void showBriefSnack(String message, {SnackBarAction? action}) => _showSnack(message, AppColors.surfaceInverse, action);
 
-  void showSuccessSnack(String message) => _showSnack(message, SnackTone.success, null);
+  void showSuccessSnack(String message) => _showSnack(message, AppColors.success, null);
 
-  void showErrorSnack(String message) => _showSnack(message, SnackTone.error, null);
+  void showErrorSnack(String message) => _showSnack(message, AppColors.danger, null);
 
-  void _showSnack(String message, SnackTone tone, SnackBarAction? action) {
+  void _showSnack(String message, Color background, SnackBarAction? action) {
     ScaffoldMessenger.of(this)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           action: action,
-          backgroundColor: switch (tone) {
-            SnackTone.error => AppColors.danger,
-            SnackTone.neutral => AppColors.surfaceInverse,
-            SnackTone.success => AppColors.success,
-          },
+          backgroundColor: background,
           behavior: SnackBarBehavior.fixed,
           content: Text(message, maxLines: _maxLines, overflow: TextOverflow.ellipsis, style: AppTextStyles.snack),
           duration: const Duration(seconds: _visibleSeconds),

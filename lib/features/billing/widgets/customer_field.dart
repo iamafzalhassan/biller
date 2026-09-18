@@ -36,35 +36,33 @@ class CustomerField extends StatelessWidget {
   final VoidCallback onPhoneSubmitted;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        AppTextField(
-          controller: nameController,
-          focusNode: nameFocus,
-          inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
-          keyboardType: TextInputType.text,
-          label: 'Customer Name',
-          onChanged: onNameChanged,
-          onSubmitted: (String _) => onNameSubmitted(),
-          textCapitalization: TextCapitalization.characters,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppTextField(
-          controller: phoneController,
-          focusNode: phoneFocus,
-          inputFormatters: const <TextInputFormatter>[SriLankaPhoneFormatter()],
-          keyboardType: TextInputType.phone,
-          label: 'Phone',
-          onChanged: onPhoneChanged,
-          onSubmitted: (String _) => onPhoneSubmitted(),
-          textInputAction: TextInputAction.done,
-        ),
-        if (hasPhoneError) const SizedBox(height: AppSpacing.xs),
-        if (hasPhoneError) const Text('Phone must be 10 digits starting with 0', maxLines: 1, style: AppTextStyles.errorHint),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      AppTextField(
+        controller: nameController,
+        focusNode: nameFocus,
+        inputFormatters: const <TextInputFormatter>[UpperCaseFormatter()],
+        keyboardType: TextInputType.text,
+        label: 'Customer Name',
+        onChanged: onNameChanged,
+        onSubmitted: (String _) => onNameSubmitted(),
+        textCapitalization: TextCapitalization.characters,
+        textInputAction: TextInputAction.next,
+      ),
+      const SizedBox(height: AppSpacing.md),
+      AppTextField(
+        controller: phoneController,
+        focusNode: phoneFocus,
+        inputFormatters: const <TextInputFormatter>[SriLankaPhoneFormatter()],
+        keyboardType: TextInputType.phone,
+        label: 'Phone',
+        onChanged: onPhoneChanged,
+        onSubmitted: (String _) => onPhoneSubmitted(),
+        textInputAction: TextInputAction.done,
+      ),
+      if (hasPhoneError) const SizedBox(height: AppSpacing.xs),
+      if (hasPhoneError) const Text('Phone must be 10 digits starting with 0', maxLines: 1, style: AppTextStyles.errorHint),
+    ],
+  );
 }

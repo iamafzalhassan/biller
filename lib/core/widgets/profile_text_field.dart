@@ -51,29 +51,20 @@ class ProfileTextField extends StatelessWidget {
     return isUpperCase ? const <TextInputFormatter>[UpperCaseFormatter()] : null;
   }
 
-  void _submit() {
-    final FocusNode? next = nextFocus;
-    if (next != null) {
-      next.requestFocus();
-      return;
-    }
-    onDone?.call();
-  }
+  void _submit() => nextFocus == null ? onDone?.call() : nextFocus!.requestFocus();
 
   @override
-  Widget build(BuildContext context) {
-    return AppTextField(
-      autofocus: autofocus,
-      controller: controller,
-      focusNode: focusNode,
-      inputFormatters: _formatters,
-      keyboardType: keyboardType,
-      label: label,
-      maxLength: maxLength,
-      onChanged: onChanged,
-      onSubmitted: (String _) => _submit(),
-      textCapitalization: isUpperCase ? TextCapitalization.characters : TextCapitalization.none,
-      textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
-    );
-  }
+  Widget build(BuildContext context) => AppTextField(
+    autofocus: autofocus,
+    controller: controller,
+    focusNode: focusNode,
+    inputFormatters: _formatters,
+    keyboardType: keyboardType,
+    label: label,
+    maxLength: maxLength,
+    onChanged: onChanged,
+    onSubmitted: (String _) => _submit(),
+    textCapitalization: isUpperCase ? TextCapitalization.characters : TextCapitalization.none,
+    textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
+  );
 }

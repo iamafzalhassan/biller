@@ -26,28 +26,26 @@ class _TermsEditorState extends State<TermsEditor> {
 
   void _publish(String value) => widget.onChanged(value.split(_breakPattern).map((String term) => term.trim()).where((String term) => term.isNotEmpty).toList());
 
-  Widget _numberedTerms() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        for (int index = 0; index < widget.terms.length; index++)
-          Padding(
-            padding: EdgeInsets.only(top: index == 0 ? 0 : AppSpacing.sm),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(
-                  width: AppSpacing.indexColumn,
-                  child: Text('${index + 1}.', style: AppTextStyles.body),
-                ),
-                Expanded(child: Text(widget.terms[index], style: AppTextStyles.body)),
-              ],
-            ),
+  Widget _numberedTerms() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: <Widget>[
+      for (int index = 0; index < widget.terms.length; index++)
+        Padding(
+          padding: EdgeInsets.only(top: index == 0 ? 0 : AppSpacing.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(
+                width: AppSpacing.indexColumn,
+                child: Text('${index + 1}.', style: AppTextStyles.body),
+              ),
+              Expanded(child: Text(widget.terms[index], style: AppTextStyles.body)),
+            ],
           ),
-      ],
-    );
-  }
+        ),
+    ],
+  );
 
   @override
   void initState() {

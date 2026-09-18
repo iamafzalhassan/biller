@@ -37,9 +37,7 @@ class SqfliteSource {
     await _trim(db);
   }
 
-  Future<Database> _open() {
-    return _opening ??= openDatabase(databaseName, version: schemaVersion, onCreate: (Database db, int version) => _createTable(db), onUpgrade: _rebuild, onDowngrade: _rebuild);
-  }
+  Future<Database> _open() => _opening ??= openDatabase(databaseName, version: schemaVersion, onCreate: (Database db, int version) => _createTable(db), onUpgrade: _rebuild, onDowngrade: _rebuild);
 
   Future<void> _rebuild(Database db, int from, int to) async {
     await db.execute('DROP TABLE IF EXISTS $tableRecent');

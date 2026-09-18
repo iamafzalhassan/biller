@@ -45,35 +45,33 @@ class TotalsSection extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusCard), color: AppColors.surfaceField),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          GestureDetector(
-            onLongPress: () {
-              Clipboard.setData(ClipboardData(text: totalCents.asAmount));
-              HapticFeedback.mediumImpact();
-              context.showBriefSnack('Total copied to the clipboard, ready to paste into a message.');
-            },
-            child: _line('TOTAL', totalCents, isBold: true),
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppSpacing.radiusCard), color: AppColors.surfaceField),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        GestureDetector(
+          onLongPress: () {
+            Clipboard.setData(ClipboardData(text: totalCents.asAmount));
+            HapticFeedback.mediumImpact();
+            context.showBriefSnack('Total copied to the clipboard, ready to paste into a message.');
+          },
+          child: _line('TOTAL', totalCents, isBold: true),
+        ),
+        if (showsAdvance) const DottedDivider(),
+        if (showsAdvance) InkWell(onTap: onAdvanceTap, child: _line('ADVANCE', advanceCents, isBold: false, isEditable: true)),
+        if (showsAdvance) const DottedDivider(),
+        if (showsAdvance) _line('BALANCE', balanceCents, isBold: false),
+        if (!showsAdvance && hasItems) const SizedBox(height: AppSpacing.sm),
+        if (!showsAdvance && hasItems)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.add, size: AppSpacing.iconButton),
+            label: const Text('Add Advance', maxLines: 1),
+            onPressed: onAdvanceTap,
           ),
-          if (showsAdvance) const DottedDivider(),
-          if (showsAdvance) InkWell(onTap: onAdvanceTap, child: _line('ADVANCE', advanceCents, isBold: false, isEditable: true)),
-          if (showsAdvance) const DottedDivider(),
-          if (showsAdvance) _line('BALANCE', balanceCents, isBold: false),
-          if (!showsAdvance && hasItems) const SizedBox(height: AppSpacing.sm),
-          if (!showsAdvance && hasItems)
-            OutlinedButton.icon(
-              icon: const Icon(Icons.add, size: AppSpacing.iconButton),
-              label: const Text('Add Advance', maxLines: 1),
-              onPressed: onAdvanceTap,
-            ),
-          const SizedBox(height: AppSpacing.xs),
-        ],
-      ),
-    );
-  }
+        const SizedBox(height: AppSpacing.xs),
+      ],
+    ),
+  );
 }

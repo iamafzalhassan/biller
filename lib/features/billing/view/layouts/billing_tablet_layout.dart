@@ -13,14 +13,12 @@ class BillingTabletLayout extends StatelessWidget {
   final Widget previewPane;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Expanded(flex: formFlex, child: form),
-        const VerticalDivider(color: AppColors.divider, thickness: AppSpacing.hairline, width: AppSpacing.hairline),
-        Expanded(flex: previewFlex, child: previewPane),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      Expanded(flex: formFlex, child: form),
+      const VerticalDivider(color: AppColors.divider, thickness: AppSpacing.hairline, width: AppSpacing.hairline),
+      Expanded(flex: previewFlex, child: previewPane),
+    ],
+  );
 }

@@ -34,123 +34,81 @@ abstract final class ThermalReceiptBuilder {
   static final DateFormat _dateFormat = DateFormat('dd MMM yy h:mm a');
 
   static Future<List<int>> build({required BusinessProfile profile, required Invoice invoice, required ThermalPaper paper}) async {
-    final CapabilityProfile capability = await CapabilityProfile.load();
-    final Generator generator = Generator(_paperSize(paper), capability);
-    final List<int> bytes = <int>[];
-    bytes.addAll(generator.reset());
-    bytes.addAll(_header(generator, profile, paper));
-    bytes.addAll(_meta(generator, invoice, paper));
-    bytes.addAll(_items(generator, invoice.printableItems, paper));
-    bytes.addAll(_totals(generator, invoice));
-    bytes.addAll(_terms(generator, profile.printableTerms, paper));
-    bytes.addAll(_footer(generator));
-    return bytes;
+    final Generator generator = Generator(_paperSize(paper), await CapabilityProfile.load());
+    return <int>[
+      ...generator.reset(),
+      ..._header(generator, profile, paper),
+      ..._meta(generator, invoice, paper),
+      ..._items(generator, invoice.printableItems, paper),
+      ..._totals(generator, invoice),
+      ..._terms(generator, profile.printableTerms, paper),
+      ..._footer(generator),
+    ];
   }
 
   static List<int> _header(Generator generator, BusinessProfile profile, ThermalPaper paper) {
-    final List<int> bytes = <int>[];
     final int lineChars = _lineChars(paper);
-    final PosStyles nameStyle = _businessNameStyle(paper);
-    for (final String line in _wrap(profile.name, paper == ThermalPaper.mm58 ? lineChars : lineChars ~/ 2)) {
-      bytes.addAll(generator.text(line, styles: nameStyle));
-    }
-    if (profile.addressLine.isNotEmpty) {
-      for (final String line in _wrap(profile.addressLine, lineChars)) {
-        bytes.addAll(generator.text(line, styles: _centered));
-      }
-    }
-    if (profile.phoneLine.isNotEmpty) {
-      for (final String line in _wrap(profile.phoneLine, lineChars)) {
-        bytes.addAll(generator.text(line, styles: _centered));
-      }
-    }
-    bytes.addAll(generator.hr());
-    bytes.addAll(generator.text(_invoiceHeading, styles: _centeredBold));
-    return bytes;
+    return <int>[
+      for (final String line in _wrap(profile.name, paper == ThermalPaper.mm58 ? lineChars : lineChars ~/ 2)) ...generator.text(line, styles: _businessNameStyle(paper)),
+      for (final String detail in <String>[profile.addressLine, profile.phoneLine])
+        if (detail.isNotEmpty)
+          for (final String line in _wrap(detail, lineChars)) ...generator.text(line, styles: _centered),
+      ...generator.hr(),
+      ...generator.text(_invoiceHeading, styles: _centeredBold),
+    ];
   }
 
   static List<int> _meta(Generator generator, Invoice invoice, ThermalPaper paper) {
-    final List<int> bytes = <int>[];
-    bytes.addAll(generator.hr());
-    bytes.addAll(_pair(generator, 'NO', invoice.invoiceNumber, paper));
-    bytes.addAll(_pair(generator, 'DATE', _dateFormat.format(invoice.createdAt).toUpperCase(), paper));
-    bytes.addAll(_pair(generator, 'BILL TO', invoice.customerName, paper));
-    final String? phone = invoice.customerPhone;
-    if (phone != null && phone.trim().isNotEmpty) bytes.addAll(_pair(generator, 'PHONE', phone.trim(), paper));
-    return bytes;
+    final String phone = invoice.customerPhone?.trim() ?? '';
+    return <int>[
+      ...generator.hr(),
+      ..._pair(generator, 'NO', invoice.invoiceNumber, paper),
+      ..._pair(generator, 'DATE', _dateFormat.format(invoice.createdAt).toUpperCase(), paper),
+      ..._pair(generator, 'BILL TO', invoice.customerName, paper),
+      if (phone.isNotEmpty) ..._pair(generator, 'PHONE', phone, paper),
+    ];
   }
 
-  static List<int> _items(Generator generator, List<InvoiceItem> items, ThermalPaper paper) {
-    final List<int> bytes = <int>[];
-    final int lineChars = _lineChars(paper);
-    final int qtyChars = _columnChars(paper, start: 0, width: _itemLabelWidth);
-    bytes.addAll(generator.hr());
-    for (int index = 0; index < items.length; index++) {
-      final InvoiceItem item = items[index];
-      final String prefix = '${index + 1}. ';
-      if (index > 0) bytes.addAll(generator.emptyLines(1));
-      for (final String line in _wrapIndented(prefix, item.description, lineChars)) {
-        bytes.addAll(generator.text(line, styles: _label));
-      }
-      final List<String> qtyLines = _wrapIndented(' ' * prefix.length, '${item.qty.asQty} x ${item.unitPriceCents.asAmount}', qtyChars);
-      for (int line = 0; line < qtyLines.length; line++) {
-        bytes.addAll(generator.row(<PosColumn>[PosColumn(text: qtyLines[line], styles: PosStyles.defaults(), width: _itemLabelWidth), PosColumn(text: line == 0 ? item.amountCents.asAmount : '', styles: _value, width: _itemAmountWidth)]));
-      }
-    }
-    return bytes;
+  static List<int> _items(Generator generator, List<InvoiceItem> items, ThermalPaper paper) => <int>[
+    ...generator.hr(),
+    for (final (int index, InvoiceItem item) in items.indexed) ...<int>[if (index > 0) ...generator.emptyLines(1), ..._item(generator, '${index + 1}. ', item, paper)],
+  ];
+
+  static List<int> _item(Generator generator, String prefix, InvoiceItem item, ThermalPaper paper) {
+    final List<String> qtyLines = _wrapIndented(' ' * prefix.length, '${item.qty.asQty} x ${item.unitPriceCents.asAmount}', _columnChars(paper, start: 0, width: _itemLabelWidth));
+    return <int>[
+      for (final String line in _wrapIndented(prefix, item.description, _lineChars(paper))) ...generator.text(line, styles: _label),
+      for (final (int index, String line) in qtyLines.indexed)
+        ...generator.row(<PosColumn>[PosColumn(text: line, styles: PosStyles.defaults(), width: _itemLabelWidth), PosColumn(text: index == 0 ? item.amountCents.asAmount : '', styles: _value, width: _itemAmountWidth)]),
+    ];
   }
 
-  static List<int> _totals(Generator generator, Invoice invoice) {
-    final List<int> bytes = <int>[];
-    bytes.addAll(generator.hr());
-    bytes.addAll(_amount(generator, 'TOTAL', invoice.totalCents.asAmount, isBold: true));
-    if (invoice.showsAdvance) bytes.addAll(_amount(generator, 'ADVANCE', invoice.advanceCents.asAmount, isBold: false));
-    if (invoice.showsAdvance) bytes.addAll(_amount(generator, 'BALANCE', invoice.balanceCents.asAmount, isBold: true));
-    bytes.addAll(generator.hr());
-    return bytes;
-  }
+  static List<int> _totals(Generator generator, Invoice invoice) => <int>[
+    ...generator.hr(),
+    ..._amount(generator, 'TOTAL', invoice.totalCents.asAmount, isBold: true),
+    if (invoice.showsAdvance) ..._amount(generator, 'ADVANCE', invoice.advanceCents.asAmount, isBold: false),
+    if (invoice.showsAdvance) ..._amount(generator, 'BALANCE', invoice.balanceCents.asAmount, isBold: true),
+    ...generator.hr(),
+  ];
 
-  static List<int> _terms(Generator generator, List<String> terms, ThermalPaper paper) {
-    if (terms.isEmpty) return <int>[];
-    final List<int> bytes = <int>[];
-    final int lineChars = _lineChars(paper);
-    bytes.addAll(generator.text(_termsHeading, styles: _label));
-    for (int index = 0; index < terms.length; index++) {
-      for (final String line in _wrapIndented('${index + 1}. ', terms[index], lineChars)) {
-        bytes.addAll(generator.text(line));
-      }
-    }
-    bytes.addAll(generator.hr());
-    return bytes;
-  }
+  static List<int> _terms(Generator generator, List<String> terms, ThermalPaper paper) => <int>[
+    if (terms.isNotEmpty) ...generator.text(_termsHeading, styles: _label),
+    for (final (int index, String term) in terms.indexed)
+      for (final String line in _wrapIndented('${index + 1}. ', term, _lineChars(paper))) ...generator.text(line),
+    if (terms.isNotEmpty) ...generator.hr(),
+  ];
 
-  static List<int> _footer(Generator generator) {
-    final List<int> bytes = <int>[];
-    bytes.addAll(generator.feed(2));
-    bytes.addAll(generator.text(_signatureRule, styles: _centered));
-    bytes.addAll(generator.text(_signatureLabel, styles: _centered));
-    bytes.addAll(generator.feed(2));
-    bytes.addAll(generator.cut());
-    return bytes;
-  }
+  static List<int> _footer(Generator generator) => <int>[...generator.feed(2), ...generator.text(_signatureRule, styles: _centered), ...generator.text(_signatureLabel, styles: _centered), ...generator.feed(2), ...generator.cut()];
 
-  static List<int> _pair(Generator generator, String label, String value, ThermalPaper paper) {
-    final List<int> bytes = <int>[];
-    final List<String> lines = _wrap(value, _columnChars(paper, start: _metaLabelWidth, width: _metaValueWidth));
-    for (int index = 0; index < lines.length; index++) {
-      bytes.addAll(generator.row(<PosColumn>[PosColumn(text: index == 0 ? label : '', styles: _label, width: _metaLabelWidth), PosColumn(text: lines[index], styles: _value, width: _metaValueWidth)]));
-    }
-    return bytes;
-  }
+  static List<int> _pair(Generator generator, String label, String value, ThermalPaper paper) => <int>[
+    for (final (int index, String line) in _wrap(value, _columnChars(paper, start: _metaLabelWidth, width: _metaValueWidth)).indexed)
+      ...generator.row(<PosColumn>[PosColumn(text: index == 0 ? label : '', styles: _label, width: _metaLabelWidth), PosColumn(text: line, styles: _value, width: _metaValueWidth)]),
+  ];
 
   static List<int> _amount(Generator generator, String label, String value, {required bool isBold}) =>
       generator.row(<PosColumn>[PosColumn(text: label, styles: _label, width: _totalLabelWidth), PosColumn(text: value, styles: isBold ? _valueBold : _value, width: _totalAmountWidth)]);
 
-  static List<String> _wrapIndented(String prefix, String text, int width) {
-    final String padding = ' ' * prefix.length;
-    final List<String> wrapped = _wrap(text, width - prefix.length);
-    return <String>[for (int index = 0; index < wrapped.length; index++) index == 0 ? '$prefix${wrapped[index]}' : '$padding${wrapped[index]}'];
-  }
+  static List<String> _wrapIndented(String prefix, String text, int width) => <String>[for (final (int index, String line) in _wrap(text, width - prefix.length).indexed) '${index == 0 ? prefix : ' ' * prefix.length}$line'];
 
   static List<String> _wrap(String text, int width) {
     final String source = text.trim();

@@ -4,11 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_spacing.dart';
+import '../../../core/widgets/receipt_preview.dart';
 import '../../../models/invoice.dart';
 import '../../../pdf/receipt_builder.dart';
 
@@ -61,20 +60,6 @@ class _LivePreviewPaneState extends ConsumerState<LivePreviewPane> {
         child: Center(child: Text('The receipt appears here as you type')),
       );
     }
-    return PdfPreview(
-      key: ValueKey<int>(_previewSeed),
-      allowPrinting: false,
-      allowSharing: false,
-      build: _build,
-      canChangeOrientation: false,
-      canChangePageFormat: false,
-      canDebug: false,
-      initialPageFormat: PdfPageFormat.a5,
-      loadingWidget: const SizedBox.shrink(),
-      pdfPreviewPageDecoration: const BoxDecoration(color: AppColors.surfaceCard),
-      previewPageMargin: const EdgeInsets.all(AppSpacing.md),
-      scrollViewDecoration: const BoxDecoration(color: AppColors.surfaceSunken),
-      useActions: false,
-    );
+    return ReceiptPreview(key: ValueKey<int>(_previewSeed), loadingWidget: const SizedBox.shrink(), onLayout: _build);
   }
 }

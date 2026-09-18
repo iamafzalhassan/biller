@@ -49,12 +49,5 @@ class AuthRepository {
     return true;
   }
 
-  String _generateRecoveryCode() {
-    final StringBuffer buffer = StringBuffer();
-    for (int i = 0; i < recoveryCodeLength; i++) {
-      if (i == 5) buffer.write('-');
-      buffer.write(recoveryAlphabet[_random.nextInt(recoveryAlphabet.length)]);
-    }
-    return buffer.toString();
-  }
+  String _generateRecoveryCode() => List<String>.generate(recoveryCodeLength, (int index) => '${index == 5 ? '-' : ''}${recoveryAlphabet[_random.nextInt(recoveryAlphabet.length)]}').join();
 }

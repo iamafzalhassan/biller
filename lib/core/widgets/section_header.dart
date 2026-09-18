@@ -10,15 +10,13 @@ class SectionHeader extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Text(label, maxLines: 1, style: AppTextStyles.overline),
-        const SizedBox(height: AppSpacing.sm),
-        const DottedDivider(),
-        const SizedBox(height: AppSpacing.lg),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      Text(label, maxLines: 1, style: AppTextStyles.overline),
+      const SizedBox(height: AppSpacing.sm),
+      const DottedDivider(),
+      const SizedBox(height: AppSpacing.lg),
+    ],
+  );
 }

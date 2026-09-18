@@ -36,13 +36,7 @@ class SettingsRepository {
 
   Future<void> markSetupComplete() => _prefs.setBool(PrefsSource.keySetupComplete, true);
 
-  Future<void> resetSetup() async {
-    await _prefs.remove(PrefsSource.keyProfile);
-    await _prefs.remove(PrefsSource.keyRetentionDays);
-    await _prefs.remove(PrefsSource.keySetupComplete);
-    await _prefs.remove(PrefsSource.keySequence);
-    await _prefs.remove(PrefsSource.keyDraft);
-  }
+  Future<void> resetSetup() => Future.wait(<String>[PrefsSource.keyProfile, PrefsSource.keyRetentionDays, PrefsSource.keySetupComplete, PrefsSource.keySequence, PrefsSource.keyDraft].map(_prefs.remove));
 
   Future<void> commitPendingInvoiceNumber() => _prefs.setInt(PrefsSource.keySequence, _prefs.getInt(PrefsSource.keySequence) + 1);
 }

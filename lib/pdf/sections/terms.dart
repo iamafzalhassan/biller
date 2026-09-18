@@ -25,20 +25,18 @@ pw.Widget buildTerms(List<String> terms) {
   );
 }
 
-pw.Widget _term(int number, String term) {
-  return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: PdfTheme.gapXs),
-    child: pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: <pw.Widget>[
-        pw.SizedBox(
-          width: PdfTheme.gapLg,
-          child: pw.Text('$number.', maxLines: 1, style: PdfTheme.terms),
-        ),
-        pw.Expanded(
-          child: pw.Text(term, maxLines: _termsMaxLines, overflow: pw.TextOverflow.clip, style: PdfTheme.terms),
-        ),
-      ],
-    ),
-  );
-}
+pw.Widget _term(int number, String term) => pw.Padding(
+  padding: const pw.EdgeInsets.only(bottom: PdfTheme.gapXs),
+  child: pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: <pw.Widget>[
+      pw.SizedBox(
+        width: PdfTheme.gapLg,
+        child: pw.Text('$number.', maxLines: 1, style: PdfTheme.terms),
+      ),
+      pw.Expanded(
+        child: pw.Text(term, maxLines: _termsMaxLines, overflow: pw.TextOverflow.clip, style: PdfTheme.terms),
+      ),
+    ],
+  ),
+);

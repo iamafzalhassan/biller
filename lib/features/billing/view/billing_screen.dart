@@ -142,62 +142,40 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   Future<void> _printDirect() async {
     SoftKeyboard.dismiss();
     final String number = ref.read(billingControllerProvider).invoice.invoiceNumber;
-    final Uint8List? bytes = await _commit(number);
-    if (bytes == null) return;
-    await _sendToPrinter(bytes, number);
+    final PrintOutcome outcome = await _controller.printBill();
+    if (mounted && !outcome.isSilent) context.showErrorSnack(outcome.message(number));
   }
 
-  Future<Uint8List?> _commit(String number) async {
-    try {
-      return await _controller.commit();
-    } catch (_) {
-      if (!mounted) return null;
-      context.showErrorSnack('Could not prepare $number. Nothing was printed and the bill is still here, so you can check the details and try again.');
-      return null;
-    }
-  }
-
-  Future<void> _sendToPrinter(Uint8List bytes, String number) async {
-    final PrintOutcome outcome = await ref.read(printDispatcherProvider).send(profile: ref.read(settingsRepositoryProvider).profile, invoice: ref.read(billingControllerProvider).invoice, bytes: bytes);
-    _controller.startNewBill();
-    if (!mounted) return;
-    if (!outcome.isSilent) context.showErrorSnack(outcome.message(number));
-  }
-
-  PreferredSizeWidget _appBar(BillingState state) {
-    return AppBar(
-      actions: <Widget>[
-        if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.addMockItems, tooltip: 'Add ${MockItems.count} mock items'),
-        IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => unawaited(_openRoute(Routes.recent)), tooltip: 'Recent invoices'),
-        IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => unawaited(_openRoute(Routes.settings)), tooltip: 'Settings'),
-        const SizedBox(width: AppSpacing.sm),
+  PreferredSizeWidget _appBar(BillingState state) => AppBar(
+    actions: <Widget>[
+      if (kDebugMode) IconButton(icon: const Icon(Icons.science_outlined), onPressed: _controller.addMockItems, tooltip: 'Add ${MockItems.count} mock items'),
+      IconButton(icon: const Icon(Icons.receipt_long_outlined), onPressed: () => unawaited(_openRoute(Routes.recent)), tooltip: 'Recent invoices'),
+      IconButton(icon: const Icon(Icons.lock_outline), onPressed: () => unawaited(_openRoute(Routes.settings)), tooltip: 'Settings'),
+      const SizedBox(width: AppSpacing.sm),
+    ],
+    title: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(state.invoice.invoiceNumber, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(_appBarDateFormat.format(state.invoice.createdAt), maxLines: 1, style: AppTextStyles.listSecondary),
       ],
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(state.invoice.invoiceNumber, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.sectionHeading),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(_appBarDateFormat.format(state.invoice.createdAt), maxLines: 1, style: AppTextStyles.listSecondary),
-        ],
-      ),
-    );
-  }
+    ),
+  );
 
-  Widget _customerField(BillingState state) {
-    return CustomerField(
-      hasPhoneError: !Validators.isValidPhone(state.invoice.customerPhone ?? ''),
-      nameController: _nameController,
-      nameFocus: _nameFocus,
-      onNameChanged: _controller.setCustomerName,
-      onNameSubmitted: _phoneFocus.requestFocus,
-      onPhoneChanged: _controller.setCustomerPhone,
-      onPhoneSubmitted: SoftKeyboard.dismiss,
-      phoneController: _phoneController,
-      phoneFocus: _phoneFocus,
-    );
-  }
+  Widget _customerField(BillingState state) => CustomerField(
+    hasPhoneError: !Validators.isValidPhone(state.invoice.customerPhone ?? ''),
+    nameController: _nameController,
+    nameFocus: _nameFocus,
+    onNameChanged: _controller.setCustomerName,
+    onNameSubmitted: _phoneFocus.requestFocus,
+    onPhoneChanged: _controller.setCustomerPhone,
+    onPhoneSubmitted: SoftKeyboard.dismiss,
+    phoneController: _phoneController,
+    phoneFocus: _phoneFocus,
+  );
 
   Widget? _draftBanner(BillingState state) {
     final DateTime? savedAt = state.draftSavedAt;
@@ -205,42 +183,34 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     return DraftBanner(onDiscard: _controller.discardDraft, onRestore: _controller.restoreDraft, savedAt: savedAt);
   }
 
-  List<Widget> _itemRows(List<InvoiceItem> items) {
-    return <Widget>[
-      for (final InvoiceItem item in items)
-        Padding(
-          key: ValueKey<String>(item.id),
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm, left: AppSpacing.screenPadding, right: AppSpacing.screenPadding),
-          child: ItemRow(
-            item: item,
-            onTap: () => unawaited(_openSheet(item: item)),
-          ),
+  List<Widget> _itemRows(List<InvoiceItem> items) => <Widget>[
+    for (final InvoiceItem item in items)
+      Padding(
+        key: ValueKey<String>(item.id),
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm, left: AppSpacing.screenPadding, right: AppSpacing.screenPadding),
+        child: ItemRow(
+          item: item,
+          onTap: () => unawaited(_openSheet(item: item)),
         ),
-    ];
-  }
+      ),
+  ];
 
   Widget _addItemButton() {
     return OutlinedButton.icon(
       icon: const Icon(Icons.add, size: AppSpacing.iconButton),
       label: const Text('Add Item', maxLines: 1),
       onPressed: () => unawaited(_openSheet()),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
-      ),
     );
   }
 
-  Widget _totalsSection(BillingState state) {
-    return TotalsSection(
-      advanceCents: state.invoice.advanceCents,
-      balanceCents: state.invoice.balanceCents,
-      hasItems: state.invoice.printableItems.isNotEmpty,
-      showsAdvance: state.invoice.showsAdvance,
-      totalCents: state.invoice.totalCents,
-      onAdvanceTap: () => unawaited(_openAdvanceSheet(state.invoice.advanceCents)),
-    );
-  }
+  Widget _totalsSection(BillingState state) => TotalsSection(
+    advanceCents: state.invoice.advanceCents,
+    balanceCents: state.invoice.balanceCents,
+    hasItems: state.invoice.printableItems.isNotEmpty,
+    showsAdvance: state.invoice.showsAdvance,
+    totalCents: state.invoice.totalCents,
+    onAdvanceTap: () => unawaited(_openAdvanceSheet(state.invoice.advanceCents)),
+  );
 
   Widget _printButton(BillingState state, {required String label, required Future<void> Function() onPrint}) {
     return GestureDetector(
@@ -258,17 +228,15 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _form(BillingState state, Widget printButton) {
-    return BillingForm(
-      addItemButton: _addItemButton(),
-      customerField: _customerField(state),
-      draftBanner: _draftBanner(state),
-      itemRows: _itemRows(state.invoice.items),
-      printButton: printButton,
-      scrollController: _scrollController,
-      totalsSection: _totalsSection(state),
-    );
-  }
+  Widget _form(BillingState state, Widget printButton) => BillingForm(
+    addItemButton: _addItemButton(),
+    customerField: _customerField(state),
+    draftBanner: _draftBanner(state),
+    itemRows: _itemRows(state.invoice.items),
+    printButton: printButton,
+    scrollController: _scrollController,
+    totalsSection: _totalsSection(state),
+  );
 
   @override
   void initState() {
